@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>네이버 가격비교 순위 모니터링</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            font-weight: 300;
+        }
+        
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+        
+        .content {
+            padding: 30px;
+        }
+        
+        .add-product-form {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            border: 1px solid #e9ecef;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #495057;
+        }
+        
+        .form-group input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        
+        .form-group input:focus {
+            outline: none;
+            border-color: #4facfe;
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: transform 0.2s;
+            font-weight: 600;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+        
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .btn-secondary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .products-section {
+            margin-top: 30px;
+        }
+        
+        .section-title {
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            color: #495057;
+            border-bottom: 2px solid #e9ecef;
+            padding-bottom: 10px;
+        }
+        
+        .product-card {
+            background: white;
+            border: 1px solid #e9ecef;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .product-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 15px rgba(0,0,0,0.1);
+        }
+        
+        .product-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .product-name {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #495057;
+        }
+        
+        .product-keyword {
+            background: #e9ecef;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            color: #6c757d;
+        }
+        
+        .rank-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .rank-item {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #4facfe;
+        }
+        
+        .rank-number {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #4facfe;
+            margin-bottom: 5px;
+        }
+        
+        .rank-price {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #495057;
+            margin-bottom: 5px;
+        }
+        
+        .rank-store {
+            font-size: 0.9rem;
+            color: #6c757d;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #6c757d;
+        }
+        
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #4facfe;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .status-bar {
+            background: #e9ecef;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .last-update {
+            color: #6c757d;
+            font-size: 0.9rem;
+        }
+        
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .success {
+            background: #d4edda;
+            color: #155724;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border: 1px solid #c3e6cb;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                margin: 10px;
+                border-radius: 15px;
+            }
+            
+            .header {
+                padding: 20px;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .content {
+                padding: 20px;
+            }
+            
+            .rank-info {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🛒 네이버 가격비교 순위 모니터링</h1>
+            <p>실시간으로 상품 순위를 추적하고 모니터링하세요</p>
+        </div>
+        
+        <div class="content">
+            <div class="add-product-form">
+                <h3 style="margin-bottom: 20px; color: #495057;">새 검색 추가</h3>
+                <div class="form-group">
+                    <label for="searchKeyword">검색 키워드</label>
+                    <input type="text" id="searchKeyword" placeholder="예: 베트남여행" required>
+                </div>
+                <div class="form-group">
+                    <label for="companyName">찾을 회사명</label>
+                    <input type="text" id="companyName" placeholder="예: 하나투어" required>
+                </div>
+                <div class="form-group">
+                    <label for="checkInterval">체크 간격 (분)</label>
+                    <input type="number" id="checkInterval" placeholder="30" min="5" max="1440" value="30">
+                </div>
+                <button class="btn" onclick="addProduct()">검색 추가</button>
+            </div>
+            
+            <div class="status-bar">
+                <div class="last-update" id="lastUpdate">
+                    마지막 업데이트: 아직 없음
+                </div>
+                <button class="btn btn-secondary" onclick="checkAllRanks()" id="checkRanksBtn">
+                    회사 검색 시작
+                </button>
+            </div>
+            
+            <div id="messageArea"></div>
+            
+            <div class="products-section">
+                <h3 class="section-title">모니터링 중인 검색</h3>
+                <div id="productsList">
+                    <div class="loading">
+                        <div class="spinner"></div>
+                        검색 목록을 불러오는 중...
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let products = [];
+        let isChecking = false;
+
+        // 페이지 로드 시 상품 목록 불러오기
+        document.addEventListener('DOMContentLoaded', function() {
+            loadProducts();
+        });
+
+        // 검색 추가
+        async function addProduct() {
+            const keyword = document.getElementById('searchKeyword').value.trim();
+            const companyName = document.getElementById('companyName').value.trim();
+            const checkInterval = parseInt(document.getElementById('checkInterval').value) || 30;
+            
+            if (!keyword || !companyName) {
+                showMessage('검색 키워드와 회사명을 모두 입력해주세요.', 'error');
+                return;
+            }
+            
+            if (checkInterval < 5 || checkInterval > 1440) {
+                showMessage('체크 간격은 5분에서 1440분(24시간) 사이여야 합니다.', 'error');
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/products', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ 
+                        name: `${keyword} - ${companyName}`, // 자동으로 이름 생성
+                        search_keyword: keyword, 
+                        company_name: companyName,
+                        check_interval: checkInterval
+                    })
+                });
+                
+                if (response.ok) {
+                    const product = await response.json();
+                    showMessage('검색이 성공적으로 추가되었습니다!', 'success');
+                    document.getElementById('searchKeyword').value = '';
+                    document.getElementById('companyName').value = '';
+                    document.getElementById('checkInterval').value = '30';
+                    loadProducts();
+                } else {
+                    const error = await response.json();
+                    showMessage(error.error || '검색 추가에 실패했습니다.', 'error');
+                }
+            } catch (error) {
+                showMessage('서버 연결에 실패했습니다.', 'error');
+            }
+        }
+
+        // 상품 목록 불러오기
+        async function loadProducts() {
+            try {
+                const response = await fetch('/api/products');
+                if (response.ok) {
+                    products = await response.json();
+                    displayProducts();
+                } else {
+                    showMessage('상품 목록을 불러오는데 실패했습니다.', 'error');
+                }
+            } catch (error) {
+                showMessage('서버 연결에 실패했습니다.', 'error');
+            }
+        }
+
+        // 상품 목록 표시
+        function displayProducts() {
+            const container = document.getElementById('productsList');
+            
+            if (products.length === 0) {
+                container.innerHTML = '<div class="loading">등록된 검색이 없습니다. 검색을 추가해보세요!</div>';
+                return;
+            }
+            
+            container.innerHTML = products.map(product => `
+                <div class="product-card">
+                    <div class="product-header">
+                        <div class="product-name">${product.name}</div>
+                        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                            <div class="product-keyword">${product.search_keyword}</div>
+                            <div class="product-keyword" style="background: #e3f2fd; color: #1976d2;">${product.company_name}</div>
+                            <div class="product-keyword" style="background: #f3e5f5; color: #7b1fa2;">${product.check_interval}분 간격</div>
+                        </div>
+                    </div>
+                    <div class="rank-info" id="ranks-${product.id}">
+                        <div class="loading">
+                            <div class="spinner"></div>
+                            회사 검색 결과를 불러오는 중...
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+            
+            // 각 상품의 순위 정보 불러오기
+            products.forEach(product => {
+                loadProductRanks(product.id);
+            });
+        }
+
+        // 상품별 순위 정보 불러오기
+        async function loadProductRanks(productId) {
+            try {
+                const response = await fetch(`/api/products/${productId}/ranks`);
+                if (response.ok) {
+                    const ranks = await response.json();
+                    displayProductRanks(productId, ranks);
+                } else {
+                    document.getElementById(`ranks-${productId}`).innerHTML = 
+                        '<div class="error">순위 정보를 불러오는데 실패했습니다.</div>';
+                }
+            } catch (error) {
+                document.getElementById(`ranks-${productId}`).innerHTML = 
+                    '<div class="error">서버 연결에 실패했습니다.</div>';
+            }
+        }
+
+        // 상품별 순위 정보 표시
+        function displayProductRanks(productId, ranks) {
+            const container = document.getElementById(`ranks-${productId}`);
+            
+            if (ranks.length === 0) {
+                container.innerHTML = '<div class="loading">아직 검색 결과가 없습니다. 회사 검색을 시작해보세요!</div>';
+                return;
+            }
+            
+            // 최신 검색 결과만 표시
+            const latestRanks = ranks.slice(0, 5);
+            
+            container.innerHTML = latestRanks.map(rank => {
+                const isFound = rank.total_products > 0;
+                const borderColor = isFound ? '#4caf50' : '#f44336';
+                const bgColor = isFound ? '#f1f8e9' : '#ffebee';
+                
+                let productsHtml = '';
+                if (isFound && rank.found_products) {
+                    try {
+                        const products = JSON.parse(rank.found_products);
+                        productsHtml = products.slice(0, 3).map((product, index) => `
+                            <div style="background: white; padding: 10px; margin: 5px 0; border-radius: 5px; border-left: 3px solid #4caf50;">
+                                <div style="font-weight: 600; color: #2e7d32; margin-bottom: 5px;">
+                                    📍 ${product.found_at}
+                                </div>
+                                <div style="font-size: 0.9rem; margin-bottom: 5px;">
+                                    📦 ${product.product_name || '상품명 정보 없음'}
+                                </div>
+                                <div style="font-size: 0.85rem; color: #666; margin-bottom: 5px;">
+                                    💰 ${product.price || '가격 정보 없음'}
+                                </div>
+                                ${product.product_link ? `
+                                    <div style="margin-top: 5px;">
+                                        <a href="${product.product_link}" target="_blank" style="color: #1976d2; text-decoration: none; font-size: 0.8rem;">
+                                            🔗 상품 바로가기
+                                        </a>
+                                    </div>
+                                ` : ''}
+                            </div>
+                        `).join('');
+                        
+                        if (products.length > 3) {
+                            productsHtml += `<div style="text-align: center; color: #666; font-size: 0.8rem; margin-top: 5px;">... 외 ${products.length - 3}개 더</div>`;
+                        }
+                    } catch (e) {
+                        productsHtml = '<div style="color: #666;">제품 정보 파싱 오류</div>';
+                    }
+                }
+                
+                return `
+                <div class="rank-item" style="border-left-color: ${borderColor}; background-color: ${bgColor};">
+                    <div class="rank-number" style="color: ${isFound ? '#4caf50' : '#f44336'}; font-size: 1.2rem; margin-bottom: 10px;">
+                        ${isFound ? `✅ ${rank.total_products}개 제품 발견!` : '❌ 제품 없음'}
+                    </div>
+                    
+                    <div style="margin-bottom: 10px; padding: 8px; background: rgba(255,255,255,0.7); border-radius: 5px;">
+                        <div style="font-size: 0.9rem; color: #666;">
+                            📊 검색 범위: ${rank.searched_pages}페이지
+                        </div>
+                        <div style="font-size: 0.85rem; color: #888; margin-top: 3px;">
+                            ${rank.summary_message}
+                        </div>
+                    </div>
+                    
+                    ${productsHtml}
+                    
+                    <div style="font-size: 0.8rem; color: #999; margin-top: 10px; text-align: right;">
+                        ${new Date(rank.checked_at).toLocaleString('ko-KR')}
+                    </div>
+                </div>
+            `}).join('');
+        }
+
+        // 모든 상품 순위 체크
+        async function checkAllRanks() {
+            if (isChecking) return;
+            
+            if (products.length === 0) {
+                showMessage('등록된 검색이 없습니다.', 'error');
+                return;
+            }
+            
+            isChecking = true;
+            const btn = document.getElementById('checkRanksBtn');
+            btn.disabled = true;
+            btn.textContent = '회사 검색 중...';
+            
+            showMessage('회사 검색을 시작합니다. 잠시만 기다려주세요...', 'success');
+            
+            try {
+                const response = await fetch('/api/check-ranks', {
+                    method: 'POST'
+                });
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    const successResults = result.results.filter(r => r.status === 'success');
+                    const notFoundCount = result.results.filter(r => r.status === 'not_found').length;
+                    const errorCount = result.results.filter(r => r.status === 'error').length;
+                    
+                    const totalProducts = successResults.reduce((sum, r) => sum + (r.total_products || 0), 0);
+                    
+                    let message = `회사 검색 완료! `;
+                    if (totalProducts > 0) {
+                        message += `총 ${totalProducts}개 제품 발견, `;
+                    }
+                    message += `미발견: ${notFoundCount}개, 오류: ${errorCount}개`;
+                    
+                    showMessage(message, 'success');
+                    updateLastUpdate();
+                    
+                    // 검색 결과 새로고침
+                    products.forEach(product => {
+                        loadProductRanks(product.id);
+                    });
+                } else {
+                    const error = await response.json();
+                    showMessage(error.error || '회사 검색에 실패했습니다.', 'error');
+                }
+            } catch (error) {
+                showMessage('서버 연결에 실패했습니다.', 'error');
+            } finally {
+                isChecking = false;
+                btn.disabled = false;
+                btn.textContent = '회사 검색 시작';
+            }
+        }
+
+        // 메시지 표시
+        function showMessage(message, type) {
+            const messageArea = document.getElementById('messageArea');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = type;
+            messageDiv.textContent = message;
+            
+            messageArea.appendChild(messageDiv);
+            
+            // 5초 후 자동 제거
+            setTimeout(() => {
+                if (messageDiv.parentNode) {
+                    messageDiv.parentNode.removeChild(messageDiv);
+                }
+            }, 5000);
+        }
+
+        // 마지막 업데이트 시간 업데이트
+        function updateLastUpdate() {
+            const now = new Date();
+            const timeString = now.toLocaleString('ko-KR');
+            document.getElementById('lastUpdate').textContent = `마지막 업데이트: ${timeString}`;
+        }
+
+        // Enter 키로 검색 추가
+        document.getElementById('searchKeyword').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                document.getElementById('companyName').focus();
+            }
+        });
+        
+        document.getElementById('companyName').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                document.getElementById('checkInterval').focus();
+            }
+        });
+        
+        document.getElementById('checkInterval').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                addProduct();
+            }
+        });
+    </script>
+</body>
+</html>
