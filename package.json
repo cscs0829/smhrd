@@ -6,7 +6,8 @@
     "dev": "next dev --turbopack",
     "build": "next build --turbopack",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "export:ep-sql": "node scripts/export_ep_sql.mjs"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
