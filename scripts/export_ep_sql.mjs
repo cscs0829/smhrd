@@ -30,6 +30,36 @@ const headerMap = {
   '연령대': 'age_group',
   '성별': 'gender',
   '도시': 'city',
+  // 아래는 이미 영문 헤더로 들어오는 경우가 많아 신원 매핑만 유지
+  'naver_category': 'naver_category',
+  'naver_product_id': 'naver_product_id',
+  'condition': 'condition',
+  'import_flag': 'import_flag',
+  'parallel_import': 'parallel_import',
+  'order_made': 'order_made',
+  'product_flag': 'product_flag',
+  'adult': 'adult',
+  'goods_type': 'goods_type',
+  'barcode': 'barcode',
+  'manufacture_define_number': 'manufacture_define_number',
+  'brand_certification': 'brand_certification',
+  'card_event': 'card_event',
+  'event_words': 'event_words',
+  'coupon': 'coupon',
+  'partner_coupon_download': 'partner_coupon_download',
+  'interest_free_event': 'interest_free_event',
+  'point': 'point',
+  'installation_costs': 'installation_costs',
+  'search_tag': 'search_tag',
+  'group_id': 'group_id',
+  'vendor_id': 'vendor_id',
+  'coordi_id': 'coordi_id',
+  'minimum_purchase_quantity': 'minimum_purchase_quantity',
+  'review_count': 'review_count',
+  'shipping': 'shipping',
+  'attribute': 'attribute',
+  'option_detail': 'option_detail',
+  'seller_id': 'seller_id',
 }
 
 function findExcelPath() {
@@ -107,9 +137,14 @@ function main() {
       const nk = normalizeHeader(k)
       out[nk] = v
     }
-    if (out['price_pc'] != null && out['price_pc'] !== '') out['price_pc'] = Number(out['price_pc'])
-    if (out['benefit_price'] != null && out['benefit_price'] !== '') out['benefit_price'] = Number(out['benefit_price'])
-    if (out['normal_price'] != null && out['normal_price'] !== '') out['normal_price'] = Number(out['normal_price'])
+    // 숫자 컬럼 캐스팅
+    const numericFields = ['price_pc','benefit_price','normal_price','point','installation_costs','minimum_purchase_quantity','review_count']
+    for (const nf of numericFields) {
+      if (out[nf] != null && out[nf] !== '') {
+        const n = Number(out[nf])
+        out[nf] = Number.isFinite(n) ? n : null
+      }
+    }
     if (out['id'] != null) out['id'] = String(out['id'])
     return out
   }).filter(r => r['id'])
@@ -117,14 +152,19 @@ function main() {
   const columns = [
     'id','title','price_pc','benefit_price','normal_price','link','mobile_link',
     'image_link','add_image_link','video_url','category_name1','category_name2',
-    'category_name3','category_name4','brand','maker','origin','age_group','gender','city'
+    'category_name3','category_name4','naver_category','naver_product_id','condition','import_flag',
+    'parallel_import','order_made','product_flag','adult','goods_type','barcode','manufacture_define_number',
+    'brand','brand_certification','maker','origin','card_event','event_words','coupon','partner_coupon_download',
+    'interest_free_event','point','installation_costs','search_tag','group_id','vendor_id','coordi_id',
+    'minimum_purchase_quantity','review_count','shipping','attribute','option_detail','seller_id',
+    'age_group','gender','city'
   ]
 
   const inserts = normalized.map(r => {
     const vals = columns.map(c => {
       const val = r[c]
       if (val === undefined || val === '') return 'NULL'
-      if (['price_pc','benefit_price','normal_price'].includes(c)) {
+      if (['price_pc','benefit_price','normal_price','point','installation_costs','minimum_purchase_quantity','review_count'].includes(c)) {
         const n = Number(val)
         return Number.isFinite(n) ? String(n) : 'NULL'
       }
@@ -144,9 +184,38 @@ function main() {
   category_name2 = excluded.category_name2,
   category_name3 = excluded.category_name3,
   category_name4 = excluded.category_name4,
+  naver_category = excluded.naver_category,
+  naver_product_id = excluded.naver_product_id,
+  condition = excluded.condition,
+  import_flag = excluded.import_flag,
+  parallel_import = excluded.parallel_import,
+  order_made = excluded.order_made,
+  product_flag = excluded.product_flag,
+  adult = excluded.adult,
+  goods_type = excluded.goods_type,
+  barcode = excluded.barcode,
+  manufacture_define_number = excluded.manufacture_define_number,
   brand = excluded.brand,
+  brand_certification = excluded.brand_certification,
   maker = excluded.maker,
   origin = excluded.origin,
+  card_event = excluded.card_event,
+  event_words = excluded.event_words,
+  coupon = excluded.coupon,
+  partner_coupon_download = excluded.partner_coupon_download,
+  interest_free_event = excluded.interest_free_event,
+  point = excluded.point,
+  installation_costs = excluded.installation_costs,
+  search_tag = excluded.search_tag,
+  group_id = excluded.group_id,
+  vendor_id = excluded.vendor_id,
+  coordi_id = excluded.coordi_id,
+  minimum_purchase_quantity = excluded.minimum_purchase_quantity,
+  review_count = excluded.review_count,
+  shipping = excluded.shipping,
+  attribute = excluded.attribute,
+  option_detail = excluded.option_detail,
+  seller_id = excluded.seller_id,
   age_group = excluded.age_group,
   gender = excluded.gender,
   city = excluded.city,
