@@ -29,3 +29,9 @@ dist/
 
 # Misc
 *.local
+
+# Data files (keep out of repo)
+*.xlsx
+*.csv
+public/*.xlsx
+public/*.csv
