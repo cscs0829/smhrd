@@ -2,7 +2,9 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import * as XLSX from 'xlsx'
 import iconv from 'iconv-lite'
+import ExcelJS from 'exceljs'
 import { AIService } from '@/lib/ai-service'
+import { normalizeCityName } from '@/lib/utils'
 
 // Supabase 클라이언트 지연 생성
 function getSupabase() {
@@ -70,6 +72,10 @@ export async function POST(req: NextRequest) {
     const newProducts: Array<Record<string, unknown>> = []
     const updatedEpData = epData ? [...epData] : []
     const deletedProductTitles: string[] = []
+    const backupRows: Array<Record<string, unknown>> = []
+    const deleteIds: string[] = []
+    const titleRows: Array<{ id: string, title: string }> = []
+    const newProductRows: Array<Record<string, unknown>> = []
 
     for (const productId of zeroClickProductIds) {
       const productIndex = updatedEpData.findIndex((p: { id: string }) => String(p.id) === productId)
@@ -78,22 +84,21 @@ export async function POST(req: NextRequest) {
         const deletedProduct = updatedEpData[productIndex]
         deletedProductTitles.push(deletedProduct.title)
 
-        // 4-1. deleted_items 테이블에 백업
-        const { error: backupError } = await supabase.from('deleted_items').insert({
+        // 4-1. deleted_items 테이블에 백업 (배치용으로 모음)
+        backupRows.push({
           original_id: deletedProduct.id,
           original_data: deletedProduct,
           reason: '클릭수 0'
         })
-        if (backupError) console.error(`백업 실패 (ID: ${deletedProduct.id}):`, backupError)
 
-        // 4-2. ep_data 테이블에서 삭제
-        const { error: deleteError } = await supabase.from('ep_data').delete().eq('id', deletedProduct.id)
-        if (deleteError) console.error(`삭제 실패 (ID: ${deletedProduct.id}):`, deleteError)
+        // 4-2. ep_data 테이블에서 삭제 (배치 삭제 예정)
+        deleteIds.push(deletedProduct.id)
 
         // 4-3. 새로운 상품 데이터 생성
         const originalIdParts = productId.split('_')
         const code = originalIdParts[1]
-        const city = originalIdParts[2]
+        const cityCodeOrName = originalIdParts[2]
+        const city = normalizeCityName(cityCodeOrName)
         const currentDate = new Date().toISOString().slice(0, 10).replace(/-/g, '') // YYYYMMDD
 
         // 새로운 ID 생성 (날짜_코드_city_세부번호)
@@ -113,7 +118,14 @@ export async function POST(req: NextRequest) {
         }
 
         // 메인 이미지 및 추가 이미지 링크 생성
-        const citySpecificImages = cityImages?.filter((img: { city: string }) => img.city === city)
+        let citySpecificImages = cityImages?.filter((img: { city: string }) => String(img.city).toLowerCase() === String(city).toLowerCase())
+        if (!citySpecificImages || citySpecificImages.length === 0) {
+          const lcCity = String(city).toLowerCase()
+          citySpecificImages = cityImages?.filter((img: { city: string }) => {
+            const lcImgCity = String(img.city).toLowerCase()
+            return lcImgCity.includes(lcCity) || lcCity.includes(lcImgCity)
+          })
+        }
         let mainImageLink = ''
         let addImageLinks: string[] = []
 
@@ -146,9 +158,8 @@ export async function POST(req: NextRequest) {
         }
         existingTitleSet.add(newTitle.toLowerCase()) // 새로 생성된 제목을 Set에 추가
 
-        // titles 테이블에 새 제목 추가
-        const { error: newTitleError } = await supabase.from('titles').insert({ id: newId, title: newTitle })
-        if (newTitleError) console.error(`새 제목 추가 실패 (ID: ${newId}):`, newTitleError)
+        // titles 테이블에 새 제목 추가 (배치용)
+        titleRows.push({ id: newId, title: newTitle })
 
         const newProduct = {
           ...deletedProduct,
@@ -161,44 +172,80 @@ export async function POST(req: NextRequest) {
         }
         newProducts.push(newProduct)
 
-        // 4-4. ep_data 테이블에 새로운 상품 추가
-        const { error: insertError } = await supabase.from('ep_data').insert(newProduct)
-        if (insertError) console.error(`새 상품 추가 실패 (ID: ${newProduct.id}):`, insertError)
+        // 4-4. ep_data 테이블에 새로운 상품 추가 (배치용)
+        newProductRows.push(newProduct)
       }
     }
 
-    // 5. 최종 Excel 파일 생성
+    // 4-x. 배치 DB 반영
+    if (backupRows.length > 0) {
+      const { error: backupErr } = await supabase.from('deleted_items').insert(backupRows)
+      if (backupErr) console.error('배치 백업 실패:', backupErr)
+    }
+    if (deleteIds.length > 0) {
+      const { error: deleteErr } = await supabase.from('ep_data').delete().in('id', deleteIds)
+      if (deleteErr) console.error('배치 삭제 실패:', deleteErr)
+    }
+    if (titleRows.length > 0) {
+      const { error: titleErr } = await supabase.from('titles').insert(titleRows)
+      if (titleErr) console.error('배치 제목 추가 실패:', titleErr)
+    }
+    if (newProductRows.length > 0) {
+      const { error: insertErr } = await supabase.from('ep_data').insert(newProductRows)
+      if (insertErr) console.error('배치 신규상품 추가 실패:', insertErr)
+    }
+
+    // 5. 최종 Excel 파일 생성 (exceljs로 스타일 확정 적용)
     const finalEpData = await supabase.from('ep_data').select('*')
     if (finalEpData.error) throw finalEpData.error
 
-    const workbook = XLSX.utils.book_new()
-    const worksheet = XLSX.utils.json_to_sheet(finalEpData.data)
+    const workbook = new ExcelJS.Workbook()
+    const worksheet = workbook.addWorksheet('Processed_EP_Data')
 
-    // 제목 중복 여부 확인 및 셀 색상 지정 (새로 생성된 상품과 기존 삭제된 상품의 제목 비교)
-    // const allTitles = new Set(finalEpData.data.map(row => row.title.toLowerCase()))
-    const deletedTitlesSet = new Set(deletedProductTitles.map(title => title.toLowerCase()))
-
-    for (let i = 0; i < finalEpData.data.length; i++) {
-      const row = finalEpData.data[i]
-      const cellRef = XLSX.utils.encode_cell({ r: i + 1, c: 0 }) // 데이터는 1행부터 시작 (헤더 제외)
-
-      // 새로 생성된 상품은 노란색 배경
-      if (newProducts.some(p => p.id === row.id)) {
-        if (!worksheet[cellRef]) worksheet[cellRef] = { t: 's', v: row.id }
-        worksheet[cellRef].s = { fill: { fgColor: { rgb: 'FFFF00' } } } // Yellow
-      }
-
-      // 새로 생성된 제목이 기존 삭제된 상품의 제목과 중복되면 빨간색 배경
-      if (deletedTitlesSet.has(row.title.toLowerCase()) && !newProducts.some(p => p.id === row.id)) {
-        if (!worksheet[cellRef]) worksheet[cellRef] = { t: 's', v: row.id }
-        worksheet[cellRef].s = { fill: { fgColor: { rgb: 'FF0000' } } } // Red
-      }
+    // 헤더 추가
+    if (finalEpData.data.length > 0) {
+      worksheet.columns = Object.keys(finalEpData.data[0]).map((key) => ({ header: key, key }))
     }
 
-    XLSX.utils.book_append_sheet(workbook, worksheet, 'Processed_EP_Data')
-    const excelBuffer = XLSX.write(workbook, { type: 'buffer', bookType: 'xlsx' })
+    // 데이터 추가
+    finalEpData.data.forEach((row) => {
+      worksheet.addRow(row)
+    })
 
-    return new NextResponse(excelBuffer, {
+    // 스타일 적용 기준 준비
+    const deletedTitlesSet = new Set(deletedProductTitles.map((title) => title.toLowerCase()))
+    const newIdSet = new Set(newProducts.map((p) => p.id))
+
+    // 첫 번째 컬럼(id) 셀에만 색상 적용 (요구사항 기준)
+    worksheet.eachRow((row, rowNumber) => {
+      if (rowNumber === 1) return // 헤더 제외
+      const idCell = row.getCell(1)
+      const idValue = String(idCell.value ?? '')
+      const titleCell = row.getCell(2)
+      const titleValue = String(titleCell.value ?? '')
+
+      // 새로 생성된 상품은 노란색
+      if (newIdSet.has(idValue)) {
+        idCell.fill = {
+          type: 'pattern',
+          pattern: 'solid',
+          fgColor: { argb: 'FFFFFF00' },
+        }
+      }
+
+      // 새 제목이 삭제된 상품의 제목과 중복이면 빨간색 (단, 새로 생성된 행은 제외)
+      if (!newIdSet.has(idValue) && deletedTitlesSet.has(titleValue.toLowerCase())) {
+        idCell.fill = {
+          type: 'pattern',
+          pattern: 'solid',
+          fgColor: { argb: 'FFFF0000' },
+        }
+      }
+    })
+
+    const excelBuffer = await workbook.xlsx.writeBuffer()
+
+    return new NextResponse(Buffer.from(excelBuffer), {
       headers: {
         'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
         'Content-Disposition': 'attachment; filename="processed_ep_data.xlsx"',

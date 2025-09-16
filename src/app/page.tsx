@@ -1,103 +1,101 @@
-import Image from "next/image";
+"use client"
+
+import React, { useState } from 'react'
+import { FileUpload } from '@/components/features/FileUpload'
+import { ProcessButton } from '@/components/features/ProcessButton'
+import { AIModelSelector } from '@/components/features/AIModelSelector'
+import { ApiKeyManager } from '@/components/features/ApiKeyManager'
+import { AttachModal } from '@/components/features/AttachModal'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { downloadFile, processFile } from '@/lib/api'
+import { getRecommendedModel } from '@/lib/ai-models'
+import { Toaster } from '@/components/ui/sonner'
 
 export default function Home() {
-  return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  const [file, setFile] = useState<File | null>(null)
+  const [isProcessing, setIsProcessing] = useState(false)
+  const [result, setResult] = useState<{ success: boolean; message: string; downloadUrl?: string } | null>(null)
+  const [selectedModel, setSelectedModel] = useState<string>(getRecommendedModel().id)
+  const [apiKey, setApiKey] = useState<string>('')
+  const [temperature, setTemperature] = useState<number>(0.7)
+  const [maxTokens, setMaxTokens] = useState<number>(100)
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+  const handleFileSelect = (f: File) => {
+    setFile(f)
+    setResult(null)
+  }
+
+  const handleProcess = async () => {
+    if (!file) return
+    try {
+      setIsProcessing(true)
+      setResult(null)
+      const res = await processFile(file)
+      setResult(res)
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : '처리 중 오류가 발생했습니다'
+      setResult({ success: false, message })
+    } finally {
+      setIsProcessing(false)
+    }
+  }
+
+  const handleDownload = () => {
+    if (result?.downloadUrl) {
+      downloadFile(result.downloadUrl, '처리결과.xlsx')
+    }
+  }
+
+  return (
+    <div className="container mx-auto px-4 py-8 space-y-6">
+      <Tabs defaultValue="process" className="w-full">
+        <TabsList className="grid grid-cols-2 w-full sm:w-auto">
+          <TabsTrigger value="process">처리</TabsTrigger>
+          <TabsTrigger value="settings">설정</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="process" className="space-y-4">
+          <div className="flex flex-col md:flex-row gap-4">
+            <div className="flex-1 space-y-4">
+              <AttachModal onFileSelect={handleFileSelect} isProcessing={isProcessing} />
+              <FileUpload onFileSelect={handleFileSelect} isProcessing={isProcessing} />
+              <ProcessButton 
+                onProcess={handleProcess}
+                onDownload={handleDownload}
+                isProcessing={isProcessing}
+                hasFile={!!file}
+                result={result}
+              />
+            </div>
+
+            <div className="w-full md:w-[380px]">
+              <AIModelSelector
+                selectedModel={selectedModel}
+                onModelChange={setSelectedModel}
+                apiKey={apiKey}
+                onApiKeyChange={setApiKey}
+                temperature={temperature}
+                onTemperatureChange={setTemperature}
+                maxTokens={maxTokens}
+                onMaxTokensChange={setMaxTokens}
+              />
+            </div>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="settings">
+          <Card>
+            <CardHeader>
+              <CardTitle>API 키 관리</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ApiKeyManager />
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
+      <Toaster richColors position="top-right" />
     </div>
   );
 }
