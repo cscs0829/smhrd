@@ -1,13 +1,3 @@
--- Initial schema for EP auto delete/add system
-
--- Drop if exists (safe init; comment out in production if needed)
-drop table if exists public.deleted_items cascade;
-drop table if exists public.titles cascade;
-drop table if exists public.city_images cascade;
-drop table if exists public.ep_data cascade;
-drop table if exists public.api_keys cascade;
-drop table if exists public.ai_model_settings cascade;
-
 -- 1) ep_data: product master
 create table public.ep_data (
   id               text primary key,

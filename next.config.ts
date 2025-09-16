@@ -1,4 +1,4 @@
-import type { NextConfig } from "next";
+// next types are optional here; keep config untyped to avoid type resolution issues in some envs
 
 const securityHeaders = [
   { key: 'Strict-Transport-Security', value: 'max-age=63072000; includeSubDomains; preload' },
@@ -11,14 +11,18 @@ const securityHeaders = [
     value: [
       "default-src 'self'",
       "img-src 'self' data: https:",
-      "script-src 'self' 'unsafe-inline'",
-      "style-src 'self' 'unsafe-inline'",
-      "connect-src 'self' https:"
+      "script-src 'self' 'unsafe-inline' 'strict-dynamic' https:",
+      "style-src 'self' 'unsafe-inline' https:",
+      "font-src 'self' data: https:",
+      "connect-src 'self' https: wss:",
+      "frame-ancestors 'none'",
+      "base-uri 'self'",
+      "form-action 'self'"
     ].join('; ')
   }
 ]
 
-const nextConfig: NextConfig = {
+const nextConfig = {
   async headers() {
     return [
       {
