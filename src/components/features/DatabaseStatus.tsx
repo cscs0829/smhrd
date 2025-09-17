@@ -189,7 +189,7 @@ export function DatabaseStatus() {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {safeRecentData.ep_data?.map((item) => (
+                        {(safeRecentData.ep_data || []).map((item) => (
                           <TableRow key={item.id}>
                             <TableCell className="font-mono text-xs">{item.id}</TableCell>
                             <TableCell className="max-w-xs truncate">{item.title}</TableCell>
@@ -216,7 +216,7 @@ export function DatabaseStatus() {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {safeRecentData.city_images?.map((item) => (
+                        {(safeRecentData.city_images || []).map((item) => (
                           <TableRow key={item.id}>
                             <TableCell>{item.id}</TableCell>
                             <TableCell>{item.city}</TableCell>
@@ -252,7 +252,7 @@ export function DatabaseStatus() {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {safeRecentData.api_keys?.map((item) => (
+                        {(safeRecentData.api_keys || []).map((item) => (
                           <TableRow key={item.id}>
                             <TableCell>{item.id}</TableCell>
                             <TableCell>
