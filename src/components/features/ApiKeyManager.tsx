@@ -13,6 +13,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Key, Plus, Edit, Trash2, Eye, EyeOff, Shield, AlertTriangle, CheckCircle, RefreshCw } from 'lucide-react'
 import { toast } from 'sonner'
 import { useApiKeys } from '@/contexts/ApiKeyContext'
+import { useSpring, animated } from '@react-spring/web' // Context7 React Spring 패턴
 
 interface ApiKey {
   id: number
@@ -41,6 +42,34 @@ export function ApiKeyManager() {
     description: '',
     apiKey: ''
   })
+
+  // Context7 React Spring 패턴: 새로고침 버튼 애니메이션
+  const [refreshSprings, refreshApi] = useSpring(() => ({
+    scale: 1,
+    rotate: 0,
+    config: { tension: 300, friction: 20 }
+  }))
+
+  // Context7 React Spring 패턴: 활성화 버튼 애니메이션
+  const [buttonSprings, buttonApi] = useSpring(() => ({
+    scale: 1,
+    opacity: 1,
+    config: { tension: 400, friction: 25 }
+  }))
+
+  // Context7 React Spring 패턴: 테이블 행 애니메이션
+  const [rowSprings, rowApi] = useSpring(() => ({
+    opacity: 1,
+    y: 0,
+    config: { tension: 300, friction: 30 }
+  }))
+
+  // Context7 React Spring 패턴: 컴포넌트 마운트 시 애니메이션
+  const [mountSprings] = useSpring(() => ({
+    from: { opacity: 0, y: 20 },
+    to: { opacity: 1, y: 0 },
+    config: { tension: 300, friction: 30 }
+  }))
 
   // API 키 저장/수정 함수
   const handleSave = async () => {
@@ -277,7 +306,10 @@ export function ApiKeyManager() {
 
   // 메인 렌더링
   return (
-    <div className="space-y-4">
+    <animated.div 
+      className="space-y-4"
+      style={mountSprings}
+    >
       <div className="flex justify-between items-center">
         <div>
           <h3 className="text-lg font-medium">API 키 목록</h3>
@@ -285,13 +317,36 @@ export function ApiKeyManager() {
         </div>
         <div className="flex gap-2">
           <Button 
-            onClick={() => { loadApiKeys(true) }} 
+            onClick={() => { 
+              // Context7 React Spring 패턴: 클릭 시 애니메이션 트리거
+              refreshApi.start({
+                from: { scale: 1, rotate: 0 },
+                to: [
+                  { scale: 0.95, rotate: 180 },
+                  { scale: 1, rotate: 360 }
+                ],
+                onRest: () => {
+                  refreshApi.start({ scale: 1, rotate: 0 })
+                }
+              })
+              loadApiKeys(true) 
+            }} 
             variant="outline" 
             size="sm"
             disabled={loading}
           >
-            <RefreshCw className={`mr-2 h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
-            새로고침
+            <animated.div
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                ...refreshSprings
+              }}
+            >
+              <RefreshCw 
+                className={`mr-2 h-4 w-4 ${loading ? 'animate-spin' : ''}`}
+              />
+              새로고침
+            </animated.div>
           </Button>
           <Button onClick={() => setOpen(true)}>
             <Plus className="mr-2 h-4 w-4" />
@@ -312,8 +367,13 @@ export function ApiKeyManager() {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {apiKeys.map((key) => (
-            <TableRow key={key.id}>
+          {apiKeys.map((key, index) => (
+            <animated.tr 
+              key={key.id}
+              style={{
+                ...rowSprings
+              }}
+            >
               <TableCell>
                 <div className="flex items-center gap-2">
                   <span className="text-lg">{getProviderIcon(key.provider)}</span>
@@ -376,30 +436,46 @@ export function ApiKeyManager() {
                   >
                     <Edit className="h-4 w-4" />
                   </Button>
-                  <Button
-                    variant={key.isActive ? "destructive" : "default"}
-                    size="sm"
-                    onClick={() => handleToggleActive(key.id)}
-                    disabled={actionLoading[key.id]}
-                    className={key.isActive ? "hover:bg-red-100" : "hover:bg-green-100"}
+                  <animated.div
+                    style={{
+                      ...buttonSprings
+                    }}
                   >
-                    {actionLoading[key.id] ? (
-                      <>
-                        <div className="mr-1 h-3 w-3 animate-spin rounded-full border-2 border-current border-t-transparent" />
-                        처리중...
-                      </>
-                    ) : key.isActive ? (
-                      <>
-                        <Shield className="mr-1 h-3 w-3" />
-                        비활성화
-                      </>
-                    ) : (
-                      <>
-                        <CheckCircle className="mr-1 h-3 w-3" />
-                        활성화
-                      </>
-                    )}
-                  </Button>
+                    <Button
+                      variant={key.isActive ? "destructive" : "default"}
+                      size="sm"
+                      onClick={() => {
+                        // Context7 React Spring 패턴: 버튼 클릭 애니메이션
+                        buttonApi.start({
+                          from: { scale: 1, opacity: 1 },
+                          to: [
+                            { scale: 0.9, opacity: 0.8 },
+                            { scale: 1, opacity: 1 }
+                          ]
+                        })
+                        handleToggleActive(key.id)
+                      }}
+                      disabled={actionLoading[key.id]}
+                      className={key.isActive ? "hover:bg-red-100" : "hover:bg-green-100"}
+                    >
+                      {actionLoading[key.id] ? (
+                        <>
+                          <div className="mr-1 h-3 w-3 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                          처리중...
+                        </>
+                      ) : key.isActive ? (
+                        <>
+                          <Shield className="mr-1 h-3 w-3" />
+                          비활성화
+                        </>
+                      ) : (
+                        <>
+                          <CheckCircle className="mr-1 h-3 w-3" />
+                          활성화
+                        </>
+                      )}
+                    </Button>
+                  </animated.div>
                   <Button
                     variant="ghost"
                     size="sm"
@@ -415,7 +491,7 @@ export function ApiKeyManager() {
                   </Button>
                 </div>
               </TableCell>
-            </TableRow>
+            </animated.tr>
           ))}
         </TableBody>
       </Table>
@@ -495,6 +571,6 @@ export function ApiKeyManager() {
           </div>
         </DialogContent>
       </Dialog>
-    </div>
+    </animated.div>
   )
 }
