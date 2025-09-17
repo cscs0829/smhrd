@@ -45,13 +45,16 @@ export function ApiKeyProvider({ children }: ApiKeyProviderProps) {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  // localStorage에서 API 키 상태 복원
+  // Context7 persistent storage 패턴: 더 구체적인 localStorage 키 사용
+  const STORAGE_KEY = 'ep-api-keys-persistent'
+  
   const loadApiKeysFromStorage = (): ApiKey[] => {
     try {
-      const stored = localStorage.getItem('api-keys')
+      const stored = localStorage.getItem(STORAGE_KEY)
       if (stored) {
         const parsed = JSON.parse(stored)
         if (Array.isArray(parsed)) {
+          console.log('localStorage에서 API 키 로드:', parsed.length, '개')
           return parsed
         }
       }
@@ -61,10 +64,10 @@ export function ApiKeyProvider({ children }: ApiKeyProviderProps) {
     return []
   }
 
-  // localStorage에 API 키 상태 저장
   const saveApiKeysToStorage = (keys: ApiKey[]) => {
     try {
-      localStorage.setItem('api-keys', JSON.stringify(keys))
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(keys))
+      console.log('localStorage에 API 키 저장:', keys.length, '개')
     } catch (error) {
       console.warn('localStorage에 API 키 저장 실패:', error)
     }
@@ -88,31 +91,42 @@ export function ApiKeyProvider({ children }: ApiKeyProviderProps) {
     }
   }
 
-  // API 키 로드 함수 - DB 우선, localStorage 백업
+  // Context7 persistent storage 패턴: localStorage 우선, DB는 데이터만 동기화
   const loadApiKeys = async (forceRefresh = false) => {
     try {
       setLoading(true)
       setError(null)
       
-      // 강제 새로고침이 아니고 localStorage에 데이터가 있으면 먼저 표시 (빠른 로딩)
-      if (!forceRefresh) {
-        const cachedKeys = loadApiKeysFromStorage()
-        if (cachedKeys.length > 0) {
-          setApiKeys(cachedKeys)
-          // 백그라운드에서 DB에서 최신 데이터 가져오기
+      // 1. localStorage에서 활성화 상태 포함한 데이터 로드 (Context7 패턴)
+      const cachedKeys = loadApiKeysFromStorage()
+      if (cachedKeys.length > 0) {
+        setApiKeys(cachedKeys)
+        setLoading(false)
+        
+        // 2. 백그라운드에서 DB 데이터와 병합 (활성화 상태는 localStorage 우선)
+        if (!forceRefresh) {
           try {
             const dbKeys = await loadFromDatabase()
-            setApiKeys(dbKeys)
-            saveApiKeysToStorage(dbKeys)
+            // DB 데이터와 localStorage 데이터를 병합 (활성화 상태는 localStorage 우선)
+            const mergedKeys = dbKeys.map(dbKey => {
+              const cachedKey = cachedKeys.find(cached => cached.id === dbKey.id)
+              return cachedKey ? { ...dbKey, isActive: cachedKey.isActive } : dbKey
+            })
+            
+            // 새로 추가된 키들만 추가
+            const newKeys = dbKeys.filter(dbKey => !cachedKeys.find(cached => cached.id === dbKey.id))
+            const finalKeys = [...mergedKeys, ...newKeys]
+            
+            setApiKeys(finalKeys)
+            saveApiKeysToStorage(finalKeys)
           } catch (dbError) {
             console.warn('DB 동기화 실패, 캐시된 데이터 사용:', dbError)
           }
-          setLoading(false)
-          return
         }
+        return
       }
       
-      // DB에서 데이터 로드
+      // 3. localStorage에 데이터가 없으면 DB에서 로드
       const dbKeys = await loadFromDatabase()
       setApiKeys(dbKeys)
       saveApiKeysToStorage(dbKeys)
@@ -191,25 +205,35 @@ export function ApiKeyProvider({ children }: ApiKeyProviderProps) {
     loadApiKeys(false)
   }, [])
 
-  // Context7 패턴: 상태 변경 시 즉시 localStorage에 저장
+  // Context7 persistent storage 패턴: 상태 변경 시 즉시 localStorage에 저장
   useEffect(() => {
     if (apiKeys.length > 0) {
       saveApiKeysToStorage(apiKeys)
     }
   }, [apiKeys])
 
-  // 페이지 새로고침 전에 현재 상태를 localStorage에 저장 (추가 보장)
+  // Context7 패턴: 페이지 새로고침 전에 현재 상태를 localStorage에 저장 (추가 보장)
   useEffect(() => {
     const handleBeforeUnload = () => {
       if (apiKeys.length > 0) {
         saveApiKeysToStorage(apiKeys)
+        console.log('페이지 새로고침 전 상태 저장 완료')
+      }
+    }
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'hidden' && apiKeys.length > 0) {
+        saveApiKeysToStorage(apiKeys)
+        console.log('페이지 숨김 시 상태 저장 완료')
       }
     }
 
     window.addEventListener('beforeunload', handleBeforeUnload)
+    document.addEventListener('visibilitychange', handleVisibilityChange)
     
     return () => {
       window.removeEventListener('beforeunload', handleBeforeUnload)
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
     }
   }, [apiKeys])
 
