@@ -10,7 +10,7 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { Key, Plus, Edit, Trash2, Eye, EyeOff, Shield, AlertTriangle, CheckCircle } from 'lucide-react'
+import { Key, Plus, Edit, Trash2, Eye, EyeOff, Shield, AlertTriangle, CheckCircle, RefreshCw } from 'lucide-react'
 import { toast } from 'sonner'
 
 interface ApiKey {
@@ -48,11 +48,45 @@ export function ApiKeyManager() {
     loadApiKeys()
   }, [])
 
+  // localStorage에서 API 키 상태 복원
+  const loadApiKeysFromStorage = () => {
+    try {
+      const stored = localStorage.getItem('api-keys')
+      if (stored) {
+        const parsed = JSON.parse(stored)
+        if (Array.isArray(parsed)) {
+          return parsed
+        }
+      }
+    } catch (error) {
+      console.warn('localStorage에서 API 키 로드 실패:', error)
+    }
+    return []
+  }
+
+  // localStorage에 API 키 상태 저장
+  const saveApiKeysToStorage = (keys: ApiKey[]) => {
+    try {
+      localStorage.setItem('api-keys', JSON.stringify(keys))
+    } catch (error) {
+      console.warn('localStorage에 API 키 저장 실패:', error)
+    }
+  }
+
   // API 키 로드 함수
-  const loadApiKeys = async () => {
+  const loadApiKeys = async (forceRefresh = false) => {
     try {
       setLoading(true)
       setError(null)
+      
+      // 강제 새로고침이 아니고 localStorage에 데이터가 있으면 먼저 표시
+      if (!forceRefresh) {
+        const cachedKeys = loadApiKeysFromStorage()
+        if (cachedKeys.length > 0) {
+          setApiKeys(cachedKeys)
+          setLoading(false)
+        }
+      }
       
       const response = await fetch('/api/api-keys')
       if (!response.ok) {
@@ -64,15 +98,25 @@ export function ApiKeyManager() {
       // 응답 데이터 검증
       if (result && Array.isArray(result.data)) {
         setApiKeys(result.data)
+        saveApiKeysToStorage(result.data) // localStorage에 저장
       } else {
         console.warn('API 응답 데이터가 예상 형식이 아닙니다:', result)
         setApiKeys([])
+        saveApiKeysToStorage([])
       }
     } catch (error) {
       console.error('API 키 로드 오류:', error)
       const errorMessage = error instanceof Error ? error.message : 'API 키를 불러오는데 실패했습니다'
       setError(errorMessage)
-      setApiKeys([]) // 오류 시 빈 배열로 설정
+      
+      // API 오류 시 localStorage에서 복원 시도
+      const cachedKeys = loadApiKeysFromStorage()
+      if (cachedKeys.length > 0) {
+        setApiKeys(cachedKeys)
+        setError(null) // 캐시된 데이터가 있으면 에러 해제
+      } else {
+        setApiKeys([])
+      }
     } finally {
       setLoading(false)
     }
@@ -107,9 +151,11 @@ export function ApiKeyManager() {
         const result = await response.json()
         
         // 서버에서 반환된 데이터로 상태 업데이트
-        setApiKeys(prev => prev.map(key => 
+        const updatedKeys = apiKeys.map(key => 
           key.id === editingKey.id ? { ...key, ...result.data } : key
-        ))
+        )
+        setApiKeys(updatedKeys)
+        saveApiKeysToStorage(updatedKeys) // localStorage에 저장
         toast.success('API 키가 수정되었습니다')
       } else {
         // 추가
@@ -131,7 +177,9 @@ export function ApiKeyManager() {
         const result = await response.json()
         
         // 서버에서 반환된 데이터로 상태 업데이트
-        setApiKeys(prev => [...prev, result.data])
+        const updatedKeys = [...apiKeys, result.data]
+        setApiKeys(updatedKeys)
+        saveApiKeysToStorage(updatedKeys) // localStorage에 저장
         toast.success('API 키가 추가되었습니다')
       }
 
@@ -163,7 +211,9 @@ export function ApiKeyManager() {
       }
       
       // 삭제 성공 시 상태에서 제거
-      setApiKeys(prev => prev.filter(key => key.id !== id))
+      const updatedKeys = apiKeys.filter(key => key.id !== id)
+      setApiKeys(updatedKeys)
+      saveApiKeysToStorage(updatedKeys) // localStorage에 저장
       toast.success('API 키가 삭제되었습니다')
     } catch (error) {
       console.error('API 키 삭제 오류:', error)
@@ -206,9 +256,11 @@ export function ApiKeyManager() {
       const result = await response.json()
       
       // 서버에서 반환된 데이터로 상태 업데이트
-      setApiKeys(prev => prev.map(k => 
+      const updatedKeys = apiKeys.map(k => 
         k.id === id ? { ...k, isActive: result.data.is_active } : k
-      ))
+      )
+      setApiKeys(updatedKeys)
+      saveApiKeysToStorage(updatedKeys) // localStorage에 저장
       
       toast.success(`API 키가 ${newActiveState ? '활성화' : '비활성화'}되었습니다`)
     } catch (error) {
@@ -286,7 +338,7 @@ export function ApiKeyManager() {
       <div className="text-center py-8">
         <AlertTriangle className="h-12 w-12 text-red-400 mx-auto mb-4" />
         <p className="text-red-500 mb-4">{error}</p>
-        <Button onClick={loadApiKeys} variant="outline">
+        <Button onClick={() => loadApiKeys()} variant="outline">
           다시 시도
         </Button>
       </div>
@@ -315,10 +367,21 @@ export function ApiKeyManager() {
           <h3 className="text-lg font-medium">API 키 목록</h3>
           <p className="text-sm text-gray-500">총 {apiKeys.length}개의 API 키가 등록되어 있습니다</p>
         </div>
-        <Button onClick={() => setOpen(true)}>
-          <Plus className="mr-2 h-4 w-4" />
-          API 키 추가
-        </Button>
+        <div className="flex gap-2">
+          <Button 
+            onClick={() => { loadApiKeys(true) }} 
+            variant="outline" 
+            size="sm"
+            disabled={loading}
+          >
+            <RefreshCw className={`mr-2 h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+            새로고침
+          </Button>
+          <Button onClick={() => setOpen(true)}>
+            <Plus className="mr-2 h-4 w-4" />
+            API 키 추가
+          </Button>
+        </div>
       </div>
 
       <Table>
