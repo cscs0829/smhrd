@@ -130,13 +130,20 @@ export async function POST(req: NextRequest) {
 
         if (citySpecificImages && citySpecificImages.length > 0) {
           const mainImages = citySpecificImages.filter((img: { is_main_image: number }) => img.is_main_image === 1)
+          
           if (mainImages.length > 0) {
+            // 메인 이미지가 있는 경우: 선택된 메인 이미지만 제외하고 나머지 모든 이미지를 랜덤으로 10개 선택
             mainImageLink = mainImages[Math.floor(Math.random() * mainImages.length)].image_link
+            
+            // 선택된 메인 이미지만 제외하고, 나머지 모든 이미지(다른 메인 이미지 포함)를 추가 이미지로 사용
+            const otherImages = citySpecificImages.filter((img: { image_link: string }) => img.image_link !== mainImageLink)
+            const shuffledOtherImages = otherImages.sort(() => 0.5 - Math.random())
+            addImageLinks = shuffledOtherImages.slice(0, 10).map((img: { image_link: string }) => img.image_link)
+          } else {
+            // 메인 이미지가 없는 경우: 모든 이미지를 랜덤으로 10개 선택
+            const shuffledAllImages = citySpecificImages.sort(() => 0.5 - Math.random())
+            addImageLinks = shuffledAllImages.slice(0, 10).map((img: { image_link: string }) => img.image_link)
           }
-
-          const otherImages = citySpecificImages.filter((img: { image_link: string }) => img.image_link !== mainImageLink)
-          const shuffledOtherImages = otherImages.sort(() => 0.5 - Math.random())
-          addImageLinks = shuffledOtherImages.slice(0, 10).map((img: { image_link: string }) => img.image_link)
         }
 
         // AI를 이용한 제목 생성
