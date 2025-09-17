@@ -139,27 +139,27 @@ export async function POST(req: NextRequest) {
             const otherImages = citySpecificImages.filter((img: { image_link: string }) => img.image_link !== mainImageLink)
             const shuffledOtherImages = otherImages.sort(() => 0.5 - Math.random())
             
-            // 정확히 10장이 되도록 반복해서 채우기
+            // 정확히 10장이 되도록 채우기 (이미지가 부족하면 빈칸으로)
             addImageLinks = []
             for (let i = 0; i < 10; i++) {
-              if (shuffledOtherImages.length > 0) {
-                addImageLinks.push(shuffledOtherImages[i % shuffledOtherImages.length].image_link)
+              if (i < shuffledOtherImages.length) {
+                addImageLinks.push(shuffledOtherImages[i].image_link)
               } else {
-                // 다른 이미지가 없는 경우 메인 이미지도 사용
-                addImageLinks.push(mainImageLink)
+                // 이미지가 부족한 경우 빈칸으로 채우기
+                addImageLinks.push('')
               }
             }
           } else {
             // 메인 이미지가 없는 경우: 모든 이미지를 랜덤으로 10개 선택
             const shuffledAllImages = citySpecificImages.sort(() => 0.5 - Math.random())
             
-            // 정확히 10장이 되도록 반복해서 채우기
+            // 정확히 10장이 되도록 채우기 (이미지가 부족하면 빈칸으로)
             addImageLinks = []
             for (let i = 0; i < 10; i++) {
-              if (shuffledAllImages.length > 0) {
-                addImageLinks.push(shuffledAllImages[i % shuffledAllImages.length].image_link)
+              if (i < shuffledAllImages.length) {
+                addImageLinks.push(shuffledAllImages[i].image_link)
               } else {
-                // 이미지가 없는 경우 빈 문자열로 채우기
+                // 이미지가 부족한 경우 빈칸으로 채우기
                 addImageLinks.push('')
               }
             }
