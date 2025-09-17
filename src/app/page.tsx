@@ -7,6 +7,7 @@ import { AIModelSelector } from '@/components/features/AIModelSelector'
 import { ApiKeyManager } from '@/components/features/ApiKeyManager'
 import { AttachModal } from '@/components/features/AttachModal'
 import { DatabaseStatus } from '@/components/features/DatabaseStatus'
+import { DuplicateSearch } from '@/components/features/DuplicateSearch'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { downloadFile, processFile } from '@/lib/api'
@@ -61,8 +62,9 @@ export default function Home() {
   return (
     <div className="container mx-auto px-4 py-8 space-y-6">
       <Tabs defaultValue="process" value={activeTab} onValueChange={handleTabChange} className="w-full">
-        <TabsList className="grid grid-cols-3 w-full sm:w-auto">
+        <TabsList className="grid grid-cols-4 w-full sm:w-auto">
           <TabsTrigger value="process">처리</TabsTrigger>
+          <TabsTrigger value="duplicate">중복 검색기</TabsTrigger>
           <TabsTrigger value="settings">설정</TabsTrigger>
           <TabsTrigger value="database">데이터베이스</TabsTrigger>
         </TabsList>
@@ -94,9 +96,13 @@ export default function Home() {
               />
             </div>
           </div>
-        </TabsContent>
+              </TabsContent>
 
-        <TabsContent value="settings">
+              <TabsContent value="duplicate">
+                <DuplicateSearch onRefresh={dbRefreshTrigger} />
+              </TabsContent>
+
+              <TabsContent value="settings">
           <Card>
             <CardHeader>
               <CardTitle>API 키 관리</CardTitle>
