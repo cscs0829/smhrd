@@ -1,6 +1,6 @@
 'use client'
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react'
+import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react'
 import { toast } from 'sonner'
 
 interface ApiKey {
@@ -92,7 +92,7 @@ export function ApiKeyProvider({ children }: ApiKeyProviderProps) {
   }
 
   // Context7 persistent storage 패턴: localStorage 우선, DB는 데이터만 동기화
-  const loadApiKeys = async (forceRefresh = false) => {
+  const loadApiKeys = useCallback(async (forceRefresh = false) => {
     try {
       setLoading(true)
       setError(null)
@@ -148,7 +148,7 @@ export function ApiKeyProvider({ children }: ApiKeyProviderProps) {
     } finally {
       setLoading(false)
     }
-  }
+  }, [loadApiKeysFromStorage, loadFromDatabase, saveApiKeysToStorage])
 
   // API 키 추가
   const addApiKey = (key: ApiKey) => {

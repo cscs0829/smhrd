@@ -37,7 +37,14 @@ export async function POST(request: NextRequest) {
     }
 
     // 결과를 통합하고 일치 유형 분류
-    const results = []
+    const results: Array<{
+      id: string
+      title: string
+      city: string
+      type: 'ep_data' | 'deleted_items'
+      created_at: string
+      match_type: 'exact' | 'partial'
+    }> = []
 
     // EP 데이터 결과 처리
     if (epData) {
