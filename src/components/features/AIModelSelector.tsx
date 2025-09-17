@@ -13,18 +13,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Cpu, Settings, Key, DollarSign, Zap, Shield, Info } from 'lucide-react'
 import { getAvailableModels } from '@/lib/ai-models'
 import { toast } from 'sonner'
-
-interface ApiKey {
-  id: number
-  provider: 'openai' | 'gemini'
-  name: string
-  description?: string
-  apiKey: string
-  isActive: boolean
-  createdAt: string
-  lastUsedAt?: string
-  usageCount: number
-}
+import { useApiKeys } from '@/contexts/ApiKeyContext'
 
 interface AIModelSelectorProps {
   selectedModel: string
@@ -47,43 +36,22 @@ export function AIModelSelector({
   maxTokens = 100,
   onMaxTokensChange
 }: AIModelSelectorProps) {
+  const { apiKeys } = useApiKeys() // 전역 상태에서 API 키 가져오기
   const [open, setOpen] = useState(false)
   const [selectedProvider, setSelectedProvider] = useState<'openai' | 'gemini'>('openai')
-  const [apiKeys, setApiKeys] = useState<ApiKey[]>([])
   const [tempApiKeyId, setTempApiKeyId] = useState(selectedApiKeyId || 0)
   const [tempTemperature, setTempTemperature] = useState(temperature)
   const [tempMaxTokens, setTempMaxTokens] = useState(maxTokens)
-  const [loading, setLoading] = useState(false)
 
   const availableModels = getAvailableModels()
   const selectedModelInfo = availableModels.find(model => model.id === selectedModel)
   const selectedApiKey = apiKeys.find(key => key.id === selectedApiKeyId)
-
-  // API 키 로드
-  const loadApiKeys = async () => {
-    try {
-      setLoading(true)
-      const response = await fetch('/api/api-keys')
-      if (response.ok) {
-        const result = await response.json()
-        setApiKeys(Array.isArray(result.data) ? result.data : [])
-      }
-    } catch (error) {
-      console.error('API 키 로드 오류:', error)
-    } finally {
-      setLoading(false)
-    }
-  }
 
   useEffect(() => {
     if (selectedModelInfo) {
       setSelectedProvider(selectedModelInfo.provider)
     }
   }, [selectedModelInfo])
-
-  useEffect(() => {
-    loadApiKeys()
-  }, [])
 
   const handleSave = () => {
     if (!tempApiKeyId) {
