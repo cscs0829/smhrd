@@ -138,11 +138,31 @@ export async function POST(req: NextRequest) {
             // 선택된 메인 이미지만 제외하고, 나머지 모든 이미지(다른 메인 이미지 포함)를 추가 이미지로 사용
             const otherImages = citySpecificImages.filter((img: { image_link: string }) => img.image_link !== mainImageLink)
             const shuffledOtherImages = otherImages.sort(() => 0.5 - Math.random())
-            addImageLinks = shuffledOtherImages.slice(0, 10).map((img: { image_link: string }) => img.image_link)
+            
+            // 정확히 10장이 되도록 반복해서 채우기
+            addImageLinks = []
+            for (let i = 0; i < 10; i++) {
+              if (shuffledOtherImages.length > 0) {
+                addImageLinks.push(shuffledOtherImages[i % shuffledOtherImages.length].image_link)
+              } else {
+                // 다른 이미지가 없는 경우 메인 이미지도 사용
+                addImageLinks.push(mainImageLink)
+              }
+            }
           } else {
             // 메인 이미지가 없는 경우: 모든 이미지를 랜덤으로 10개 선택
             const shuffledAllImages = citySpecificImages.sort(() => 0.5 - Math.random())
-            addImageLinks = shuffledAllImages.slice(0, 10).map((img: { image_link: string }) => img.image_link)
+            
+            // 정확히 10장이 되도록 반복해서 채우기
+            addImageLinks = []
+            for (let i = 0; i < 10; i++) {
+              if (shuffledAllImages.length > 0) {
+                addImageLinks.push(shuffledAllImages[i % shuffledAllImages.length].image_link)
+              } else {
+                // 이미지가 없는 경우 빈 문자열로 채우기
+                addImageLinks.push('')
+              }
+            }
           }
         }
 
