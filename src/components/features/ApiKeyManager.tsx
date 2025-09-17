@@ -33,6 +33,7 @@ export function ApiKeyManager() {
   const [showKeys, setShowKeys] = useState<Record<number, boolean>>({})
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [actionLoading, setActionLoading] = useState<{ [key: number]: boolean }>({})
 
   // 폼 상태
   const [formData, setFormData] = useState({
@@ -104,7 +105,11 @@ export function ApiKeyManager() {
         }
         
         const result = await response.json()
-        setApiKeys(prev => prev.map(key => key.id === editingKey.id ? result.data : key))
+        
+        // 서버에서 반환된 데이터로 상태 업데이트
+        setApiKeys(prev => prev.map(key => 
+          key.id === editingKey.id ? { ...key, ...result.data } : key
+        ))
         toast.success('API 키가 수정되었습니다')
       } else {
         // 추가
@@ -124,6 +129,8 @@ export function ApiKeyManager() {
         }
         
         const result = await response.json()
+        
+        // 서버에서 반환된 데이터로 상태 업데이트
         setApiKeys(prev => [...prev, result.data])
         toast.success('API 키가 추가되었습니다')
       }
@@ -140,51 +147,76 @@ export function ApiKeyManager() {
 
   // API 키 삭제 함수
   const handleDelete = async (id: number) => {
+    if (actionLoading[id]) return // 이미 처리 중이면 무시
     if (!confirm('정말로 이 API 키를 삭제하시겠습니까?')) return
 
     try {
+      setActionLoading(prev => ({ ...prev, [id]: true }))
+      
       const response = await fetch(`/api/api-keys?id=${id}`, {
         method: 'DELETE'
       })
       
       if (!response.ok) {
-        throw new Error('API 키 삭제에 실패했습니다')
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(errorData.error || 'API 키 삭제에 실패했습니다')
       }
       
+      // 삭제 성공 시 상태에서 제거
       setApiKeys(prev => prev.filter(key => key.id !== id))
       toast.success('API 키가 삭제되었습니다')
     } catch (error) {
       console.error('API 키 삭제 오류:', error)
-      toast.error('API 키 삭제에 실패했습니다')
+      const message = error instanceof Error ? error.message : 'API 키 삭제에 실패했습니다'
+      toast.error(message)
+    } finally {
+      setActionLoading(prev => ({ ...prev, [id]: false }))
     }
   }
 
   // API 키 활성화/비활성화 함수
   const handleToggleActive = async (id: number) => {
+    if (actionLoading[id]) return // 이미 처리 중이면 무시
+    
     try {
+      setActionLoading(prev => ({ ...prev, [id]: true }))
+      
       const key = apiKeys.find(k => k.id === id)
-      if (!key) return
+      if (!key) {
+        toast.error('API 키를 찾을 수 없습니다')
+        return
+      }
+      
+      const newActiveState = !key.isActive
       
       const response = await fetch('/api/api-keys', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           id: id,
-          isActive: !key.isActive
+          isActive: newActiveState
         })
       })
       
       if (!response.ok) {
-        throw new Error('API 키 상태 변경에 실패했습니다')
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(errorData.error || 'API 키 상태 변경에 실패했습니다')
       }
       
+      const result = await response.json()
+      
+      // 서버에서 반환된 데이터로 상태 업데이트
       setApiKeys(prev => prev.map(k => 
-        k.id === id ? { ...k, isActive: !k.isActive } : k
+        k.id === id ? { ...k, isActive: result.data.is_active } : k
       ))
-      toast.success('API 키 상태가 변경되었습니다')
+      
+      toast.success(`API 키가 ${newActiveState ? '활성화' : '비활성화'}되었습니다`)
     } catch (error) {
       console.error('API 키 상태 변경 오류:', error)
-      toast.error('API 키 상태 변경에 실패했습니다')
+      const message = error instanceof Error ? error.message : 'API 키 상태 변경에 실패했습니다'
+      toast.error(message)
+    } finally {
+      setActionLoading(prev => ({ ...prev, [id]: false }))
     }
   }
 
@@ -366,19 +398,41 @@ export function ApiKeyManager() {
                     <Edit className="h-4 w-4" />
                   </Button>
                   <Button
-                    variant="ghost"
+                    variant={key.isActive ? "destructive" : "default"}
                     size="sm"
                     onClick={() => handleToggleActive(key.id)}
+                    disabled={actionLoading[key.id]}
+                    className={key.isActive ? "hover:bg-red-100" : "hover:bg-green-100"}
                   >
-                    {key.isActive ? '비활성화' : '활성화'}
+                    {actionLoading[key.id] ? (
+                      <>
+                        <div className="mr-1 h-3 w-3 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                        처리중...
+                      </>
+                    ) : key.isActive ? (
+                      <>
+                        <Shield className="mr-1 h-3 w-3" />
+                        비활성화
+                      </>
+                    ) : (
+                      <>
+                        <CheckCircle className="mr-1 h-3 w-3" />
+                        활성화
+                      </>
+                    )}
                   </Button>
                   <Button
                     variant="ghost"
                     size="sm"
                     onClick={() => handleDelete(key.id)}
-                    className="text-red-600 hover:text-red-700"
+                    disabled={actionLoading[key.id]}
+                    className="text-red-600 hover:text-red-700 disabled:opacity-50"
                   >
-                    <Trash2 className="h-4 w-4" />
+                    {actionLoading[key.id] ? (
+                      <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                    ) : (
+                      <Trash2 className="h-4 w-4" />
+                    )}
                   </Button>
                 </div>
               </TableCell>

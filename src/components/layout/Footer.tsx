@@ -2,7 +2,7 @@
 
 // Card 컴포넌트는 사용되지 않음
 import { Badge } from '@/components/ui/badge'
-import { Github, ExternalLink, Heart } from 'lucide-react'
+import { Github } from 'lucide-react'
 
 export function Footer() {
   return (
@@ -66,19 +66,6 @@ export function Footer() {
                   GitHub 저장소
                 </a>
               </div>
-              <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
-                <ExternalLink className="h-4 w-4" />
-                <a 
-                  href="#" 
-                  className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
-                >
-                  문서 보기
-                </a>
-              </div>
-              <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
-                <Heart className="h-4 w-4 text-red-500" />
-                <span>Made with ❤️ for EP Team</span>
-              </div>
             </div>
           </div>
         </div>
@@ -86,11 +73,11 @@ export function Footer() {
         {/* 하단 정보 */}
         <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
           <div className="flex flex-col sm:flex-row justify-between items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
-            <p>© 2024 EP 자동 삭제 및 추가 시스템. All rights reserved.</p>
+            <p>© 2025 EP 자동 삭제 및 추가 시스템. All rights reserved. made by sean.</p>
             <div className="flex items-center gap-4">
               <span>버전 1.0.0</span>
               <span>•</span>
-              <span>최종 업데이트: 2024-09-16</span>
+              <span>최종 업데이트: 2025-01-16</span>
             </div>
           </div>
         </div>
