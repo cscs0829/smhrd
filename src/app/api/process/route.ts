@@ -118,7 +118,7 @@ export async function POST(req: NextRequest) {
         }
 
         // 메인 이미지 및 추가 이미지 링크 생성 - 개선된 도시 매칭
-        let citySpecificImages = findMatchingCityImages(cityImages || [], city)
+        const citySpecificImages = findMatchingCityImages(cityImages || [], city)
         
         // 디버깅을 위한 로그 추가
         console.log(`도시 매칭 결과 - ID: ${productId}, 추출된 도시: ${city}, 매칭된 이미지 수: ${citySpecificImages.length}`)
