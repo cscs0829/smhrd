@@ -151,6 +151,9 @@ export function ApiKeyManager() {
       
       const newActiveState = !key.isActive
       
+      // Context7 패턴: API 호출 전에 즉시 UI 상태 업데이트 (Optimistic Update)
+      toggleApiKeyActive(id, newActiveState)
+      
       const response = await fetch('/api/api-keys', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
@@ -161,14 +164,17 @@ export function ApiKeyManager() {
       })
       
       if (!response.ok) {
+        // API 실패 시 이전 상태로 롤백
+        toggleApiKeyActive(id, key.isActive)
         const errorData = await response.json().catch(() => ({}))
         throw new Error(errorData.error || 'API 키 상태 변경에 실패했습니다')
       }
       
+      // API 성공 시 최종 확인 (DB에서 받은 값으로 동기화)
       const result = await response.json()
-      
-      // 전역 상태 업데이트
-      toggleApiKeyActive(id, result.data.is_active)
+      if (result.data && typeof result.data.is_active === 'boolean') {
+        toggleApiKeyActive(id, result.data.is_active)
+      }
       
       toast.success(`API 키가 ${newActiveState ? '활성화' : '비활성화'}되었습니다`)
     } catch (error) {

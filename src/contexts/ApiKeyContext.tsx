@@ -163,10 +163,13 @@ export function ApiKeyProvider({ children }: ApiKeyProviderProps) {
     })
   }
 
-  // API 키 활성화/비활성화
+  // API 키 활성화/비활성화 - Context7 updater function 패턴 사용
   const toggleApiKeyActive = (id: number, isActive: boolean) => {
     setApiKeys(prev => {
-      const updated = prev.map(k => k.id === id ? { ...k, isActive } : k)
+      const updated = prev.map(k => 
+        k.id === id ? { ...k, isActive } : k
+      )
+      // 즉시 localStorage에 저장하여 지속성 보장
       saveApiKeysToStorage(updated)
       return updated
     })
@@ -177,7 +180,14 @@ export function ApiKeyProvider({ children }: ApiKeyProviderProps) {
     loadApiKeys(false)
   }, [])
 
-  // 페이지 새로고침 전에 현재 상태를 localStorage에 저장
+  // Context7 패턴: 상태 변경 시 즉시 localStorage에 저장
+  useEffect(() => {
+    if (apiKeys.length > 0) {
+      saveApiKeysToStorage(apiKeys)
+    }
+  }, [apiKeys])
+
+  // 페이지 새로고침 전에 현재 상태를 localStorage에 저장 (추가 보장)
   useEffect(() => {
     const handleBeforeUnload = () => {
       if (apiKeys.length > 0) {
