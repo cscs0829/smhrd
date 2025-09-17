@@ -43,10 +43,25 @@ export function ApiKeyManager() {
     apiKey: ''
   })
 
-  // 컴포넌트 마운트 시 API 키 로드
+  // 컴포넌트 마운트 시 API 키 로드 - DB 우선
   useEffect(() => {
-    loadApiKeys()
+    loadApiKeys(false) // false = 캐시 우선, 백그라운드에서 DB 동기화
   }, [])
+
+  // 페이지 새로고침 전에 현재 상태를 localStorage에 저장
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      if (apiKeys.length > 0) {
+        saveApiKeysToStorage(apiKeys)
+      }
+    }
+
+    window.addEventListener('beforeunload', handleBeforeUnload)
+    
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload)
+    }
+  }, [apiKeys])
 
   // localStorage에서 API 키 상태 복원
   const loadApiKeysFromStorage = () => {
@@ -73,37 +88,26 @@ export function ApiKeyManager() {
     }
   }
 
-  // API 키 로드 함수
+  // API 키 로드 함수 - DB 우선, localStorage 백업
   const loadApiKeys = async (forceRefresh = false) => {
     try {
       setLoading(true)
       setError(null)
       
-      // 강제 새로고침이 아니고 localStorage에 데이터가 있으면 먼저 표시
+      // 강제 새로고침이 아니고 localStorage에 데이터가 있으면 먼저 표시 (빠른 로딩)
       if (!forceRefresh) {
         const cachedKeys = loadApiKeysFromStorage()
         if (cachedKeys.length > 0) {
           setApiKeys(cachedKeys)
-          setLoading(false)
+          // 백그라운드에서 DB에서 최신 데이터 가져오기
+          loadFromDatabase()
+          return
         }
       }
       
-      const response = await fetch('/api/api-keys')
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: API 키를 불러오는데 실패했습니다`)
-      }
+      // DB에서 데이터 로드
+      await loadFromDatabase()
       
-      const result = await response.json()
-      
-      // 응답 데이터 검증
-      if (result && Array.isArray(result.data)) {
-        setApiKeys(result.data)
-        saveApiKeysToStorage(result.data) // localStorage에 저장
-      } else {
-        console.warn('API 응답 데이터가 예상 형식이 아닙니다:', result)
-        setApiKeys([])
-        saveApiKeysToStorage([])
-      }
     } catch (error) {
       console.error('API 키 로드 오류:', error)
       const errorMessage = error instanceof Error ? error.message : 'API 키를 불러오는데 실패했습니다'
@@ -114,11 +118,38 @@ export function ApiKeyManager() {
       if (cachedKeys.length > 0) {
         setApiKeys(cachedKeys)
         setError(null) // 캐시된 데이터가 있으면 에러 해제
+        toast.warning('네트워크 오류로 캐시된 데이터를 표시합니다')
       } else {
         setApiKeys([])
       }
     } finally {
       setLoading(false)
+    }
+  }
+
+  // DB에서 데이터 로드하는 별도 함수
+  const loadFromDatabase = async () => {
+    try {
+      const response = await fetch('/api/api-keys')
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: API 키를 불러오는데 실패했습니다`)
+      }
+      
+      const result = await response.json()
+      
+      // 응답 데이터 검증
+      if (result && Array.isArray(result.data)) {
+        setApiKeys(result.data)
+        saveApiKeysToStorage(result.data) // localStorage에 백업 저장
+      } else {
+        console.warn('API 응답 데이터가 예상 형식이 아닙니다:', result)
+        setApiKeys([])
+        saveApiKeysToStorage([])
+      }
+    } catch (error) {
+      console.error('DB에서 API 키 로드 실패:', error)
+      // DB 로드 실패 시 에러를 다시 throw하여 상위에서 처리
+      throw error
     }
   }
 
@@ -155,7 +186,7 @@ export function ApiKeyManager() {
           key.id === editingKey.id ? { ...key, ...result.data } : key
         )
         setApiKeys(updatedKeys)
-        saveApiKeysToStorage(updatedKeys) // localStorage에 저장
+        saveApiKeysToStorage(updatedKeys) // localStorage에 백업 저장
         toast.success('API 키가 수정되었습니다')
       } else {
         // 추가
@@ -179,7 +210,7 @@ export function ApiKeyManager() {
         // 서버에서 반환된 데이터로 상태 업데이트
         const updatedKeys = [...apiKeys, result.data]
         setApiKeys(updatedKeys)
-        saveApiKeysToStorage(updatedKeys) // localStorage에 저장
+        saveApiKeysToStorage(updatedKeys) // localStorage에 백업 저장
         toast.success('API 키가 추가되었습니다')
       }
 
@@ -213,7 +244,7 @@ export function ApiKeyManager() {
       // 삭제 성공 시 상태에서 제거
       const updatedKeys = apiKeys.filter(key => key.id !== id)
       setApiKeys(updatedKeys)
-      saveApiKeysToStorage(updatedKeys) // localStorage에 저장
+      saveApiKeysToStorage(updatedKeys) // localStorage에 백업 저장
       toast.success('API 키가 삭제되었습니다')
     } catch (error) {
       console.error('API 키 삭제 오류:', error)
@@ -260,7 +291,7 @@ export function ApiKeyManager() {
         k.id === id ? { ...k, isActive: result.data.is_active } : k
       )
       setApiKeys(updatedKeys)
-      saveApiKeysToStorage(updatedKeys) // localStorage에 저장
+      saveApiKeysToStorage(updatedKeys) // localStorage에 백업 저장
       
       toast.success(`API 키가 ${newActiveState ? '활성화' : '비활성화'}되었습니다`)
     } catch (error) {
