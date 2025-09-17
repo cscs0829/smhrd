@@ -229,7 +229,7 @@ export async function POST(req: NextRequest) {
     const deletedProducts = backupRows.map(backup => backup.original_data)
     
     // Excel 데이터 준비: 삭제된 상품 + 새로 생성된 상품
-    const excelData = []
+    const excelData: Array<Record<string, unknown>> = []
     
     // 삭제된 상품들 추가 (기존 데이터 그대로)
     deletedProducts.forEach(deletedProduct => {
