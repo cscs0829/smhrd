@@ -26,11 +26,12 @@ interface ApiKey {
 }
 
 export function ApiKeyManager() {
-  const [apiKeys, setApiKeys] = useState<ApiKey[] | null>(null)
+  const [apiKeys, setApiKeys] = useState<ApiKey[]>([])
   const [open, setOpen] = useState(false)
   const [editingKey, setEditingKey] = useState<ApiKey | null>(null)
   const [showKeys, setShowKeys] = useState<{ [key: number]: boolean }>({})
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   // 폼 상태
   const [formData, setFormData] = useState({
@@ -47,16 +48,19 @@ export function ApiKeyManager() {
   const loadApiKeys = async () => {
     try {
       setLoading(true)
+      setError(null)
       const response = await fetch('/api/api-keys')
       if (!response.ok) {
         throw new Error('API 키를 불러오는데 실패했습니다')
       }
       const result = await response.json()
-      setApiKeys(result.data || [])
+      setApiKeys(Array.isArray(result.data) ? result.data : [])
     } catch (error) {
       console.error('API 키 로드 오류:', error)
-      toast.error('API 키를 불러오는데 실패했습니다')
-      setApiKeys(null) // 오류 발생 시 null로 설정
+      const errorMessage = error instanceof Error ? error.message : 'API 키를 불러오는데 실패했습니다'
+      setError(errorMessage)
+      toast.error(errorMessage)
+      setApiKeys([]) // 오류 발생 시 빈 배열로 설정
     } finally {
       setLoading(false)
     }
@@ -88,7 +92,7 @@ export function ApiKeyManager() {
         }
         
         const result = await response.json()
-        setApiKeys(prev => prev ? prev.map(key => key.id === editingKey.id ? result.data : key) : [result.data])
+        setApiKeys(prev => prev.map(key => key.id === editingKey.id ? result.data : key))
         toast.success('API 키가 수정되었습니다')
       } else {
         // 추가
@@ -108,7 +112,7 @@ export function ApiKeyManager() {
         }
         
         const result = await response.json()
-        setApiKeys(prev => prev ? [...prev, result.data] : [result.data])
+        setApiKeys(prev => [...prev, result.data])
         toast.success('API 키가 추가되었습니다')
       }
 
@@ -144,7 +148,7 @@ export function ApiKeyManager() {
         throw new Error('API 키 삭제에 실패했습니다')
       }
       
-      setApiKeys(prev => prev ? prev.filter(key => key.id !== id) : [])
+      setApiKeys(prev => prev.filter(key => key.id !== id))
       toast.success('API 키가 삭제되었습니다')
     } catch (error) {
       console.error('API 키 삭제 오류:', error)
@@ -154,7 +158,7 @@ export function ApiKeyManager() {
 
   const handleToggleActive = async (id: number) => {
     try {
-      const key = apiKeys?.find(k => k.id === id)
+      const key = apiKeys.find(k => k.id === id)
       if (!key) return
       
       const response = await fetch('/api/api-keys', {
@@ -170,9 +174,9 @@ export function ApiKeyManager() {
         throw new Error('API 키 상태 변경에 실패했습니다')
       }
       
-      setApiKeys(prev => prev ? prev.map(k => 
+      setApiKeys(prev => prev.map(k => 
         k.id === id ? { ...k, isActive: !k.isActive } : k
-      ) : [])
+      ))
       toast.success('API 키 상태가 변경되었습니다')
     } catch (error) {
       console.error('API 키 상태 변경 오류:', error)
@@ -330,7 +334,15 @@ export function ApiKeyManager() {
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto"></div>
               <p className="mt-2 text-sm text-gray-500">API 키를 불러오는 중...</p>
             </div>
-          ) : apiKeys === null || apiKeys.length === 0 ? (
+          ) : error ? (
+            <div className="text-center py-8">
+              <AlertTriangle className="h-12 w-12 text-red-400 mx-auto mb-4" />
+              <p className="text-red-500 mb-4">{error}</p>
+              <Button onClick={loadApiKeys} variant="outline">
+                다시 시도
+              </Button>
+            </div>
+          ) : apiKeys.length === 0 ? (
             <div className="text-center py-8">
               <Key className="h-12 w-12 text-gray-400 mx-auto mb-4" />
               <p className="text-gray-500 mb-4">등록된 API 키가 없습니다</p>
@@ -353,7 +365,7 @@ export function ApiKeyManager() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {apiKeys && apiKeys.map((key) => (
+                  {apiKeys.map((key) => (
                     <TableRow key={key.id}>
                       <TableCell>
                         <div className="flex items-center gap-2">
