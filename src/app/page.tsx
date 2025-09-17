@@ -18,7 +18,7 @@ export default function Home() {
   const [isProcessing, setIsProcessing] = useState(false)
   const [result, setResult] = useState<{ success: boolean; message: string; downloadUrl?: string } | null>(null)
   const [selectedModel, setSelectedModel] = useState<string>(getRecommendedModel().id)
-  const [apiKey, setApiKey] = useState<string>('')
+  const [selectedApiKeyId, setSelectedApiKeyId] = useState<number>(0)
   const [temperature, setTemperature] = useState<number>(0.7)
   const [maxTokens, setMaxTokens] = useState<number>(100)
 
@@ -75,8 +75,8 @@ export default function Home() {
               <AIModelSelector
                 selectedModel={selectedModel}
                 onModelChange={setSelectedModel}
-                apiKey={apiKey}
-                onApiKeyChange={setApiKey}
+                selectedApiKeyId={selectedApiKeyId}
+                onApiKeyChange={setSelectedApiKeyId}
                 temperature={temperature}
                 onTemperatureChange={setTemperature}
                 maxTokens={maxTokens}

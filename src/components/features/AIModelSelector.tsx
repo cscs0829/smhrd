@@ -14,11 +14,23 @@ import { Cpu, Settings, Key, DollarSign, Zap, Shield, Info } from 'lucide-react'
 import { getAvailableModels } from '@/lib/ai-models'
 import { toast } from 'sonner'
 
+interface ApiKey {
+  id: number
+  provider: 'openai' | 'gemini'
+  name: string
+  description?: string
+  apiKey: string
+  isActive: boolean
+  createdAt: string
+  lastUsedAt?: string
+  usageCount: number
+}
+
 interface AIModelSelectorProps {
   selectedModel: string
   onModelChange: (modelId: string) => void
-  apiKey?: string
-  onApiKeyChange?: (apiKey: string) => void
+  selectedApiKeyId?: number
+  onApiKeyChange?: (apiKeyId: number) => void
   temperature?: number
   onTemperatureChange?: (temperature: number) => void
   maxTokens?: number
@@ -28,7 +40,7 @@ interface AIModelSelectorProps {
 export function AIModelSelector({
   selectedModel,
   onModelChange,
-  apiKey = '',
+  selectedApiKeyId,
   onApiKeyChange,
   temperature = 0.7,
   onTemperatureChange,
@@ -37,13 +49,31 @@ export function AIModelSelector({
 }: AIModelSelectorProps) {
   const [open, setOpen] = useState(false)
   const [selectedProvider, setSelectedProvider] = useState<'openai' | 'gemini'>('openai')
-  const [tempApiKey, setTempApiKey] = useState(apiKey)
+  const [apiKeys, setApiKeys] = useState<ApiKey[]>([])
+  const [tempApiKeyId, setTempApiKeyId] = useState(selectedApiKeyId || 0)
   const [tempTemperature, setTempTemperature] = useState(temperature)
   const [tempMaxTokens, setTempMaxTokens] = useState(maxTokens)
+  const [loading, setLoading] = useState(false)
 
   const availableModels = getAvailableModels()
   const selectedModelInfo = availableModels.find(model => model.id === selectedModel)
-  // providerModels는 UI에 사용되지 않아 제거
+  const selectedApiKey = apiKeys.find(key => key.id === selectedApiKeyId)
+
+  // API 키 로드
+  const loadApiKeys = async () => {
+    try {
+      setLoading(true)
+      const response = await fetch('/api/api-keys')
+      if (response.ok) {
+        const result = await response.json()
+        setApiKeys(Array.isArray(result.data) ? result.data : [])
+      }
+    } catch (error) {
+      console.error('API 키 로드 오류:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   useEffect(() => {
     if (selectedModelInfo) {
@@ -51,13 +81,17 @@ export function AIModelSelector({
     }
   }, [selectedModelInfo])
 
+  useEffect(() => {
+    loadApiKeys()
+  }, [])
+
   const handleSave = () => {
-    if (!tempApiKey.trim()) {
-      toast.error('API 키를 입력해주세요')
+    if (!tempApiKeyId) {
+      toast.error('API 키를 선택해주세요')
       return
     }
 
-    onApiKeyChange?.(tempApiKey)
+    onApiKeyChange?.(tempApiKeyId)
     onTemperatureChange?.(tempTemperature)
     onMaxTokensChange?.(tempMaxTokens)
     setOpen(false)
@@ -69,6 +103,13 @@ export function AIModelSelector({
     const model = availableModels.find(m => m.id === modelId)
     if (model) {
       setSelectedProvider(model.provider)
+      // 해당 제공업체의 활성화된 API 키가 있으면 첫 번째로 선택
+      const availableKeys = apiKeys.filter(key => key.provider === model.provider && key.isActive)
+      if (availableKeys.length > 0) {
+        setTempApiKeyId(availableKeys[0].id)
+      } else {
+        setTempApiKeyId(0)
+      }
     }
   }
 
@@ -152,7 +193,7 @@ export function AIModelSelector({
 
               <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
                 <Shield className="h-4 w-4" />
-                <span>API 키: {apiKey ? '설정됨' : '설정 필요'}</span>
+                <span>API 키: {selectedApiKey ? selectedApiKey.name : '설정 필요'}</span>
               </div>
             </div>
           ) : (
@@ -200,22 +241,36 @@ export function AIModelSelector({
                   </Select>
                 </div>
 
-                {/* API 키 입력 */}
+                {/* API 키 선택 */}
                 <div className="space-y-2">
-                  <Label htmlFor="api-key">API 키</Label>
-                  <Input
-                    id="api-key"
-                    type="password"
-                    placeholder="API 키를 입력하세요"
-                    value={tempApiKey}
-                    onChange={(e) => setTempApiKey(e.target.value)}
-                  />
-                  <div className="text-xs text-gray-500">
-                    {selectedProvider === 'openai' 
-                      ? 'OpenAI API 키 (sk-로 시작)'
-                      : 'Google AI Studio API 키'
-                    }
-                  </div>
+                  <Label>API 키 선택</Label>
+                  <Select value={tempApiKeyId.toString()} onValueChange={(value) => setTempApiKeyId(parseInt(value))}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="API 키를 선택하세요" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {apiKeys
+                        .filter(key => key.provider === selectedProvider && key.isActive)
+                        .map((key) => (
+                          <SelectItem key={key.id} value={key.id.toString()}>
+                            <div className="flex items-center gap-2">
+                              <span>{key.name}</span>
+                              {key.description && (
+                                <span className="text-xs text-gray-500">- {key.description}</span>
+                              )}
+                            </div>
+                          </SelectItem>
+                        ))}
+                    </SelectContent>
+                  </Select>
+                  {apiKeys.filter(key => key.provider === selectedProvider && key.isActive).length === 0 && (
+                    <div className="text-xs text-red-500">
+                      {selectedProvider === 'openai' 
+                        ? '활성화된 OpenAI API 키가 없습니다. 설정 탭에서 API 키를 추가해주세요.'
+                        : '활성화된 Gemini API 키가 없습니다. 설정 탭에서 API 키를 추가해주세요.'
+                      }
+                    </div>
+                  )}
                 </div>
 
                 {/* 고급 설정 */}
