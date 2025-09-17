@@ -15,17 +15,23 @@ export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url)
     const userId = searchParams.get('userId')
+    const isDefault = searchParams.get('isDefault') === 'true'
 
     const supabase = getSupabase()
     let query = supabase.from('ai_model_settings').select('*')
     
-    if (userId) {
+    if (isDefault) {
+      // 기본 설정만 조회
+      query = query.eq('is_default', true)
+    } else if (userId) {
       query = query.eq('user_id', userId)
     }
 
-    const { data, error } = await query.order('created_at', { ascending: false })
+    const { data, error } = isDefault 
+      ? await query.single()
+      : await query.order('created_at', { ascending: false })
 
-    if (error) throw error
+    if (error && error.code !== 'PGRST116') throw error
 
     return NextResponse.json({ data })
   } catch (error: unknown) {
@@ -99,22 +105,3 @@ export async function POST(req: NextRequest) {
   }
 }
 
-// 기본 AI 모델 설정 조회
-export async function GET_DEFAULT() {
-  try {
-    const supabase = getSupabase()
-    const { data, error } = await supabase
-      .from('ai_model_settings')
-      .select('*')
-      .eq('is_default', true)
-      .single()
-
-    if (error && error.code !== 'PGRST116') throw error
-
-    return NextResponse.json({ data })
-  } catch (error: unknown) {
-    console.error('기본 AI 모델 설정 조회 오류:', error)
-    const message = error instanceof Error ? error.message : '알 수 없는 오류가 발생했습니다.'
-    return NextResponse.json({ error: message }, { status: 500 })
-  }
-}
