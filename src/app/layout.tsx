@@ -4,6 +4,7 @@ import "./globals.css";
 import { Header } from '@/components/layout/Header'
 import { Footer } from '@/components/layout/Footer'
 import { Toaster } from '@/components/ui/sonner'
+import { ApiKeyProvider } from '@/contexts/ApiKeyContext'
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -28,12 +29,14 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen flex flex-col`}>
-        <Header />
-        <main className="flex-1 container mx-auto px-4 py-6">
-          {children}
-        </main>
-        <Footer />
-        <Toaster richColors position="top-right" />
+        <ApiKeyProvider>
+          <Header />
+          <main className="flex-1 container mx-auto px-4 py-6">
+            {children}
+          </main>
+          <Footer />
+          <Toaster richColors position="top-right" />
+        </ApiKeyProvider>
       </body>
     </html>
   );

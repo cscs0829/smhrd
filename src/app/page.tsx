@@ -12,7 +12,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { downloadFile, processFile } from '@/lib/api'
 import { getRecommendedModel } from '@/lib/ai-models'
 import { Toaster } from '@/components/ui/sonner'
-import { ApiKeyProvider } from '@/contexts/ApiKeyContext'
 
 export default function Home() {
   const [file, setFile] = useState<File | null>(null)
@@ -50,61 +49,58 @@ export default function Home() {
   }
 
   return (
-    <ApiKeyProvider>
-      <div className="container mx-auto px-4 py-8 space-y-6">
-        <Tabs defaultValue="process" className="w-full">
-          <TabsList className="grid grid-cols-3 w-full sm:w-auto">
-            <TabsTrigger value="process">처리</TabsTrigger>
-            <TabsTrigger value="settings">설정</TabsTrigger>
-            <TabsTrigger value="database">데이터베이스</TabsTrigger>
-          </TabsList>
+    <div className="container mx-auto px-4 py-8 space-y-6">
+      <Tabs defaultValue="process" className="w-full">
+        <TabsList className="grid grid-cols-3 w-full sm:w-auto">
+          <TabsTrigger value="process">처리</TabsTrigger>
+          <TabsTrigger value="settings">설정</TabsTrigger>
+          <TabsTrigger value="database">데이터베이스</TabsTrigger>
+        </TabsList>
 
-          <TabsContent value="process" className="space-y-4">
-            <div className="flex flex-col md:flex-row gap-4">
-              <div className="flex-1 space-y-4">
-                <AttachModal onFileSelect={handleFileSelect} isProcessing={isProcessing} />
-                <FileUpload onFileSelect={handleFileSelect} isProcessing={isProcessing} />
-                <ProcessButton 
-                  onProcess={handleProcess}
-                  onDownload={handleDownload}
-                  isProcessing={isProcessing}
-                  hasFile={!!file}
-                  result={result}
-                />
-              </div>
-
-              <div className="w-full md:w-[380px]">
-                <AIModelSelector
-                  selectedModel={selectedModel}
-                  onModelChange={setSelectedModel}
-                  selectedApiKeyId={selectedApiKeyId}
-                  onApiKeyChange={setSelectedApiKeyId}
-                  temperature={temperature}
-                  onTemperatureChange={setTemperature}
-                  maxTokens={maxTokens}
-                  onMaxTokensChange={setMaxTokens}
-                />
-              </div>
+        <TabsContent value="process" className="space-y-4">
+          <div className="flex flex-col md:flex-row gap-4">
+            <div className="flex-1 space-y-4">
+              <AttachModal onFileSelect={handleFileSelect} isProcessing={isProcessing} />
+              <FileUpload onFileSelect={handleFileSelect} isProcessing={isProcessing} />
+              <ProcessButton 
+                onProcess={handleProcess}
+                onDownload={handleDownload}
+                isProcessing={isProcessing}
+                hasFile={!!file}
+                result={result}
+              />
             </div>
-          </TabsContent>
 
-          <TabsContent value="settings">
-            <Card>
-              <CardHeader>
-                <CardTitle>API 키 관리</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ApiKeyManager />
-              </CardContent>
-            </Card>
-          </TabsContent>
+            <div className="w-full md:w-[380px]">
+              <AIModelSelector
+                selectedModel={selectedModel}
+                onModelChange={setSelectedModel}
+                selectedApiKeyId={selectedApiKeyId}
+                onApiKeyChange={setSelectedApiKeyId}
+                temperature={temperature}
+                onTemperatureChange={setTemperature}
+                maxTokens={maxTokens}
+                onMaxTokensChange={setMaxTokens}
+              />
+            </div>
+          </div>
+        </TabsContent>
 
-          <TabsContent value="database">
-            <DatabaseStatus />
-          </TabsContent>
-        </Tabs>
-        <Toaster richColors position="top-right" />
-      </div>
-    </ApiKeyProvider>
+        <TabsContent value="settings">
+          <Card>
+            <CardHeader>
+              <CardTitle>API 키 관리</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ApiKeyManager />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="database">
+          <DatabaseStatus />
+        </TabsContent>
+      </Tabs>
+    </div>
   );
 }
