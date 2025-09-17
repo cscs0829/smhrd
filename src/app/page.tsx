@@ -12,7 +12,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { downloadFile, processFile } from '@/lib/api'
 import { getRecommendedModel } from '@/lib/ai-models'
-import { Toaster } from '@/components/ui/sonner'
 
 export default function Home() {
   const [file, setFile] = useState<File | null>(null)
@@ -99,7 +98,7 @@ export default function Home() {
               </TabsContent>
 
               <TabsContent value="duplicate">
-                <DuplicateSearch onRefresh={dbRefreshTrigger} />
+                <DuplicateSearch />
               </TabsContent>
 
               <TabsContent value="settings">

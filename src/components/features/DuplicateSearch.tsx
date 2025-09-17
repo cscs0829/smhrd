@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -21,11 +21,7 @@ interface SearchResult {
   match_type: 'exact' | 'partial'
 }
 
-interface DuplicateSearchProps {
-  onRefresh?: number
-}
-
-export function DuplicateSearch({ onRefresh }: DuplicateSearchProps) {
+export function DuplicateSearch() {
   const [searchTerm, setSearchTerm] = useState('')
   const [searchResults, setSearchResults] = useState<SearchResult[]>([])
   const [loading, setLoading] = useState(false)
@@ -239,7 +235,7 @@ export function DuplicateSearch({ onRefresh }: DuplicateSearchProps) {
                     <Alert>
                       <AlertTriangle className="h-4 w-4" />
                       <AlertDescription>
-                        '{searchTerm}'와 일치하는 항목을 찾지 못했습니다.
+                        &apos;{searchTerm}&apos;와 일치하는 항목을 찾지 못했습니다.
                       </AlertDescription>
                     </Alert>
                   ) : (

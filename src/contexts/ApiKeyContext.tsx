@@ -203,7 +203,7 @@ export function ApiKeyProvider({ children }: ApiKeyProviderProps) {
   // 컴포넌트 마운트 시 API 키 로드
   useEffect(() => {
     loadApiKeys(false)
-  }, [])
+  }, [loadApiKeys])
 
   // Context7 persistent storage 패턴: 상태 변경 시 즉시 localStorage에 저장
   useEffect(() => {

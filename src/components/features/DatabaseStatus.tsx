@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -67,7 +67,7 @@ export function DatabaseStatus({ onRefresh }: DatabaseStatusProps) {
     config: { tension: 300, friction: 30 }
   }))
 
-  const loadDbStatus = async () => {
+  const loadDbStatus = useCallback(async () => {
     try {
       setLoading(true)
       
@@ -98,18 +98,18 @@ export function DatabaseStatus({ onRefresh }: DatabaseStatusProps) {
     } finally {
       setLoading(false)
     }
-  }
+  }, [refreshApi])
 
   useEffect(() => {
     loadDbStatus()
-  }, [])
+  }, [loadDbStatus])
 
   // onRefresh prop이 변경되면 데이터 새로고침
   useEffect(() => {
     if (onRefresh && onRefresh > 0) {
       loadDbStatus()
     }
-  }, [onRefresh])
+  }, [onRefresh, loadDbStatus])
 
   const getStatusIcon = (status: string) => {
     switch (status) {
