@@ -163,12 +163,23 @@ export function ApiKeyProvider({ children }: ApiKeyProviderProps) {
     })
   }
 
-  // API 키 활성화/비활성화 - Context7 updater function 패턴 사용
+  // API 키 활성화/비활성화 - Context7 단일 활성화 패턴 사용
   const toggleApiKeyActive = (id: number, isActive: boolean) => {
     setApiKeys(prev => {
-      const updated = prev.map(k => 
-        k.id === id ? { ...k, isActive } : k
-      )
+      const targetKey = prev.find(k => k.id === id)
+      if (!targetKey) return prev
+      
+      const updated = prev.map(k => {
+        if (k.id === id) {
+          // 선택된 키의 상태 변경
+          return { ...k, isActive }
+        } else if (isActive && k.provider === targetKey.provider) {
+          // 같은 제공업체의 다른 키들은 비활성화 (단일 활성화)
+          return { ...k, isActive: false }
+        }
+        return k
+      })
+      
       // 즉시 localStorage에 저장하여 지속성 보장
       saveApiKeysToStorage(updated)
       return updated

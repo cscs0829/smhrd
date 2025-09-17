@@ -152,6 +152,7 @@ export function ApiKeyManager() {
       const newActiveState = !key.isActive
       
       // Context7 패턴: API 호출 전에 즉시 UI 상태 업데이트 (Optimistic Update)
+      // 단일 활성화: 같은 제공업체의 다른 키들을 비활성화하고 선택된 키만 활성화
       toggleApiKeyActive(id, newActiveState)
       
       const response = await fetch('/api/api-keys', {
@@ -173,6 +174,7 @@ export function ApiKeyManager() {
       // API 성공 시 최종 확인 (DB에서 받은 값으로 동기화)
       const result = await response.json()
       if (result.data && typeof result.data.is_active === 'boolean') {
+        // DB에서 받은 값으로 최종 동기화 (단일 활성화 로직 포함)
         toggleApiKeyActive(id, result.data.is_active)
       }
       
