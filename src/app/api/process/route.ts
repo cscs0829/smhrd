@@ -221,20 +221,81 @@ export async function POST(req: NextRequest) {
       if (insertErr) console.error('배치 신규상품 추가 실패:', insertErr)
     }
 
-    // 5. 최종 Excel 파일 생성 (exceljs로 스타일 확정 적용)
-    const finalEpData = await supabase.from('ep_data').select('*')
-    if (finalEpData.error) throw finalEpData.error
-
+    // 5. Excel 파일 생성 - 삭제된 상품과 새로 생성된 상품만 포함
     const workbook = new ExcelJS.Workbook()
     const worksheet = workbook.addWorksheet('Processed_EP_Data')
 
+    // 삭제된 상품들 조회 (백업에서 가져오기)
+    const deletedProducts = backupRows.map(backup => backup.original_data)
+    
+    // Excel 데이터 준비: 삭제된 상품 + 새로 생성된 상품
+    const excelData = []
+    
+    // 삭제된 상품들 추가 (기존 데이터 그대로)
+    deletedProducts.forEach(deletedProduct => {
+      excelData.push({
+        id: deletedProduct.id,
+        title: deletedProduct.title,
+        image_link: deletedProduct.image_link,
+        add_image_link: deletedProduct.add_image_link,
+        video_url: deletedProduct.video_url,
+        // 나머지 컬럼들은 기존 데이터 그대로
+        price_pc: deletedProduct.price_pc,
+        benefit_price: deletedProduct.benefit_price,
+        normal_price: deletedProduct.normal_price,
+        link: deletedProduct.link,
+        mobile_link: deletedProduct.mobile_link,
+        category_name1: deletedProduct.category_name1,
+        category_name2: deletedProduct.category_name2,
+        category_name3: deletedProduct.category_name3,
+        category_name4: deletedProduct.category_name4,
+        brand: deletedProduct.brand,
+        maker: deletedProduct.maker,
+        origin: deletedProduct.origin,
+        age_group: deletedProduct.age_group,
+        gender: deletedProduct.gender,
+        city: deletedProduct.city,
+        created_at: deletedProduct.created_at,
+        updated_at: deletedProduct.updated_at
+      })
+    })
+    
+    // 새로 생성된 상품들 추가
+    newProducts.forEach(newProduct => {
+      excelData.push({
+        id: newProduct.id,
+        title: newProduct.title,
+        image_link: newProduct.image_link,
+        add_image_link: newProduct.add_image_link,
+        video_url: newProduct.video_url,
+        // 나머지 컬럼들은 기존 데이터 그대로
+        price_pc: newProduct.price_pc,
+        benefit_price: newProduct.benefit_price,
+        normal_price: newProduct.normal_price,
+        link: newProduct.link,
+        mobile_link: newProduct.mobile_link,
+        category_name1: newProduct.category_name1,
+        category_name2: newProduct.category_name2,
+        category_name3: newProduct.category_name3,
+        category_name4: newProduct.category_name4,
+        brand: newProduct.brand,
+        maker: newProduct.maker,
+        origin: newProduct.origin,
+        age_group: newProduct.age_group,
+        gender: newProduct.gender,
+        city: newProduct.city,
+        created_at: newProduct.created_at,
+        updated_at: newProduct.updated_at
+      })
+    })
+
     // 헤더 추가
-    if (finalEpData.data.length > 0) {
-      worksheet.columns = Object.keys(finalEpData.data[0]).map((key) => ({ header: key, key }))
+    if (excelData.length > 0) {
+      worksheet.columns = Object.keys(excelData[0]).map((key) => ({ header: key, key }))
     }
 
     // 데이터 추가
-    finalEpData.data.forEach((row) => {
+    excelData.forEach((row) => {
       worksheet.addRow(row)
     })
 
