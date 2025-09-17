@@ -56,6 +56,7 @@ export function ApiKeyManager() {
     } catch (error) {
       console.error('API 키 로드 오류:', error)
       toast.error('API 키를 불러오는데 실패했습니다')
+      setApiKeys([]) // 오류 발생 시 빈 배열로 설정
     } finally {
       setLoading(false)
     }
