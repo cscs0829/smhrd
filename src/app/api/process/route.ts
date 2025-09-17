@@ -4,7 +4,7 @@ import * as XLSX from 'xlsx'
 import iconv from 'iconv-lite'
 import ExcelJS from 'exceljs'
 import { AIService } from '@/lib/ai-service'
-import { normalizeCityName } from '@/lib/utils'
+import { normalizeCityName, findMatchingCityImages } from '@/lib/utils'
 
 // Supabase 클라이언트 지연 생성
 function getSupabase() {
@@ -117,14 +117,13 @@ export async function POST(req: NextRequest) {
           }
         }
 
-        // 메인 이미지 및 추가 이미지 링크 생성
-        let citySpecificImages = cityImages?.filter((img: { city: string }) => String(img.city).toLowerCase() === String(city).toLowerCase())
-        if (!citySpecificImages || citySpecificImages.length === 0) {
-          const lcCity = String(city).toLowerCase()
-          citySpecificImages = cityImages?.filter((img: { city: string }) => {
-            const lcImgCity = String(img.city).toLowerCase()
-            return lcImgCity.includes(lcCity) || lcCity.includes(lcImgCity)
-          })
+        // 메인 이미지 및 추가 이미지 링크 생성 - 개선된 도시 매칭
+        let citySpecificImages = findMatchingCityImages(cityImages || [], city)
+        
+        // 디버깅을 위한 로그 추가
+        console.log(`도시 매칭 결과 - ID: ${productId}, 추출된 도시: ${city}, 매칭된 이미지 수: ${citySpecificImages.length}`)
+        if (citySpecificImages.length === 0) {
+          console.log(`도시 이미지를 찾을 수 없음 - 사용 가능한 도시들:`, cityImages?.map(img => img.city).slice(0, 10))
         }
         let mainImageLink = ''
         let addImageLinks: string[] = []

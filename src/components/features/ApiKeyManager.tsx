@@ -329,7 +329,7 @@ export function ApiKeyManager() {
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto"></div>
               <p className="mt-2 text-sm text-gray-500">API 키를 불러오는 중...</p>
             </div>
-          ) : apiKeys.length === 0 ? (
+          ) : !apiKeys || apiKeys.length === 0 ? (
             <div className="text-center py-8">
               <Key className="h-12 w-12 text-gray-400 mx-auto mb-4" />
               <p className="text-gray-500 mb-4">등록된 API 키가 없습니다</p>
@@ -352,7 +352,7 @@ export function ApiKeyManager() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {apiKeys.map((key) => (
+                  {apiKeys?.map((key) => (
                     <TableRow key={key.id}>
                       <TableCell>
                         <div className="flex items-center gap-2">

@@ -98,6 +98,26 @@ export function DatabaseStatus() {
     return new Date(dateString).toLocaleString('ko-KR')
   }
 
+  if (!dbStatus) {
+    return (
+      <div className="text-center py-8">
+        <Database className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+        <p className="text-gray-500">데이터베이스 상태를 확인하려면 새로고침 버튼을 클릭하세요</p>
+        <Button onClick={loadDbStatus} className="mt-4">
+          <RefreshCw className="mr-2 h-4 w-4" />
+          새로고침
+        </Button>
+      </div>
+    )
+  }
+
+  // recentData가 없을 경우를 위한 기본값 설정
+  const safeRecentData = dbStatus.recentData || {
+    ep_data: [],
+    city_images: [],
+    api_keys: []
+  }
+
   return (
     <div className="space-y-4">
       <Card>
@@ -156,7 +176,7 @@ export function DatabaseStatus() {
               {/* 최근 데이터 샘플 */}
               <div className="space-y-4">
                 {/* EP 데이터 */}
-                {dbStatus.recentData.ep_data.length > 0 && (
+                {safeRecentData.ep_data?.length > 0 && (
                   <div>
                     <h3 className="font-medium mb-2">최근 EP 데이터 (상위 5개)</h3>
                     <Table>
@@ -169,7 +189,7 @@ export function DatabaseStatus() {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {dbStatus.recentData.ep_data.map((item) => (
+                        {safeRecentData.ep_data?.map((item) => (
                           <TableRow key={item.id}>
                             <TableCell className="font-mono text-xs">{item.id}</TableCell>
                             <TableCell className="max-w-xs truncate">{item.title}</TableCell>
@@ -183,7 +203,7 @@ export function DatabaseStatus() {
                 )}
 
                 {/* 도시 이미지 데이터 */}
-                {dbStatus.recentData.city_images.length > 0 && (
+                {safeRecentData.city_images?.length > 0 && (
                   <div>
                     <h3 className="font-medium mb-2">최근 도시 이미지 데이터 (상위 5개)</h3>
                     <Table>
@@ -196,7 +216,7 @@ export function DatabaseStatus() {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {dbStatus.recentData.city_images.map((item) => (
+                        {safeRecentData.city_images?.map((item) => (
                           <TableRow key={item.id}>
                             <TableCell>{item.id}</TableCell>
                             <TableCell>{item.city}</TableCell>
@@ -218,7 +238,7 @@ export function DatabaseStatus() {
                 )}
 
                 {/* API 키 데이터 */}
-                {dbStatus.recentData.api_keys.length > 0 && (
+                {safeRecentData.api_keys?.length > 0 && (
                   <div>
                     <h3 className="font-medium mb-2">등록된 API 키 (상위 5개)</h3>
                     <Table>
@@ -232,7 +252,7 @@ export function DatabaseStatus() {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {dbStatus.recentData.api_keys.map((item) => (
+                        {safeRecentData.api_keys?.map((item) => (
                           <TableRow key={item.id}>
                             <TableCell>{item.id}</TableCell>
                             <TableCell>
