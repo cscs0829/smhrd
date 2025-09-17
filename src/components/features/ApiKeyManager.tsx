@@ -47,37 +47,12 @@ export function ApiKeyManager() {
   const loadApiKeys = async () => {
     try {
       setLoading(true)
-      // 실제로는 API 호출
-      // const response = await fetch('/api/api-keys')
-      // const data = await response.json()
-      
-      // 임시 데이터
-      const mockData: ApiKey[] = [
-        {
-          id: 1,
-          provider: 'openai',
-          name: 'OpenAI Production Key',
-          description: '프로덕션용 OpenAI API 키',
-          apiKey: 'sk-********************************',
-          isActive: true,
-          createdAt: '2024-09-16T00:00:00Z',
-          lastUsedAt: '2024-09-16T10:30:00Z',
-          usageCount: 1250
-        },
-        {
-          id: 2,
-          provider: 'gemini',
-          name: 'Gemini Development Key',
-          description: '개발용 Gemini API 키',
-          apiKey: 'AI**********************************',
-          isActive: true,
-          createdAt: '2024-09-15T00:00:00Z',
-          lastUsedAt: '2024-09-16T09:15:00Z',
-          usageCount: 890
-        }
-      ]
-      
-      setApiKeys(mockData)
+      const response = await fetch('/api/api-keys')
+      if (!response.ok) {
+        throw new Error('API 키를 불러오는데 실패했습니다')
+      }
+      const result = await response.json()
+      setApiKeys(result.data || [])
     } catch (error) {
       console.error('API 키 로드 오류:', error)
       toast.error('API 키를 불러오는데 실패했습니다')
@@ -95,22 +70,44 @@ export function ApiKeyManager() {
     try {
       if (editingKey) {
         // 수정
-        const updatedKey = { ...editingKey, ...formData }
-        setApiKeys(prev => prev.map(key => key.id === editingKey.id ? updatedKey : key))
+        const response = await fetch('/api/api-keys', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            id: editingKey.id,
+            name: formData.name,
+            description: formData.description,
+            apiKey: formData.apiKey,
+            isActive: editingKey.isActive
+          })
+        })
+        
+        if (!response.ok) {
+          throw new Error('API 키 수정에 실패했습니다')
+        }
+        
+        const result = await response.json()
+        setApiKeys(prev => prev.map(key => key.id === editingKey.id ? result.data : key))
         toast.success('API 키가 수정되었습니다')
       } else {
         // 추가
-        const newKey: ApiKey = {
-          id: Date.now(),
-          provider: formData.provider,
-          name: formData.name,
-          description: formData.description,
-          apiKey: formData.apiKey,
-          isActive: true,
-          createdAt: new Date().toISOString(),
-          usageCount: 0
+        const response = await fetch('/api/api-keys', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            provider: formData.provider,
+            name: formData.name,
+            description: formData.description,
+            apiKey: formData.apiKey
+          })
+        })
+        
+        if (!response.ok) {
+          throw new Error('API 키 추가에 실패했습니다')
         }
-        setApiKeys(prev => [...prev, newKey])
+        
+        const result = await response.json()
+        setApiKeys(prev => [...prev, result.data])
         toast.success('API 키가 추가되었습니다')
       }
 
@@ -138,6 +135,14 @@ export function ApiKeyManager() {
     if (!confirm('정말로 이 API 키를 삭제하시겠습니까?')) return
 
     try {
+      const response = await fetch(`/api/api-keys?id=${id}`, {
+        method: 'DELETE'
+      })
+      
+      if (!response.ok) {
+        throw new Error('API 키 삭제에 실패했습니다')
+      }
+      
       setApiKeys(prev => prev.filter(key => key.id !== id))
       toast.success('API 키가 삭제되었습니다')
     } catch (error) {
@@ -148,8 +153,24 @@ export function ApiKeyManager() {
 
   const handleToggleActive = async (id: number) => {
     try {
-      setApiKeys(prev => prev.map(key => 
-        key.id === id ? { ...key, isActive: !key.isActive } : key
+      const key = apiKeys.find(k => k.id === id)
+      if (!key) return
+      
+      const response = await fetch('/api/api-keys', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: id,
+          isActive: !key.isActive
+        })
+      })
+      
+      if (!response.ok) {
+        throw new Error('API 키 상태 변경에 실패했습니다')
+      }
+      
+      setApiKeys(prev => prev.map(k => 
+        k.id === id ? { ...k, isActive: !k.isActive } : k
       ))
       toast.success('API 키 상태가 변경되었습니다')
     } catch (error) {
