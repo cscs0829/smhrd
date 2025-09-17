@@ -21,6 +21,8 @@ export default function Home() {
   const [selectedApiKeyId, setSelectedApiKeyId] = useState<number>(0)
   const [temperature, setTemperature] = useState<number>(0.7)
   const [maxTokens, setMaxTokens] = useState<number>(100)
+  const [activeTab, setActiveTab] = useState<string>('process')
+  const [dbRefreshTrigger, setDbRefreshTrigger] = useState<number>(0)
 
   const handleFileSelect = (f: File) => {
     setFile(f)
@@ -48,9 +50,17 @@ export default function Home() {
     }
   }
 
+  const handleTabChange = (value: string) => {
+    setActiveTab(value)
+    // 데이터베이스 탭이 활성화되면 자동으로 새로고침
+    if (value === 'database') {
+      setDbRefreshTrigger(prev => prev + 1)
+    }
+  }
+
   return (
     <div className="container mx-auto px-4 py-8 space-y-6">
-      <Tabs defaultValue="process" className="w-full">
+      <Tabs defaultValue="process" value={activeTab} onValueChange={handleTabChange} className="w-full">
         <TabsList className="grid grid-cols-3 w-full sm:w-auto">
           <TabsTrigger value="process">처리</TabsTrigger>
           <TabsTrigger value="settings">설정</TabsTrigger>
@@ -97,9 +107,9 @@ export default function Home() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="database">
-          <DatabaseStatus />
-        </TabsContent>
+              <TabsContent value="database">
+                <DatabaseStatus onRefresh={dbRefreshTrigger} />
+              </TabsContent>
       </Tabs>
     </div>
   );

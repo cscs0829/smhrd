@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Database, RefreshCw, CheckCircle, XCircle, AlertTriangle } from 'lucide-react'
 import { toast } from 'sonner'
+import { useSpring, animated } from '@react-spring/web' // Context7 React Spring 패턴
 
 interface TableCounts {
   ep_data: number
@@ -44,13 +45,44 @@ interface DbStatus {
   connectionStatus: 'connected' | 'error'
 }
 
-export function DatabaseStatus() {
+interface DatabaseStatusProps {
+  onRefresh?: number
+}
+
+export function DatabaseStatus({ onRefresh }: DatabaseStatusProps) {
   const [dbStatus, setDbStatus] = useState<DbStatus | null>(null)
   const [loading, setLoading] = useState(false)
+
+  // Context7 React Spring 패턴: 새로고침 애니메이션
+  const [refreshSprings, refreshApi] = useSpring(() => ({
+    scale: 1,
+    rotate: 0,
+    config: { tension: 300, friction: 20 }
+  }))
+
+  // Context7 React Spring 패턴: 컴포넌트 마운트 애니메이션
+  const [mountSprings] = useSpring(() => ({
+    from: { opacity: 0, y: 20 },
+    to: { opacity: 1, y: 0 },
+    config: { tension: 300, friction: 30 }
+  }))
 
   const loadDbStatus = async () => {
     try {
       setLoading(true)
+      
+      // Context7 React Spring 패턴: 새로고침 애니메이션 트리거
+      refreshApi.start({
+        from: { scale: 1, rotate: 0 },
+        to: [
+          { scale: 0.95, rotate: 180 },
+          { scale: 1, rotate: 360 }
+        ],
+        onRest: () => {
+          refreshApi.start({ scale: 1, rotate: 0 })
+        }
+      })
+      
       const response = await fetch('/api/db-status')
       const result = await response.json()
       
@@ -71,6 +103,13 @@ export function DatabaseStatus() {
   useEffect(() => {
     loadDbStatus()
   }, [])
+
+  // onRefresh prop이 변경되면 데이터 새로고침
+  useEffect(() => {
+    if (onRefresh && onRefresh > 0) {
+      loadDbStatus()
+    }
+  }, [onRefresh])
 
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -103,10 +142,16 @@ export function DatabaseStatus() {
       <div className="text-center py-8">
         <Database className="h-12 w-12 text-gray-400 mx-auto mb-4" />
         <p className="text-gray-500">데이터베이스 상태를 확인하려면 새로고침 버튼을 클릭하세요</p>
-        <Button onClick={loadDbStatus} className="mt-4">
-          <RefreshCw className="mr-2 h-4 w-4" />
-          새로고침
-        </Button>
+        <animated.div
+          style={{
+            ...refreshSprings
+          }}
+        >
+          <Button onClick={loadDbStatus} className="mt-4">
+            <RefreshCw className="mr-2 h-4 w-4" />
+            새로고침
+          </Button>
+        </animated.div>
       </div>
     )
   }
@@ -119,7 +164,10 @@ export function DatabaseStatus() {
   }
 
   return (
-    <div className="space-y-4">
+    <animated.div 
+      className="space-y-4"
+      style={mountSprings}
+    >
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
@@ -132,15 +180,21 @@ export function DatabaseStatus() {
                 Supabase 데이터베이스 연결 상태 및 테이블 정보를 확인하세요
               </CardDescription>
             </div>
-            <Button 
-              onClick={loadDbStatus} 
-              disabled={loading}
-              variant="outline"
-              size="sm"
+            <animated.div
+              style={{
+                ...refreshSprings
+              }}
             >
-              <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
-              새로고침
-            </Button>
+              <Button
+                onClick={loadDbStatus}
+                disabled={loading}
+                variant="outline"
+                size="sm"
+              >
+                <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+                새로고침
+              </Button>
+            </animated.div>
           </div>
         </CardHeader>
         <CardContent>
@@ -286,6 +340,6 @@ export function DatabaseStatus() {
           )}
         </CardContent>
       </Card>
-    </div>
+    </animated.div>
   )
 }
