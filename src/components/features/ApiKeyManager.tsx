@@ -26,10 +26,11 @@ interface ApiKey {
 }
 
 export function ApiKeyManager() {
+  // 상태 초기화 - 더 안전한 방식
   const [apiKeys, setApiKeys] = useState<ApiKey[]>([])
   const [open, setOpen] = useState(false)
   const [editingKey, setEditingKey] = useState<ApiKey | null>(null)
-  const [showKeys, setShowKeys] = useState<{ [key: number]: boolean }>({})
+  const [showKeys, setShowKeys] = useState<Record<number, boolean>>({})
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -41,31 +42,42 @@ export function ApiKeyManager() {
     apiKey: ''
   })
 
+  // 컴포넌트 마운트 시 API 키 로드
   useEffect(() => {
     loadApiKeys()
   }, [])
 
+  // API 키 로드 함수
   const loadApiKeys = async () => {
     try {
       setLoading(true)
       setError(null)
+      
       const response = await fetch('/api/api-keys')
       if (!response.ok) {
-        throw new Error('API 키를 불러오는데 실패했습니다')
+        throw new Error(`HTTP ${response.status}: API 키를 불러오는데 실패했습니다`)
       }
+      
       const result = await response.json()
-      setApiKeys(Array.isArray(result.data) ? result.data : [])
+      
+      // 응답 데이터 검증
+      if (result && Array.isArray(result.data)) {
+        setApiKeys(result.data)
+      } else {
+        console.warn('API 응답 데이터가 예상 형식이 아닙니다:', result)
+        setApiKeys([])
+      }
     } catch (error) {
       console.error('API 키 로드 오류:', error)
       const errorMessage = error instanceof Error ? error.message : 'API 키를 불러오는데 실패했습니다'
       setError(errorMessage)
-      toast.error(errorMessage)
-      setApiKeys([]) // 오류 발생 시 빈 배열로 설정
+      setApiKeys([]) // 오류 시 빈 배열로 설정
     } finally {
       setLoading(false)
     }
   }
 
+  // API 키 저장/수정 함수
   const handleSave = async () => {
     if (!formData.name.trim() || !formData.apiKey.trim()) {
       toast.error('이름과 API 키를 입력해주세요')
@@ -121,21 +133,12 @@ export function ApiKeyManager() {
       setOpen(false)
     } catch (error) {
       console.error('API 키 저장 오류:', error)
-      toast.error('API 키 저장에 실패했습니다')
+      const message = error instanceof Error ? error.message : 'API 키 저장에 실패했습니다'
+      toast.error(message)
     }
   }
 
-  const handleEdit = (key: ApiKey) => {
-    setEditingKey(key)
-    setFormData({
-      provider: key.provider,
-      name: key.name,
-      description: key.description || '',
-      apiKey: '••••••••••••••••' // 마스킹된 키
-    })
-    setOpen(true)
-  }
-
+  // API 키 삭제 함수
   const handleDelete = async (id: number) => {
     if (!confirm('정말로 이 API 키를 삭제하시겠습니까?')) return
 
@@ -156,6 +159,7 @@ export function ApiKeyManager() {
     }
   }
 
+  // API 키 활성화/비활성화 함수
   const handleToggleActive = async (id: number) => {
     try {
       const key = apiKeys.find(k => k.id === id)
@@ -184,278 +188,280 @@ export function ApiKeyManager() {
     }
   }
 
+  // 편집 모드 시작
+  const handleEdit = (key: ApiKey) => {
+    setEditingKey(key)
+    setFormData({
+      provider: key.provider,
+      name: key.name,
+      description: key.description || '',
+      apiKey: '••••••••••••••••' // 마스킹된 키
+    })
+    setOpen(true)
+  }
+
+  // API 키 표시/숨김 토글
   const toggleKeyVisibility = (id: number) => {
     setShowKeys(prev => ({ ...prev, [id]: !prev[id] }))
   }
 
-  const maskApiKey = (key: string) => {
-    if (key.length <= 8) return '••••••••'
-    return key.substring(0, 4) + '••••••••' + key.substring(key.length - 4)
-  }
-
+  // 제공업체 아이콘 반환
   const getProviderIcon = (provider: string) => {
     switch (provider) {
       case 'openai':
         return '🤖'
       case 'gemini':
-        return '🔮'
+        return '🧠'
       default:
         return '🔑'
     }
   }
 
+  // 제공업체 색상 반환
   const getProviderColor = (provider: string) => {
     switch (provider) {
       case 'openai':
-        return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300'
+        return 'bg-green-100 text-green-800'
       case 'gemini':
-        return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300'
+        return 'bg-blue-100 text-blue-800'
       default:
-        return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300'
+        return 'bg-gray-100 text-gray-800'
     }
   }
 
+  // 날짜 포맷팅
+  const formatDate = (dateString: string) => {
+    try {
+      return new Date(dateString).toLocaleString('ko-KR')
+    } catch {
+      return dateString
+    }
+  }
+
+  // 로딩 상태 렌더링
+  if (loading) {
+    return (
+      <div className="text-center py-8">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto"></div>
+        <p className="mt-2 text-sm text-gray-500">API 키를 불러오는 중...</p>
+      </div>
+    )
+  }
+
+  // 오류 상태 렌더링
+  if (error) {
+    return (
+      <div className="text-center py-8">
+        <AlertTriangle className="h-12 w-12 text-red-400 mx-auto mb-4" />
+        <p className="text-red-500 mb-4">{error}</p>
+        <Button onClick={loadApiKeys} variant="outline">
+          다시 시도
+        </Button>
+      </div>
+    )
+  }
+
+  // 빈 상태 렌더링
+  if (apiKeys.length === 0) {
+    return (
+      <div className="text-center py-8">
+        <Key className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+        <p className="text-gray-500 mb-4">등록된 API 키가 없습니다</p>
+        <Button onClick={() => setOpen(true)}>
+          <Plus className="mr-2 h-4 w-4" />
+          첫 번째 API 키 추가
+        </Button>
+      </div>
+    )
+  }
+
+  // 메인 렌더링
   return (
     <div className="space-y-4">
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle className="flex items-center gap-2">
-                <Key className="h-5 w-5" />
-                API 키 관리
-              </CardTitle>
-              <CardDescription>
-                AI 서비스 사용을 위한 API 키를 관리하세요
-              </CardDescription>
-            </div>
-            <Dialog open={open} onOpenChange={setOpen}>
-              <DialogTrigger asChild>
-                <Button onClick={() => {
-                  setEditingKey(null)
-                  setFormData({ provider: 'openai', name: '', description: '', apiKey: '' })
-                }}>
-                  <Plus className="mr-2 h-4 w-4" />
-                  API 키 추가
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="max-w-md">
-                <DialogHeader>
-                  <DialogTitle>
-                    {editingKey ? 'API 키 수정' : '새 API 키 추가'}
-                  </DialogTitle>
-                  <DialogDescription>
-                    AI 서비스 사용을 위한 API 키 정보를 입력하세요
-                  </DialogDescription>
-                </DialogHeader>
+      <div className="flex justify-between items-center">
+        <div>
+          <h3 className="text-lg font-medium">API 키 목록</h3>
+          <p className="text-sm text-gray-500">총 {apiKeys.length}개의 API 키가 등록되어 있습니다</p>
+        </div>
+        <Button onClick={() => setOpen(true)}>
+          <Plus className="mr-2 h-4 w-4" />
+          API 키 추가
+        </Button>
+      </div>
 
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Label>제공업체</Label>
-                    <div className="flex gap-2">
-                      <Button
-                        variant={formData.provider === 'openai' ? 'default' : 'outline'}
-                        size="sm"
-                        onClick={() => setFormData(prev => ({ ...prev, provider: 'openai' }))}
-                      >
-                        🤖 OpenAI
-                      </Button>
-                      <Button
-                        variant={formData.provider === 'gemini' ? 'default' : 'outline'}
-                        size="sm"
-                        onClick={() => setFormData(prev => ({ ...prev, provider: 'gemini' }))}
-                      >
-                        🔮 Gemini
-                      </Button>
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="name">이름</Label>
-                    <Input
-                      id="name"
-                      placeholder="API 키 이름을 입력하세요"
-                      value={formData.name}
-                      onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="description">설명 (선택사항)</Label>
-                    <Textarea
-                      id="description"
-                      placeholder="API 키에 대한 설명을 입력하세요"
-                      value={formData.description}
-                      onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="api-key">API 키</Label>
-                    <Input
-                      id="api-key"
-                      type="password"
-                      placeholder={formData.provider === 'openai' ? 'sk-...' : 'AI...'}
-                      value={formData.apiKey}
-                      onChange={(e) => setFormData(prev => ({ ...prev, apiKey: e.target.value }))}
-                    />
-                    <div className="text-xs text-gray-500">
-                      {formData.provider === 'openai' 
-                        ? 'OpenAI API 키는 sk-로 시작합니다'
-                        : 'Google AI Studio API 키를 입력하세요'
-                      }
-                    </div>
-                  </div>
-
-                  <Alert>
-                    <Shield className="h-4 w-4" />
-                    <AlertDescription>
-                      API 키는 안전하게 암호화되어 저장됩니다. 
-                      다른 사람과 공유하지 마세요.
-                    </AlertDescription>
-                  </Alert>
-
-                  <div className="flex justify-end gap-2">
-                    <Button variant="outline" onClick={() => setOpen(false)}>
-                      취소
-                    </Button>
-                    <Button onClick={handleSave}>
-                      {editingKey ? '수정' : '추가'}
-                    </Button>
-                  </div>
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>제공업체</TableHead>
+            <TableHead>이름</TableHead>
+            <TableHead>API 키</TableHead>
+            <TableHead>사용량</TableHead>
+            <TableHead>상태</TableHead>
+            <TableHead>작업</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {apiKeys.map((key) => (
+            <TableRow key={key.id}>
+              <TableCell>
+                <div className="flex items-center gap-2">
+                  <span className="text-lg">{getProviderIcon(key.provider)}</span>
+                  <Badge className={getProviderColor(key.provider)}>
+                    {key.provider.toUpperCase()}
+                  </Badge>
                 </div>
-              </DialogContent>
-            </Dialog>
+              </TableCell>
+              <TableCell>
+                <div>
+                  <p className="font-medium">{key.name}</p>
+                  {key.description && (
+                    <p className="text-sm text-gray-500">{key.description}</p>
+                  )}
+                </div>
+              </TableCell>
+              <TableCell>
+                <div className="flex items-center gap-2">
+                  <code className="text-xs bg-gray-100 px-2 py-1 rounded">
+                    {showKeys[key.id] ? key.apiKey : '••••••••••••••••'}
+                  </code>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => toggleKeyVisibility(key.id)}
+                  >
+                    {showKeys[key.id] ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </Button>
+                </div>
+              </TableCell>
+              <TableCell>
+                <div className="text-sm">
+                  <p>{key.usageCount}회 사용</p>
+                  {key.lastUsedAt && (
+                    <p className="text-gray-500">마지막 사용: {formatDate(key.lastUsedAt)}</p>
+                  )}
+                </div>
+              </TableCell>
+              <TableCell>
+                <div className="flex items-center gap-2">
+                  {key.isActive ? (
+                    <Badge className="bg-green-100 text-green-800">
+                      <CheckCircle className="mr-1 h-3 w-3" />
+                      활성
+                    </Badge>
+                  ) : (
+                    <Badge variant="secondary">
+                      <Shield className="mr-1 h-3 w-3" />
+                      비활성
+                    </Badge>
+                  )}
+                </div>
+              </TableCell>
+              <TableCell>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleEdit(key)}
+                  >
+                    <Edit className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleToggleActive(key.id)}
+                  >
+                    {key.isActive ? '비활성화' : '활성화'}
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleDelete(key.id)}
+                    className="text-red-600 hover:text-red-700"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+
+      {/* API 키 추가/수정 다이얼로그 */}
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>
+              {editingKey ? 'API 키 수정' : 'API 키 추가'}
+            </DialogTitle>
+            <DialogDescription>
+              {editingKey ? 'API 키 정보를 수정하세요.' : '새로운 API 키를 추가하세요.'}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="provider" className="text-right">
+                제공업체
+              </Label>
+              <select
+                id="provider"
+                value={formData.provider}
+                onChange={(e) => setFormData(prev => ({ ...prev, provider: e.target.value as 'openai' | 'gemini' }))}
+                className="col-span-3 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                disabled={!!editingKey}
+              >
+                <option value="openai">OpenAI</option>
+                <option value="gemini">Google Gemini</option>
+              </select>
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="name" className="text-right">
+                이름
+              </Label>
+              <Input
+                id="name"
+                value={formData.name}
+                onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                className="col-span-3"
+                placeholder="API 키 이름을 입력하세요"
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="description" className="text-right">
+                설명
+              </Label>
+              <Textarea
+                id="description"
+                value={formData.description}
+                onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                className="col-span-3"
+                placeholder="API 키에 대한 설명을 입력하세요 (선택사항)"
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="apiKey" className="text-right">
+                API 키
+              </Label>
+              <Input
+                id="apiKey"
+                type="password"
+                value={formData.apiKey}
+                onChange={(e) => setFormData(prev => ({ ...prev, apiKey: e.target.value }))}
+                className="col-span-3"
+                placeholder="API 키를 입력하세요"
+              />
+            </div>
           </div>
-        </CardHeader>
-        <CardContent>
-          {loading ? (
-            <div className="text-center py-4">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto"></div>
-              <p className="mt-2 text-sm text-gray-500">API 키를 불러오는 중...</p>
-            </div>
-          ) : error ? (
-            <div className="text-center py-8">
-              <AlertTriangle className="h-12 w-12 text-red-400 mx-auto mb-4" />
-              <p className="text-red-500 mb-4">{error}</p>
-              <Button onClick={loadApiKeys} variant="outline">
-                다시 시도
-              </Button>
-            </div>
-          ) : apiKeys.length === 0 ? (
-            <div className="text-center py-8">
-              <Key className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <p className="text-gray-500 mb-4">등록된 API 키가 없습니다</p>
-              <Button onClick={() => setOpen(true)}>
-                <Plus className="mr-2 h-4 w-4" />
-                첫 번째 API 키 추가
-              </Button>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>제공업체</TableHead>
-                    <TableHead>이름</TableHead>
-                    <TableHead>API 키</TableHead>
-                    <TableHead>사용량</TableHead>
-                    <TableHead>상태</TableHead>
-                    <TableHead>작업</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {apiKeys.map((key) => (
-                    <TableRow key={key.id}>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <span className="text-lg">{getProviderIcon(key.provider)}</span>
-                          <Badge className={getProviderColor(key.provider)}>
-                            {key.provider.toUpperCase()}
-                          </Badge>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div>
-                          <p className="font-medium">{key.name}</p>
-                          {key.description && (
-                            <p className="text-sm text-gray-500">{key.description}</p>
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <code className="text-sm font-mono">
-                            {showKeys[key.id] ? key.apiKey : maskApiKey(key.apiKey)}
-                          </code>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => toggleKeyVisibility(key.id)}
-                          >
-                            {showKeys[key.id] ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                          </Button>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="text-sm">
-                          <p>{key.usageCount.toLocaleString()}회</p>
-                          {key.lastUsedAt && (
-                            <p className="text-gray-500">
-                              {new Date(key.lastUsedAt).toLocaleDateString()}
-                            </p>
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          {key.isActive ? (
-                            <Badge variant="default" className="bg-green-100 text-green-800">
-                              <CheckCircle className="h-3 w-3 mr-1" />
-                              활성
-                            </Badge>
-                          ) : (
-                            <Badge variant="secondary">
-                              <AlertTriangle className="h-3 w-3 mr-1" />
-                              비활성
-                            </Badge>
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-1">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleEdit(key)}
-                          >
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleToggleActive(key.id)}
-                          >
-                            {key.isActive ? '비활성화' : '활성화'}
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleDelete(key.id)}
-                            className="text-red-600 hover:text-red-700"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" onClick={() => setOpen(false)}>
+              취소
+            </Button>
+            <Button onClick={handleSave}>
+              {editingKey ? '수정' : '추가'}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
