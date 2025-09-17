@@ -127,7 +127,7 @@ export function normalizeCityName(input: string): string {
 }
 
 // 도시 매칭을 위한 유연한 검색 함수
-export function findMatchingCityImages(cityImages: Array<{ city: string; [key: string]: unknown }>, targetCity: string): Array<{ city: string; [key: string]: unknown }> {
+export function findMatchingCityImages(cityImages: Array<{ city: string; image_link: string; is_main_image: number; [key: string]: unknown }>, targetCity: string): Array<{ city: string; image_link: string; is_main_image: number; [key: string]: unknown }> {
   if (!cityImages || cityImages.length === 0) return []
   
   const normalizedTarget = normalizeCityName(targetCity).toLowerCase()
