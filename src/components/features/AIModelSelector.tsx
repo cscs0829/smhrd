@@ -14,6 +14,7 @@ import { Cpu, Settings, Key, DollarSign, Zap, Shield, Info } from 'lucide-react'
 import { getAvailableModels } from '@/lib/ai-models'
 import { toast } from 'sonner'
 import { useApiKeys } from '@/contexts/ApiKeyContext'
+import { useSpring, animated } from '@react-spring/web' // Context7 React Spring 패턴
 
 interface AIModelSelectorProps {
   selectedModel: string
@@ -43,6 +44,20 @@ export function AIModelSelector({
   const [tempTemperature, setTempTemperature] = useState(temperature)
   const [tempMaxTokens, setTempMaxTokens] = useState(maxTokens)
 
+  // Context7 React Spring 패턴: 모델 선택 애니메이션
+  const [modelSprings, modelApi] = useSpring(() => ({
+    scale: 1,
+    opacity: 1,
+    config: { tension: 400, friction: 25 }
+  }))
+
+  // Context7 React Spring 패턴: API 키 선택 애니메이션
+  const [apiKeySprings, apiKeyApi] = useSpring(() => ({
+    scale: 1,
+    opacity: 1,
+    config: { tension: 300, friction: 20 }
+  }))
+
   const availableModels = getAvailableModels()
   const selectedModelInfo = availableModels.find(model => model.id === selectedModel)
   const selectedApiKey = apiKeys.find(key => key.id === selectedApiKeyId)
@@ -67,6 +82,15 @@ export function AIModelSelector({
   }
 
   const handleModelSelect = (modelId: string) => {
+    // Context7 React Spring 패턴: 모델 선택 애니메이션
+    modelApi.start({
+      from: { scale: 1, opacity: 1 },
+      to: [
+        { scale: 0.95, opacity: 0.8 },
+        { scale: 1, opacity: 1 }
+      ]
+    })
+
     onModelChange(modelId)
     const model = availableModels.find(m => m.id === modelId)
     if (model) {
@@ -74,9 +98,25 @@ export function AIModelSelector({
       // 해당 제공업체의 활성화된 API 키가 있으면 첫 번째로 선택
       const availableKeys = apiKeys.filter(key => key.provider === model.provider && key.isActive)
       if (availableKeys.length > 0) {
-        setTempApiKeyId(availableKeys[0].id)
+        const selectedKeyId = availableKeys[0].id
+        setTempApiKeyId(selectedKeyId)
+        // 부모 컴포넌트에도 즉시 반영
+        onApiKeyChange?.(selectedKeyId)
+        
+        // Context7 React Spring 패턴: API 키 선택 애니메이션
+        apiKeyApi.start({
+          from: { scale: 1, opacity: 1 },
+          to: [
+            { scale: 1.05, opacity: 0.9 },
+            { scale: 1, opacity: 1 }
+          ]
+        })
+        
+        toast.success(`${model.provider.toUpperCase()} 활성화된 API 키가 자동 선택되었습니다`)
       } else {
         setTempApiKeyId(0)
+        onApiKeyChange?.(0)
+        toast.warning(`${model.provider.toUpperCase()} 활성화된 API 키가 없습니다`)
       }
     }
   }
@@ -189,48 +229,60 @@ export function AIModelSelector({
                 {/* 모델 선택 */}
                 <div className="space-y-2">
                   <Label>AI 모델 선택</Label>
-                  <Select value={selectedModel} onValueChange={handleModelSelect}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="모델을 선택하세요" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {availableModels.map((model) => (
-                        <SelectItem key={model.id} value={model.id}>
-                          <div className="flex items-center gap-2">
-                            <span>{getProviderIcon(model.provider)}</span>
-                            <span>{model.name}</span>
-                            <Badge variant="outline" className="text-xs">
-                              {model.provider.toUpperCase()}
-                            </Badge>
-                          </div>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <animated.div
+                    style={{
+                      ...modelSprings
+                    }}
+                  >
+                    <Select value={selectedModel} onValueChange={handleModelSelect}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="모델을 선택하세요" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {availableModels.map((model) => (
+                          <SelectItem key={model.id} value={model.id}>
+                            <div className="flex items-center gap-2">
+                              <span>{getProviderIcon(model.provider)}</span>
+                              <span>{model.name}</span>
+                              <Badge variant="outline" className="text-xs">
+                                {model.provider.toUpperCase()}
+                              </Badge>
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </animated.div>
                 </div>
 
                 {/* API 키 선택 */}
                 <div className="space-y-2">
                   <Label>API 키 선택</Label>
-                  <Select value={tempApiKeyId.toString()} onValueChange={(value) => setTempApiKeyId(parseInt(value))}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="API 키를 선택하세요" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {apiKeys
-                        .filter(key => key.provider === selectedProvider && key.isActive)
-                        .map((key) => (
-                          <SelectItem key={key.id} value={key.id.toString()}>
-                            <div className="flex items-center gap-2">
-                              <span>{key.name}</span>
-                              {key.description && (
-                                <span className="text-xs text-gray-500">- {key.description}</span>
-                              )}
-                            </div>
-                          </SelectItem>
-                        ))}
-                    </SelectContent>
-                  </Select>
+                  <animated.div
+                    style={{
+                      ...apiKeySprings
+                    }}
+                  >
+                    <Select value={tempApiKeyId.toString()} onValueChange={(value) => setTempApiKeyId(parseInt(value))}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="API 키를 선택하세요" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {apiKeys
+                          .filter(key => key.provider === selectedProvider && key.isActive)
+                          .map((key) => (
+                            <SelectItem key={key.id} value={key.id.toString()}>
+                              <div className="flex items-center gap-2">
+                                <span>{key.name}</span>
+                                {key.description && (
+                                  <span className="text-xs text-gray-500">- {key.description}</span>
+                                )}
+                              </div>
+                            </SelectItem>
+                          ))}
+                      </SelectContent>
+                    </Select>
+                  </animated.div>
                   {apiKeys.filter(key => key.provider === selectedProvider && key.isActive).length === 0 && (
                     <div className="text-xs text-red-500">
                       {selectedProvider === 'openai' 
