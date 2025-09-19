@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge'
 import { toast } from 'sonner'
 import { Plus, Edit, Trash2, Save, X, Search } from 'lucide-react'
 import { useTheme } from 'next-themes'
+import { applyMuiPaginationFixes } from '@/utils/mui-pagination-fix'
 
 interface TableData {
   id: string | number
@@ -106,6 +107,16 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
   const [showGlobalFilter, setShowGlobalFilter] = useState(true)
 
   const tableSchema = TABLE_SCHEMAS[tableName as keyof typeof TABLE_SCHEMAS]
+
+  // MUI Pagination 클릭 문제 해결 - 모바일과 동일한 동작 보장
+  useEffect(() => {
+    if (!isOpen) return
+
+    // 모달이 열릴 때 수정사항 적용
+    const cleanup = applyMuiPaginationFixes()
+
+    return cleanup
+  }, [isOpen])
 
   // 데이터 로드
   const loadData = useCallback(async () => {

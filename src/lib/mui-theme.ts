@@ -180,99 +180,26 @@ export const createMuiTheme = () => {
           },
         },
       },
-      // TablePagination 컴포넌트 설정
+      // TablePagination 컴포넌트 설정 - 간단하고 확실한 방법
       MuiTablePagination: {
         defaultProps: {
-          // Select 컴포넌트의 기본 props 설정
+          // Select 컴포넌트의 기본 설정
           SelectProps: {
+            // 포털 사용하지 않고 직접 렌더링 (모바일과 동일)
             MenuProps: {
-              container: getRootElement,
-              disablePortal: false,
-              anchorOrigin: {
-                vertical: 'bottom',
-                horizontal: 'left',
-              },
-              transformOrigin: {
-                vertical: 'top',
-                horizontal: 'left',
-              },
+              disablePortal: true,
+              // z-index를 적절히 설정
               PaperProps: {
                 sx: {
-                  zIndex: 9999,
-                  maxHeight: '300px',
-                  '& .MuiMenuItem-root': {
-                    cursor: 'pointer',
-                    pointerEvents: 'auto',
-                    userSelect: 'none',
-                    '&:hover': {
-                      backgroundColor: 'rgba(0, 0, 0, 0.04)',
-                    },
-                    '&.Mui-selected': {
-                      backgroundColor: 'rgba(25, 118, 210, 0.12)',
-                      '&:hover': {
-                        backgroundColor: 'rgba(25, 118, 210, 0.16)',
-                      },
-                    },
-                  },
+                  zIndex: 1300,
                 },
-              },
-            },
-            sx: {
-              cursor: 'pointer',
-              pointerEvents: 'auto',
-              '& .MuiSelect-select': {
-                cursor: 'pointer',
-                pointerEvents: 'auto',
-                userSelect: 'none',
-              },
-              '& .MuiSelect-icon': {
-                cursor: 'pointer',
-                pointerEvents: 'auto',
               },
             },
           },
         },
         styleOverrides: {
           root: {
-            position: 'relative',
-            zIndex: 1,
-            '& *': {
-              pointerEvents: 'auto',
-            },
-          },
-          select: {
-            cursor: 'pointer',
-            pointerEvents: 'auto',
-            '&.MuiInputBase-root': {
-              cursor: 'pointer',
-              pointerEvents: 'auto',
-              position: 'relative',
-              zIndex: 10,
-              '&:hover': {
-                backgroundColor: 'rgba(0, 0, 0, 0.04)',
-              },
-              '&.Mui-focused': {
-                backgroundColor: 'transparent',
-              },
-            },
-          },
-          selectIcon: {
-            cursor: 'pointer',
-            pointerEvents: 'auto',
-            position: 'relative',
-            zIndex: 11,
-          },
-          actions: {
-            '& button': {
-              cursor: 'pointer',
-              pointerEvents: 'auto',
-              position: 'relative',
-              zIndex: 10,
-            },
-          },
-          toolbar: {
-            position: 'relative',
-            zIndex: 5,
+            // CSS 파일에서 처리하므로 최소한만 설정
             '& *': {
               pointerEvents: 'auto',
             },
