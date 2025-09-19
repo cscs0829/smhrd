@@ -1,21 +1,18 @@
 'use client'
 
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import { MaterialReactTable, useMaterialReactTable, type MRT_ColumnDef } from 'material-react-table'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Badge } from '@/components/ui/badge'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { toast } from 'sonner'
 import { Plus, Edit, Trash2, Save, X, Search, Filter } from 'lucide-react'
 
 interface TableData {
   id: string | number
-  [key: string]: any
+  [key: string]: unknown
 }
 
 interface DatabaseManagementModalProps {
@@ -101,13 +98,13 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
   const [editingRow, setEditingRow] = useState<string | number | null>(null)
   const [editingData, setEditingData] = useState<TableData>({})
   const [globalFilter, setGlobalFilter] = useState('')
-  const [columnFilters, setColumnFilters] = useState<any[]>([])
+  const [columnFilters, setColumnFilters] = useState<unknown[]>([])
   const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 10 })
 
   const tableSchema = TABLE_SCHEMAS[tableName as keyof typeof TABLE_SCHEMAS]
 
   // 데이터 로드
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     try {
       setLoading(true)
       const response = await fetch(`/api/admin/table-data?table=${tableName}&page=${pagination.pageIndex}&limit=${pagination.pageSize}`)
@@ -124,10 +121,10 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
     } finally {
       setLoading(false)
     }
-  }
+  }, [tableName, pagination.pageIndex, pagination.pageSize])
 
   // 데이터 저장
-  const saveData = async (rowData: TableData) => {
+  const saveData = useCallback(async (rowData: TableData) => {
     try {
       const isNew = !rowData.id || editingRow === 'new'
       const url = isNew 
@@ -156,10 +153,10 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
       console.error('데이터 저장 오류:', error)
       toast.error('저장 중 오류가 발생했습니다')
     }
-  }
+  }, [tableName, editingRow, loadData])
 
   // 데이터 삭제
-  const deleteData = async (id: string | number) => {
+  const deleteData = useCallback(async (id: string | number) => {
     if (!confirm('정말로 이 데이터를 삭제하시겠습니까?')) return
 
     try {
@@ -179,7 +176,7 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
       console.error('데이터 삭제 오류:', error)
       toast.error('삭제 중 오류가 발생했습니다')
     }
-  }
+  }, [tableName, loadData])
 
   // 편집 시작
   const startEditing = (row: TableData) => {
@@ -286,7 +283,7 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
           return <div className="truncate max-w-[200px]">{value as string}</div>
         }
       },
-      Footer: ({ table }) => {
+      Footer: () => {
         if (editingRow === 'new') {
           return (
             <div className="flex gap-2">
@@ -337,7 +334,7 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
         }
       }
     ])
-  }, [tableSchema, editingRow, editingData])
+  }, [tableSchema, editingRow, editingData, saveData, deleteData])
 
   // 테이블 설정
   const table = useMaterialReactTable({
@@ -367,7 +364,7 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
         새 데이터 추가
       </Button>
     ),
-    renderToolbarInternalActions: ({ table }) => (
+    renderToolbarInternalActions: () => (
       <div className="flex gap-2">
         <Button
           variant="outline"
@@ -396,7 +393,7 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
     if (isOpen && tableName) {
       loadData()
     }
-  }, [isOpen, tableName, pagination.pageIndex, pagination.pageSize])
+  }, [isOpen, tableName, pagination.pageIndex, pagination.pageSize, loadData])
 
   if (!tableSchema) {
     return (
