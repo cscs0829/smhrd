@@ -68,6 +68,20 @@ export function AIModelSelector({
     }
   }, [selectedModelInfo])
 
+  // 활성 상태인 API 키를 자동으로 선택
+  useEffect(() => {
+    if (apiKeys.length > 0 && (!tempApiKeyId || tempApiKeyId === 0)) {
+      // 활성 상태인 API 키 중에서 첫 번째 선택
+      const activeApiKey = apiKeys.find(key => key.isActive)
+      if (activeApiKey) {
+        setTempApiKeyId(activeApiKey.id)
+      } else {
+        // 활성 상태인 키가 없으면 첫 번째 키 선택
+        setTempApiKeyId(apiKeys[0].id)
+      }
+    }
+  }, [apiKeys, tempApiKeyId])
+
   const handleSave = () => {
     if (!tempApiKeyId) {
       toast.error('API 키를 선택해주세요')

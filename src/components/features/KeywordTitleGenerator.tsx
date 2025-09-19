@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -11,6 +11,7 @@ import { Loader2, Copy, Download, RefreshCw } from 'lucide-react'
 import { toast } from 'sonner'
 import { AIModelSelector } from '@/components/features/AIModelSelector'
 import { getRecommendedModel } from '@/lib/ai-models'
+import { useApiKeys } from '@/contexts/ApiKeyContext'
 
 interface GeneratedTitle {
   id: string
@@ -21,6 +22,8 @@ interface GeneratedTitle {
 }
 
 export function KeywordTitleGenerator() {
+  const { apiKeys } = useApiKeys()
+  
   // AI 모델 설정을 내부에서 관리
   const [selectedModel, setSelectedModel] = useState<string>(getRecommendedModel().id)
   const [selectedApiKeyId, setSelectedApiKeyId] = useState<number>(0)
@@ -32,6 +35,20 @@ export function KeywordTitleGenerator() {
   const [isGenerating, setIsGenerating] = useState(false)
   const [generatedTitles, setGeneratedTitles] = useState<GeneratedTitle[]>([])
   const [selectedCategory, setSelectedCategory] = useState('all')
+
+  // 활성 상태인 API 키를 자동으로 선택
+  useEffect(() => {
+    if (apiKeys.length > 0 && selectedApiKeyId === 0) {
+      // 활성 상태인 API 키 중에서 첫 번째 선택
+      const activeApiKey = apiKeys.find(key => key.isActive)
+      if (activeApiKey) {
+        setSelectedApiKeyId(activeApiKey.id)
+      } else {
+        // 활성 상태인 키가 없으면 첫 번째 키 선택
+        setSelectedApiKeyId(apiKeys[0].id)
+      }
+    }
+  }, [apiKeys, selectedApiKeyId])
 
   const productTypes = [
     '패키지 여행',
