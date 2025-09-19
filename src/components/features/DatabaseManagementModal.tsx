@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import { MaterialReactTable, useMaterialReactTable, type MRT_ColumnDef, type MRT_Cell, type MRT_Row } from 'material-react-table'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
@@ -17,7 +17,6 @@ interface TableData {
   id: string | number
   [key: string]: unknown
 }
-
 
 interface DatabaseManagementModalProps {
   isOpen: boolean
@@ -101,14 +100,8 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
   const [totalCount, setTotalCount] = useState<number>(tableCount || 0)
   const [editingRow, setEditingRow] = useState<string | number | null>(null)
   const [editingData, setEditingData] = useState<TableData>({ id: '' })
-  const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 10 })
-  const loadMoreRef = useRef<HTMLDivElement | null>(null)
-  const tableScrollRef = useRef<HTMLDivElement | null>(null)
+  const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 20 })
   const { resolvedTheme } = useTheme()
-  const [isFetchingMore, setIsFetchingMore] = useState(false)
-  const inFlightPagesRef = useRef<Set<number>>(new Set())
-  const lastLoadedPageRef = useRef<number>(-1)
-  const abortRef = useRef<AbortController | null>(null)
   
   // 전역 필터 스토어 사용
   const { 
@@ -125,48 +118,20 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
     globalFilter, 
     columnFilters 
   } = tableFilters
-  
-  // 반응형 모달 크기 설정 (현재 페이지 스크롤 전략으로 내부 높이 제한 제거)
 
   const tableSchema = TABLE_SCHEMAS[tableName as keyof typeof TABLE_SCHEMAS]
 
   // 데이터 로드
-  const loadData = useCallback(async (append: boolean = false) => {
+  const loadData = useCallback(async () => {
     try {
-      if (append) {
-        if (isFetchingMore || loading) return
-        // 같은 페이지 중복 요청 방지
-        if (inFlightPagesRef.current.has(pagination.pageIndex)) return
-        setIsFetchingMore(true)
-        inFlightPagesRef.current.add(pagination.pageIndex)
-      } else {
-        // 초기/갱신 로드 시 진행 중 요청 취소
-        abortRef.current?.abort()
-        abortRef.current = new AbortController()
-        inFlightPagesRef.current.clear()
-        lastLoadedPageRef.current = -1
-        setLoading(true)
-      }
+      setLoading(true)
       const searchParam = encodeURIComponent(globalFilter || '')
-      const response = await fetch(`/api/admin/table-data?table=${tableName}&page=${pagination.pageIndex}&limit=${pagination.pageSize}&search=${searchParam}`,{ signal: abortRef.current?.signal })
+      const response = await fetch(`/api/admin/table-data?table=${tableName}&page=${pagination.pageIndex}&limit=${pagination.pageSize}&search=${searchParam}`)
       const result = await response.json()
       
       if (result.success) {
+        setData(result.data)
         setTotalCount(result.pagination?.total ?? totalCount)
-        if (append) {
-          setData(prev => {
-            const existingIds = new Set(prev.map((it) => it.id))
-            const next = [...prev]
-            for (const row of result.data as TableData[]) {
-              if (!existingIds.has(row.id)) next.push(row)
-            }
-            return next
-          })
-          lastLoadedPageRef.current = Math.max(lastLoadedPageRef.current, pagination.pageIndex)
-        } else {
-          setData(result.data)
-          lastLoadedPageRef.current = pagination.pageIndex
-        }
       } else {
         toast.error('데이터를 불러오는데 실패했습니다')
       }
@@ -174,12 +139,9 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
       console.error('데이터 로드 오류:', error)
       toast.error('데이터를 불러올 수 없습니다')
     } finally {
-      if (append) {
-        inFlightPagesRef.current.delete(pagination.pageIndex)
-        setIsFetchingMore(false)
-      } else setLoading(false)
+      setLoading(false)
     }
-  }, [tableName, pagination.pageIndex, pagination.pageSize, totalCount, globalFilter, isFetchingMore, loading])
+  }, [tableName, pagination.pageIndex, pagination.pageSize, totalCount, globalFilter])
 
   // 데이터 저장
   const saveData = useCallback(async (rowData: TableData) => {
@@ -424,23 +386,6 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
           }
           return <div className="truncate max-w-[200px]">{value as string}</div>
         }
-      },
-      Footer: () => {
-        if (editingRow === 'new') {
-          return (
-            <div className="flex gap-2">
-              <Button size="sm" onClick={() => saveData(editingData)}>
-                <Save className="h-4 w-4 mr-1" />
-                저장
-              </Button>
-              <Button size="sm" variant="outline" onClick={cancelEditing}>
-                <X className="h-4 w-4 mr-1" />
-                취소
-              </Button>
-            </div>
-          )
-        }
-        return null
       }
     })).concat([
       // 액션 컬럼
@@ -473,8 +418,7 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
               </Button>
             </div>
           )
-        },
-        Footer: () => null
+        }
       }
     ])
   }, [tableSchema, editingRow, editingData, saveData, deleteData])
@@ -483,45 +427,43 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
   const table = useMaterialReactTable({
     columns,
     data: filteredData,
-    // 서버 상태 동기화: 무한 스크롤 사용으로 내부 페이지네이션은 숨김
     manualFiltering: true,
     manualPagination: true,
     rowCount: totalCount,
-    enablePagination: false,
-    enableRowVirtualization: true,
+    enablePagination: true,
+    enableRowVirtualization: false,
     autoResetPageIndex: false,
     enableColumnFilters: true,
     enableGlobalFilter: true,
-    // 무한 스크롤 시 정렬로 인한 순서 흔들림 방지
-    enableSorting: false,
-    // 행 식별자 고정으로 React key 안정화
+    enableSorting: true,
     getRowId: (originalRow) => String(originalRow.id ?? ''),
     enableRowActions: false,
     enableTopToolbar: true,
-    enableBottomToolbar: false,
+    enableBottomToolbar: true,
     enableDensityToggle: true,
     enableFullScreenToggle: true,
     enableHiding: true,
     state: {
       globalFilter,
       columnFilters,
+      pagination,
+      isLoading: loading,
     },
     onGlobalFilterChange: (value) => {
       setTableFilters(tableName, { globalFilter: value })
+      setPagination(prev => ({ ...prev, pageIndex: 0 }))
     },
     onColumnFiltersChange: (value) => {
       const newValue = typeof value === 'function' ? value(columnFilters) : value
       setTableFilters(tableName, { columnFilters: newValue || [] })
     },
-    // pagination은 무한 스크롤로 대체
+    onPaginationChange: setPagination,
     renderTopToolbarCustomActions: () => (
-      <Button onClick={addNew} disabled={editingRow !== null}>
-        <Plus className="h-4 w-4 mr-2" />
-        새 데이터 추가
-      </Button>
-    ),
-    renderToolbarInternalActions: () => (
       <div className="flex gap-2">
+        <Button onClick={addNew} disabled={editingRow !== null}>
+          <Plus className="h-4 w-4 mr-2" />
+          새 데이터 추가
+        </Button>
         <Button
           variant="outline"
           size="sm"
@@ -533,7 +475,6 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
         </Button>
       </div>
     ),
-    // 다크모드 지원을 위한 테마 설정
     mrtTheme: {
       baseBackgroundColor: resolvedTheme === 'dark' ? '#1f2937' : '#ffffff',
       draggingBorderColor: resolvedTheme === 'dark' ? '#3b82f6' : '#2563eb',
@@ -542,272 +483,44 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
       pinnedRowBackgroundColor: resolvedTheme === 'dark' ? '#1e40af' : '#dbeafe',
       selectedRowBackgroundColor: resolvedTheme === 'dark' ? '#1e3a8a' : '#bfdbfe',
     },
-    // 테이블 컨테이너 스타일링 (내부 스크롤 제거: 페이지 스크롤 사용)
     muiTableContainerProps: {
       sx: { 
+        maxHeight: '60vh',
+        overflow: 'auto',
         position: 'relative',
         zIndex: 1,
-        '&::-webkit-scrollbar': {
-          width: '8px',
-          height: '8px',
-        },
-        '&::-webkit-scrollbar-track': {
-          backgroundColor: resolvedTheme === 'dark' ? '#374151' : '#f1f5f9',
-          borderRadius: '4px',
-        },
-        '&::-webkit-scrollbar-thumb': {
-          backgroundColor: resolvedTheme === 'dark' ? '#6b7280' : '#cbd5e1',
-          borderRadius: '4px',
-          '&:hover': {
-            backgroundColor: resolvedTheme === 'dark' ? '#9ca3af' : '#94a3b8',
-          },
-        },
       }
     },
-    // 테이블 페이퍼 스타일링
     muiTablePaperProps: {
       elevation: 0,
       sx: {
         borderRadius: '12px',
         border: `1px solid ${resolvedTheme === 'dark' ? '#374151' : '#e5e7eb'}`,
         backgroundColor: resolvedTheme === 'dark' ? '#1f2937' : '#ffffff',
-        boxShadow: resolvedTheme === 'dark' 
-          ? '0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.1)'
-          : '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
-        position: 'relative',
-        zIndex: 1,
-        '& .MuiBox-root': {
-          position: 'relative',
-          zIndex: 2,
-          pointerEvents: 'auto',
-        },
-        '& .MuiSelect-root': {
-          position: 'relative',
-          zIndex: 3,
-          pointerEvents: 'auto',
-        },
-        '& .MuiInputBase-root': {
-          position: 'relative',
-          zIndex: 3,
-          pointerEvents: 'auto',
-        },
-        '& .MuiPagination-root': {
-          position: 'relative',
-          zIndex: 2,
-          pointerEvents: 'auto',
-        },
-        '& .MuiPaginationItem-root': {
-          position: 'relative',
-          zIndex: 3,
-          pointerEvents: 'auto',
-        },
-      }
-    },
-    // 헤더 셀 스타일링
-    muiTableHeadCellProps: {
-      sx: { 
-        fontSize: '0.875rem', 
-        fontWeight: 600,
-        backgroundColor: resolvedTheme === 'dark' ? '#374151' : '#f8fafc',
-        color: resolvedTheme === 'dark' ? '#f9fafb' : '#1f2937',
-        borderBottom: `1px solid ${resolvedTheme === 'dark' ? '#4b5563' : '#e5e7eb'}`,
-        '&:hover': {
-          backgroundColor: resolvedTheme === 'dark' ? '#4b5563' : '#f1f5f9',
-        }
-      }
-    },
-    // 바디 셀 스타일링
-    muiTableBodyCellProps: {
-      sx: { 
-        fontSize: '0.875rem',
-        color: resolvedTheme === 'dark' ? '#f9fafb' : '#1f2937',
-        borderBottom: `1px solid ${resolvedTheme === 'dark' ? '#374151' : '#f1f5f9'}`,
-        '&:focus-visible': {
-          outline: `2px solid ${resolvedTheme === 'dark' ? '#3b82f6' : '#2563eb'}`,
-          outlineOffset: '-2px',
-        }
-      }
-    },
-    // 바디 행 스타일링 (zebra 제거로 리페인트 감소)
-    muiTableBodyRowProps: () => ({
-      sx: {
-        '&:hover': {
-          backgroundColor: resolvedTheme === 'dark' ? '#374151' : '#f1f5f9',
-        }
-      }
-    }),
-    // 페이지네이션 스타일링
-    muiPaginationProps: {
-      sx: {
-        position: 'relative',
-        zIndex: 2,
-        pointerEvents: 'auto',
-        '& .MuiPaginationItem-root': {
-          color: resolvedTheme === 'dark' ? '#f9fafb' : '#1f2937',
-          position: 'relative',
-          zIndex: 3,
-          pointerEvents: 'auto',
-          cursor: 'pointer',
-          '&.Mui-selected': {
-            backgroundColor: resolvedTheme === 'dark' ? '#3b82f6' : '#2563eb',
-            color: '#ffffff',
-            '&:hover': {
-              backgroundColor: resolvedTheme === 'dark' ? '#2563eb' : '#1d4ed8',
-            }
-          },
-          '&:hover': {
-            backgroundColor: resolvedTheme === 'dark' ? '#374151' : '#f1f5f9',
-          }
-        },
-        '& .MuiPaginationItem-ellipsis': {
-          color: resolvedTheme === 'dark' ? '#9ca3af' : '#6b7280',
-          position: 'relative',
-          zIndex: 3,
-          pointerEvents: 'auto',
-        },
-        '& .MuiSelect-select': {
-          position: 'relative',
-          zIndex: 4,
-          pointerEvents: 'auto',
-          cursor: 'pointer',
-        },
-        '& .MuiInputBase-input': {
-          position: 'relative',
-          zIndex: 4,
-          pointerEvents: 'auto',
-          cursor: 'pointer',
-        }
-      }
-    },
-    // 검색 필드 스타일링
-    muiSearchTextFieldProps: {
-      sx: {
-        '& .MuiOutlinedInput-root': {
-          backgroundColor: resolvedTheme === 'dark' ? '#374151' : '#ffffff',
-          color: resolvedTheme === 'dark' ? '#f9fafb' : '#1f2937',
-          '& fieldset': {
-            borderColor: resolvedTheme === 'dark' ? '#4b5563' : '#d1d5db',
-          },
-          '&:hover fieldset': {
-            borderColor: resolvedTheme === 'dark' ? '#6b7280' : '#9ca3af',
-          },
-          '&.Mui-focused fieldset': {
-            borderColor: resolvedTheme === 'dark' ? '#3b82f6' : '#2563eb',
-          }
-        },
-        '& .MuiInputLabel-root': {
-          color: resolvedTheme === 'dark' ? '#9ca3af' : '#6b7280',
-        }
-      }
-    },
-    // 필터 필드 스타일링
-    muiFilterTextFieldProps: {
-      sx: {
-        '& .MuiOutlinedInput-root': {
-          backgroundColor: resolvedTheme === 'dark' ? '#374151' : '#ffffff',
-          color: resolvedTheme === 'dark' ? '#f9fafb' : '#1f2937',
-          '& fieldset': {
-            borderColor: resolvedTheme === 'dark' ? '#4b5563' : '#d1d5db',
-          },
-          '&:hover fieldset': {
-            borderColor: resolvedTheme === 'dark' ? '#6b7280' : '#9ca3af',
-          },
-          '&.Mui-focused fieldset': {
-            borderColor: resolvedTheme === 'dark' ? '#3b82f6' : '#2563eb',
-          }
-        },
-        '& .MuiInputLabel-root': {
-          color: resolvedTheme === 'dark' ? '#9ca3af' : '#6b7280',
-        }
       }
     }
   })
 
   // 모달이 열릴 때 데이터 로드
-  // 초기 로드 및 테이블 변경 시 리셋 후 첫 페이지 로드
   useEffect(() => {
     if (!isOpen || !tableName) return
-    setData([])
     setTotalCount(tableCount || 0)
-    setPagination({ pageIndex: 0, pageSize: 10 })
-    // 첫 페이지 로드 (append 아님)
-    loadData(false)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOpen, tableName])
+    setPagination({ pageIndex: 0, pageSize: 20 })
+  }, [isOpen, tableName, tableCount])
 
-  // 글로벌 검색 변경 시 첫 페이지부터 다시 로드
+  // 페이지네이션, 검색, 필터 변경 시 데이터 로드
   useEffect(() => {
     if (!isOpen || !tableName) return
-    setData([])
-    setPagination({ pageIndex: 0, pageSize: 10 })
-    loadData(false)
-  }, [globalFilter, isOpen, tableName, loadData])
+    loadData()
+  }, [isOpen, tableName, pagination.pageIndex, pagination.pageSize, globalFilter, loadData])
 
-  // pageIndex 증가 시 다음 페이지 append 로드
+  // 고급 필터 변경 시 데이터 로드
   useEffect(() => {
     if (!isOpen || !tableName) return
-    if (pagination.pageIndex === 0) return
-    // 이미 로드된 페이지면 스킵
-    if (pagination.pageIndex <= lastLoadedPageRef.current) return
-    loadData(true)
-  }, [pagination.pageIndex, isOpen, tableName, loadData])
-
-  // IntersectionObserver로 무한 스크롤 처리
-  useEffect(() => {
-    if (!isOpen) return
-    const el = loadMoreRef.current
-    if (!el) return
-
-    let tick = false
-    const observer = new IntersectionObserver((entries) => {
-      const [entry] = entries
-      if (!entry.isIntersecting) return
-      const loaded = data.length
-      const hasMore = loaded < totalCount
-      if (!hasMore || isFetchingMore) return
-      if (tick) return
-      tick = true
-      // 약간의 디바운스로 중복 증가 방지
-      setTimeout(() => {
-        setPagination(prev => ({ ...prev, pageIndex: prev.pageIndex + 1 }))
-        tick = false
-      }, 50)
-    }, { root: tableScrollRef.current, rootMargin: '400px 0px', threshold: 0.1 })
-
-    observer.observe(el)
-    return () => {
-      observer.disconnect()
+    if (advancedFilters.length > 0) {
+      loadData()
     }
-  }, [isOpen, data.length, totalCount, isFetchingMore])
-
-  // 모달 닫힘/테이블 변경/언마운트 시 진행 중 요청 정리 및 상태 초기화
-  useEffect(() => {
-    const abortSnapshot = abortRef.current
-    const inFlightSnapshot = inFlightPagesRef.current
-
-    if (!isOpen) {
-      abortSnapshot?.abort()
-      inFlightSnapshot.clear()
-      lastLoadedPageRef.current = -1
-      setIsFetchingMore(false)
-      setLoading(false)
-    }
-    return () => {
-      abortSnapshot?.abort()
-      inFlightSnapshot.clear()
-    }
-  }, [isOpen, tableName])
-
-  // 테이블 변경 시 필터 상태 복원
-  useEffect(() => {
-    if (isOpen && tableName) {
-      // 테이블 변경 시 필터 상태가 자동으로 복원됨 (전역 스토어에서)
-      // 필터가 적용된 상태로 데이터를 다시 로드
-      if (advancedFilters.length > 0) {
-        loadData()
-      }
-    }
-  }, [tableName, isOpen, advancedFilters.length, loadData])
+  }, [advancedFilters, isOpen, tableName, loadData])
 
   if (!tableSchema) {
     return (
@@ -825,14 +538,8 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
   }
 
   return (
-    <Dialog 
-      open={isOpen} 
-      onOpenChange={onClose}
-    >
-      <DialogContent 
-        size="full"
-        className="w-full p-0 relative z-50"
-      >
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent size="full" className="w-full p-0 relative z-50">
         <DialogHeader className="px-4 sm:px-6 py-4 border-b border-gray-200 dark:border-gray-700">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="flex-1">
@@ -964,12 +671,9 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
           </CollapsibleContent>
         </Collapsible>
 
-        <div ref={tableScrollRef} className="flex-1 px-4 sm:px-6 pb-4 sm:pb-6 relative z-10 max-h-[70vh] overflow-auto">
+        {/* 테이블 컨테이너 */}
+        <div className="flex-1 px-4 sm:px-6 pb-4 sm:pb-6 relative z-10 max-h-[70vh] overflow-auto">
           <MaterialReactTable table={table} />
-          {/* 무한 스크롤 센티넬 */}
-          <div ref={loadMoreRef} className="h-10 w-full flex items-center justify-center text-sm text-gray-500">
-            {isFetchingMore ? '추가 로딩 중…' : loading && data.length === 0 ? '불러오는 중…' : (data.length < totalCount ? '아래로 스크롤하면 더 불러옵니다' : '모든 데이터를 불러왔습니다')}
-          </div>
         </div>
       </DialogContent>
     </Dialog>
