@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useMemo, useCallback } from 'react'
-import { MaterialReactTable, useMaterialReactTable, type MRT_ColumnDef, type MRT_ColumnFiltersState } from 'material-react-table'
+import { MaterialReactTable, useMaterialReactTable, type MRT_ColumnDef, type MRT_ColumnFiltersState, type MRT_Cell, type MRT_Row } from 'material-react-table'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -205,7 +205,7 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
       size: col.key === 'id' ? 80 : 150,
       enableColumnFilter: true,
       enableSorting: true,
-      Cell: ({ cell, row }: { cell: any; row: any }) => {
+      Cell: ({ cell, row }: { cell: MRT_Cell<TableData>; row: MRT_Row<TableData> }) => {
         const value = cell.getValue()
         
         if (editingRow === row.original.id) {
@@ -307,7 +307,7 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
         size: 120,
         enableColumnFilter: false,
         enableSorting: false,
-        Cell: ({ row }: { row: any }) => {
+        Cell: ({ row }: { row: MRT_Row<TableData> }) => {
           if (editingRow === row.original.id) {
             return (
               <div className="flex gap-1">
