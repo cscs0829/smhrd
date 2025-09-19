@@ -50,7 +50,11 @@ export async function POST(request: NextRequest) {
     }
     
     // 삭제된 EP 데이터에서도 제목들 가져오기
-    let deletedTitles: any[] = []
+    let deletedTitles: Array<{
+      title: string
+      id: string | number
+      deleted_at: string
+    }> = []
     try {
       const { data: deletedData, error: deletedError } = await supabase
         .from('deleted_ep_data')
