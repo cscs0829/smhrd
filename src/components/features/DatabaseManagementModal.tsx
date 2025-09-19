@@ -378,6 +378,99 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
     enableDensityToggle: true,
     enableFullScreenToggle: true,
     enableHiding: true,
+    // 한국어 로컬라이제이션
+    localization: {
+      language: 'ko',
+      actions: '액션',
+      and: '그리고',
+      cancel: '취소',
+      changeFilterMode: '필터 모드 변경',
+      changeSearchMode: '검색 모드 변경',
+      clearFilter: '필터 지우기',
+      clearSearch: '검색 지우기',
+      clearSort: '정렬 지우기',
+      clickToCopy: '클릭하여 복사',
+      collapse: '접기',
+      collapseAll: '모두 접기',
+      columnActions: '컬럼 액션',
+      copiedToClipboard: '클립보드에 복사됨',
+      dropToGroupBy: '그룹화하려면 여기에 드롭하세요: {column}',
+      edit: '편집',
+      expand: '펼치기',
+      expandAll: '모두 펼치기',
+      filterArrIncludes: '포함',
+      filterArrIncludesAll: '모두 포함',
+      filterArrIncludesSome: '일부 포함',
+      filterBetween: '사이',
+      filterBetweenInclusive: '사이 (포함)',
+      filterByColumn: '{column}으로 필터링',
+      filterContains: '포함',
+      filterEmpty: '비어있음',
+      filterEndsWith: '끝남',
+      filterEquals: '같음',
+      filterEqualsString: '같음',
+      filterFuzzy: '퍼지',
+      filterGreaterThan: '보다 큼',
+      filterGreaterThanOrEqualTo: '보다 크거나 같음',
+      filterInNumberRange: '숫자 범위 내',
+      filterIncludesString: '문자열 포함',
+      filterIncludesStringSensitive: '문자열 포함 (대소문자 구분)',
+      filterLessThan: '보다 작음',
+      filterLessThanOrEqualTo: '보다 작거나 같음',
+      filterMode: '필터 모드: {filterType}',
+      filterNotEmpty: '비어있지 않음',
+      filterNotEquals: '같지 않음',
+      filterStartsWith: '시작함',
+      filterWeakEquals: '약한 같음',
+      filteringByColumn: '{column}으로 필터링 중 - {filterType} - {filterValue}',
+      goToFirstPage: '첫 페이지로',
+      goToLastPage: '마지막 페이지로',
+      goToNextPage: '다음 페이지로',
+      goToPreviousPage: '이전 페이지로',
+      grab: '잡기',
+      groupByColumn: '{column}으로 그룹화',
+      groupedBy: '그룹화됨: ',
+      hideAll: '모두 숨기기',
+      hideColumn: '{column} 숨기기',
+      max: '최대',
+      min: '최소',
+      move: '이동',
+      noRecordsToDisplay: '표시할 레코드가 없습니다',
+      noResultsFound: '결과를 찾을 수 없습니다',
+      of: '의',
+      or: '또는',
+      pinToLeft: '왼쪽에 고정',
+      pinToRight: '오른쪽에 고정',
+      resetColumnSize: '컬럼 크기 재설정',
+      resetOrder: '순서 재설정',
+      rowActions: '행 액션',
+      rowNumber: '행 번호',
+      rowNumbers: '행 번호',
+      rowsPerPage: '페이지당 행 수',
+      save: '저장',
+      search: '검색',
+      select: '선택',
+      selectedCountOfRowCountRowsSelected: '{rowCount}개 중 {selectedCount}개 행 선택됨',
+      showAll: '모두 보기',
+      showAllColumns: '모든 컬럼 보기',
+      showHideColumns: '컬럼 보기/숨기기',
+      showHideFilters: '필터 보기/숨기기',
+      showHideSearch: '검색 보기/숨기기',
+      sortByColumnAsc: '{column} 오름차순 정렬',
+      sortByColumnDesc: '{column} 내림차순 정렬',
+      sortedByColumnAsc: '{column} 오름차순으로 정렬됨',
+      sortedByColumnDesc: '{column} 내림차순으로 정렬됨',
+      thenBy: ', 그 다음 ',
+      toggleDensity: '밀도 토글',
+      toggleFullScreen: '전체 화면 토글',
+      toggleSelectAll: '모두 선택 토글',
+      toggleSelectRow: '행 선택 토글',
+      toggleVisibility: '가시성 토글',
+      ungroupByColumn: '{column} 그룹화 해제',
+      unpin: '고정 해제',
+      unpinAll: '모든 고정 해제',
+      unsorted: '정렬되지 않음',
+    },
     initialState: {
       showColumnFilters: showColumnFilters,
       showGlobalFilter: showGlobalFilter,
@@ -434,14 +527,6 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
         zIndex: 1,
       }
     },
-    muiTablePaperProps: {
-      elevation: 0,
-      sx: {
-        borderRadius: '12px',
-        border: `1px solid ${resolvedTheme === 'dark' ? '#374151' : '#e5e7eb'}`,
-        backgroundColor: resolvedTheme === 'dark' ? '#1f2937' : '#ffffff',
-      }
-    },
     // 컬럼 필터 모드 설정
     columnFilterModeOptions: ['contains', 'startsWith', 'endsWith', 'equals'],
 
@@ -482,54 +567,88 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
     muiPaginationProps: {
       sx: {
         position: 'relative',
-        zIndex: 10,
+        zIndex: 1000,
         pointerEvents: 'auto',
+        '& .MuiTablePagination-toolbar': {
+          position: 'relative',
+          zIndex: 1001,
+          pointerEvents: 'auto',
+        },
         '& .MuiTablePagination-select': {
           position: 'relative',
-          zIndex: 15,
-          pointerEvents: 'auto',
-          cursor: 'pointer',
+          zIndex: 1002,
+          pointerEvents: 'auto !important',
+          cursor: 'pointer !important',
           '&:focus': {
             backgroundColor: resolvedTheme === 'dark' ? '#374151' : '#ffffff',
           }
         },
         '& .MuiTablePagination-selectLabel': {
           position: 'relative',
-          zIndex: 15,
+          zIndex: 1001,
           pointerEvents: 'auto',
         },
         '& .MuiTablePagination-displayedRows': {
           position: 'relative',
-          zIndex: 15,
+          zIndex: 1001,
           pointerEvents: 'auto',
         },
         '& .MuiTablePagination-actions': {
           position: 'relative',
-          zIndex: 15,
+          zIndex: 1001,
           pointerEvents: 'auto',
           '& button': {
-            pointerEvents: 'auto',
-            cursor: 'pointer',
+            pointerEvents: 'auto !important',
+            cursor: 'pointer !important',
           }
         },
         '& .MuiInputBase-root': {
           position: 'relative',
-          zIndex: 20,
-          pointerEvents: 'auto',
-          cursor: 'pointer',
+          zIndex: 1003,
+          pointerEvents: 'auto !important',
+          cursor: 'pointer !important',
           backgroundColor: resolvedTheme === 'dark' ? '#374151' : '#ffffff',
           '&:hover': {
             backgroundColor: resolvedTheme === 'dark' ? '#4b5563' : '#f9fafb',
+          },
+          '&.Mui-focused': {
+            backgroundColor: resolvedTheme === 'dark' ? '#374151' : '#ffffff',
           }
         },
         '& .MuiSelect-select': {
           position: 'relative',
-          zIndex: 25,
-          pointerEvents: 'auto',
-          cursor: 'pointer',
+          zIndex: 1004,
+          pointerEvents: 'auto !important',
+          cursor: 'pointer !important',
+        },
+        '& .MuiSelect-icon': {
+          position: 'relative',
+          zIndex: 1004,
+          pointerEvents: 'auto !important',
+          cursor: 'pointer !important',
         }
       }
     },
+
+    // 테이블 페이퍼에 포털 컨테이너 설정
+    muiTablePaperProps: {
+      elevation: 0,
+      sx: {
+        borderRadius: '12px',
+        border: `1px solid ${resolvedTheme === 'dark' ? '#374151' : '#e5e7eb'}`,
+        backgroundColor: resolvedTheme === 'dark' ? '#1f2937' : '#ffffff',
+        position: 'relative',
+        zIndex: 1,
+        '& .MuiPopover-root': {
+          zIndex: 2000,
+        },
+        '& .MuiMenu-root': {
+          zIndex: 2000,
+        }
+      }
+    },
+
+
 
     // 필터 버튼 커스터마이징 - 토글 기능 강화
     renderToolbarInternalActions: ({ table }) => (
@@ -580,6 +699,25 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
     loadData()
   }, [isOpen, tableName, pagination.pageIndex, pagination.pageSize, globalFilter, loadData])
 
+  // 모달 열림/닫힘 시 포커스 관리
+  useEffect(() => {
+    if (isOpen) {
+      // 모달이 열릴 때 aria-hidden 문제 방지
+      const handleFocusCapture = (e: FocusEvent) => {
+        const target = e.target as HTMLElement
+        if (target.closest('[aria-hidden="true"]')) {
+          e.stopPropagation()
+        }
+      }
+      
+      document.addEventListener('focusin', handleFocusCapture, true)
+      
+      return () => {
+        document.removeEventListener('focusin', handleFocusCapture, true)
+      }
+    }
+  }, [isOpen])
+
 
 
   if (!tableSchema) {
@@ -598,8 +736,30 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
   }
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent size="full" className="w-full p-0 relative z-50">
+    <Dialog 
+      open={isOpen} 
+      onOpenChange={(open) => {
+        if (!open) {
+          onClose()
+        }
+      }}
+    >
+      <DialogContent 
+        size="full" 
+        className="w-full p-0 relative z-50"
+        onInteractOutside={(e) => {
+          // 페이지네이션 셀렉트 박스 클릭 시 모달이 닫히지 않도록 방지
+          const target = e.target as HTMLElement
+          if (target.closest('.MuiSelect-root') || 
+              target.closest('.MuiMenu-root') || 
+              target.closest('.MuiPopover-root') ||
+              target.closest('[role="listbox"]') ||
+              target.closest('[role="option"]')) {
+            e.preventDefault()
+          }
+        }}
+        aria-describedby={undefined}
+      >
         <DialogHeader className="px-4 sm:px-6 py-4 border-b border-gray-200 dark:border-gray-700">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="flex-1">
