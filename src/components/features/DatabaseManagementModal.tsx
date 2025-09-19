@@ -10,7 +10,7 @@ import { Badge } from '@/components/ui/badge'
 import { toast } from 'sonner'
 import { Plus, Edit, Trash2, Save, X, Search } from 'lucide-react'
 import { useTheme } from 'next-themes'
-import { applyMuiPaginationFixes } from '@/utils/mui-pagination-fix'
+// import { applyMuiPaginationFixes } from '@/utils/mui-pagination-fix' // 현재 사용하지 않음
 
 interface TableData {
   id: string | number

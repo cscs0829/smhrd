@@ -5,8 +5,7 @@
  * 무한 루프 방지를 위해 간단하고 안전한 방식으로 구현
  */
 
-// 이벤트 처리 중인지 확인하는 플래그
-let isProcessingEvent = false
+// 사용하지 않는 변수 제거
 
 export const initializeMuiPaginationFix = () => {
   if (typeof window === 'undefined') return
