@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useMemo, useCallback } from 'react'
-import { MaterialReactTable, useMaterialReactTable, type MRT_ColumnDef } from 'material-react-table'
+import { MaterialReactTable, useMaterialReactTable, type MRT_ColumnDef, type MRT_ColumnFiltersState } from 'material-react-table'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -97,7 +97,7 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
   const [editingRow, setEditingRow] = useState<string | number | null>(null)
   const [editingData, setEditingData] = useState<TableData>({ id: '' })
   const [globalFilter, setGlobalFilter] = useState('')
-  const [columnFilters, setColumnFilters] = useState<unknown[]>([])
+  const [columnFilters, setColumnFilters] = useState<MRT_ColumnFiltersState>([])
   const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 10 })
 
   const tableSchema = TABLE_SCHEMAS[tableName as keyof typeof TABLE_SCHEMAS]
@@ -205,7 +205,7 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
       size: col.key === 'id' ? 80 : 150,
       enableColumnFilter: true,
       enableSorting: true,
-      Cell: ({ cell, row }) => {
+      Cell: ({ cell, row }: { cell: any; row: any }) => {
         const value = cell.getValue()
         
         if (editingRow === row.original.id) {
@@ -225,16 +225,16 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
                     <SelectItem value="false">아니오</SelectItem>
                   </SelectContent>
                 </Select>
-              ) : col.type === 'select' && col.options ? (
+              ) : col.type === 'select' && 'options' in col && col.options ? (
                 <Select
-                  value={editingData[col.key] || ''}
+                  value={String(editingData[col.key] || '')}
                   onValueChange={(val) => setEditingData(prev => ({ ...prev, [col.key]: val }))}
                 >
                   <SelectTrigger className="h-8">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {col.options.map((option) => (
+                    {col.options.map((option: string) => (
                       <SelectItem key={option} value={option}>
                         {option.toUpperCase()}
                       </SelectItem>
@@ -244,7 +244,7 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
               ) : (
                 <Input
                   type={col.type === 'password' ? 'password' : col.type === 'number' ? 'number' : 'text'}
-                  value={editingData[col.key] || ''}
+                  value={String(editingData[col.key] || '')}
                   onChange={(e) => setEditingData(prev => ({ ...prev, [col.key]: e.target.value }))}
                   className="h-8"
                 />
@@ -302,12 +302,12 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
     })).concat([
       // 액션 컬럼
       {
-        id: 'actions',
+        accessorKey: 'actions',
         header: '액션',
         size: 120,
         enableColumnFilter: false,
         enableSorting: false,
-        Cell: ({ row }) => {
+        Cell: ({ row }: { row: any }) => {
           if (editingRow === row.original.id) {
             return (
               <div className="flex gap-1">
@@ -330,7 +330,8 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
               </Button>
             </div>
           )
-        }
+        },
+        Footer: () => null
       }
     ])
   }, [tableSchema, editingRow, editingData, saveData, deleteData])
