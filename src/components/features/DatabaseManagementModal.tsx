@@ -466,10 +466,14 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
     manualPagination: true,
     rowCount: totalCount,
     enablePagination: false,
+    enableRowVirtualization: true,
     autoResetPageIndex: false,
     enableColumnFilters: true,
     enableGlobalFilter: true,
-    enableSorting: true,
+    // 무한 스크롤 시 정렬로 인한 순서 흔들림 방지
+    enableSorting: false,
+    // 행 식별자 고정으로 React key 안정화
+    getRowId: (originalRow) => String(originalRow.id ?? ''),
     enableRowActions: false,
     enableTopToolbar: true,
     enableBottomToolbar: false,
