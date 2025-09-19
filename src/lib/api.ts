@@ -171,7 +171,7 @@ export async function getApiKeyById(id: number): Promise<ApiKey | null> {
     }
     
     const data = await response.json()
-    const apiKeys = data.apiKeys || []
+    const apiKeys = data.data || [] // api-keys 엔드포인트는 { data } 형식으로 반환
     
     return apiKeys.find((key: ApiKey) => key.id === id) || null
   } catch (error) {

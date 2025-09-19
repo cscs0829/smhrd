@@ -1,10 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { AIService } from '@/lib/ai-service'
-import { getApiKeyById } from '@/lib/api'
+import { createClient } from '@supabase/supabase-js'
+
+function getSupabase() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+  if (!supabaseUrl || !supabaseServiceRoleKey) {
+    throw new Error('Supabase 환경변수가 설정되지 않았습니다.')
+  }
+  return createClient(supabaseUrl, supabaseServiceRoleKey)
+}
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
+    console.log('요청 데이터:', body)
+    
     const { 
       location, 
       productType, 
@@ -15,16 +26,45 @@ export async function POST(request: NextRequest) {
       maxTokens 
     } = body
 
+    console.log('파싱된 데이터:', {
+      location,
+      productType,
+      additionalKeywords,
+      modelId,
+      apiKeyId,
+      temperature,
+      maxTokens
+    })
+
     if (!location) {
+      console.log('오류: location이 없음')
       return NextResponse.json(
         { error: '나라/도시 정보가 필요합니다.' },
         { status: 400 }
       )
     }
 
-    // API 키 가져오기
-    const apiKey = await getApiKeyById(apiKeyId)
-    if (!apiKey) {
+    if (!apiKeyId) {
+      console.log('오류: apiKeyId가 없음')
+      return NextResponse.json(
+        { error: 'API 키 ID가 필요합니다.' },
+        { status: 400 }
+      )
+    }
+
+    // API 키 가져오기 (직접 데이터베이스에서 조회)
+    console.log('API 키 조회 중...', apiKeyId)
+    const supabase = getSupabase()
+    const { data: apiKeyData, error: apiKeyError } = await supabase
+      .from('api_keys')
+      .select('*')
+      .eq('id', apiKeyId)
+      .eq('is_active', true)
+      .single()
+    
+    console.log('API 키 조회 결과:', apiKeyData ? '성공' : '실패', apiKeyError)
+    
+    if (apiKeyError || !apiKeyData) {
       return NextResponse.json(
         { error: '유효하지 않은 API 키입니다.' },
         { status: 400 }
@@ -34,7 +74,7 @@ export async function POST(request: NextRequest) {
     // AI 서비스 초기화
     const aiService = new AIService({
       modelId,
-      apiKey: apiKey.key,
+      apiKey: apiKeyData.api_key,
       temperature: temperature || 0.7,
       maxTokens: maxTokens || 100
     })
