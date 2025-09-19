@@ -4,11 +4,11 @@ import { useState, useEffect, useMemo, useCallback } from 'react'
 import { MaterialReactTable, useMaterialReactTable, type MRT_ColumnDef, type MRT_Cell, type MRT_Row } from 'material-react-table'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
+
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Badge } from '@/components/ui/badge'
 import { toast } from 'sonner'
-import { Plus, Edit, Trash2, Save, X, Search } from 'lucide-react'
+import { Plus, Edit, Trash2, Search } from 'lucide-react'
 import { useTheme } from 'next-themes'
 // import { applyMuiPaginationFixes } from '@/utils/mui-pagination-fix' // 현재 사용하지 않음
 
@@ -97,8 +97,7 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
   const [data, setData] = useState<TableData[]>([])
   const [loading, setLoading] = useState(false)
   const [totalCount, setTotalCount] = useState<number>(tableCount || 0)
-  const [editingRow, setEditingRow] = useState<string | number | null>(null)
-  const [editingData, setEditingData] = useState<TableData>({ id: '' })
+
   const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 20 })
   const { resolvedTheme } = useTheme()
   const [globalFilter, setGlobalFilter] = useState('')
@@ -139,18 +138,11 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
     }
   }, [tableName, pagination.pageIndex, pagination.pageSize, totalCount, globalFilter])
 
-  // 데이터 저장
+  // 데이터 저장 (편집)
   const saveData = useCallback(async (rowData: TableData) => {
     try {
-      const isNew = !rowData.id || editingRow === 'new'
-      const url = isNew
-        ? `/api/admin/table-data?table=${tableName}`
-        : `/api/admin/table-data?table=${tableName}&id=${rowData.id}`
-
-      const method = isNew ? 'POST' : 'PUT'
-
-      const response = await fetch(url, {
-        method,
+      const response = await fetch(`/api/admin/table-data?table=${tableName}&id=${rowData.id}`, {
+        method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(rowData)
       })
@@ -158,7 +150,7 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
       const result = await response.json()
 
       if (result.success) {
-        toast.success(isNew ? '데이터가 추가되었습니다' : '데이터가 수정되었습니다')
+        toast.success('데이터가 수정되었습니다')
         setEditingRow(null)
         setEditingData({ id: '' })
         loadData()
@@ -169,7 +161,34 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
       console.error('데이터 저장 오류:', error)
       toast.error('저장 중 오류가 발생했습니다')
     }
-  }, [tableName, editingRow, loadData])
+  }, [tableName, loadData])
+
+  // 새 데이터 생성
+  const createData = useCallback(async (values: Record<string, any>) => {
+    try {
+      // ID 필드 제거 (자동 생성)
+      const { id, created_at, updated_at, ...newData } = values
+
+      const response = await fetch(`/api/admin/table-data?table=${tableName}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newData)
+      })
+
+      const result = await response.json()
+
+      if (result.success) {
+        toast.success('새 데이터가 추가되었습니다')
+        setCreatingRow(null)
+        loadData()
+      } else {
+        toast.error(result.error || '추가에 실패했습니다')
+      }
+    } catch (error) {
+      console.error('데이터 생성 오류:', error)
+      toast.error('추가 중 오류가 발생했습니다')
+    }
+  }, [tableName, loadData])
 
   // 데이터 삭제
   const deleteData = useCallback(async (id: string | number) => {
@@ -194,23 +213,7 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
     }
   }, [tableName, loadData])
 
-  // 편집 시작
-  const startEditing = (row: TableData) => {
-    setEditingRow(row.id)
-    setEditingData({ ...row })
-  }
 
-  // 편집 취소
-  const cancelEditing = () => {
-    setEditingRow(null)
-    setEditingData({ id: '' })
-  }
-
-  // 새 데이터 추가
-  const addNew = () => {
-    setEditingRow('new')
-    setEditingData({ id: '' })
-  }
 
   // 컬럼 정의 생성
   const columns = useMemo<MRT_ColumnDef<TableData>[]>(() => {
@@ -222,6 +225,7 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
       size: col.key === 'id' ? 80 : 150,
       enableColumnFilter: true,
       enableSorting: true,
+      enableEditing: col.editable,
       // 컬럼별 필터 설정
       filterVariant: col.type === 'boolean' ? 'select' : 'text',
       filterSelectOptions: col.type === 'boolean' ? [
@@ -229,6 +233,58 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
         { text: '아니오', value: 'false' }
       ] : col.type === 'select' && 'options' in col && col.options ?
         col.options.map(option => ({ text: option.toUpperCase(), value: option })) : undefined,
+      // 편집 컴포넌트 커스터마이징
+      muiEditTextFieldProps: ({ cell, column, row }) => ({
+        type: col.type === 'number' ? 'number' : col.type === 'password' ? 'password' : 'text',
+        required: col.key !== 'id' && !col.key.includes('_at'),
+        variant: 'outlined' as const,
+        size: 'small' as const,
+      }),
+      // boolean과 select 타입을 위한 커스텀 편집 컴포넌트
+      Edit: col.type === 'boolean' ? ({ cell, column, row, table }) => (
+        <Select
+          value={cell.getValue() ? 'true' : 'false'}
+          onValueChange={(value) => {
+            row._valuesCache[column.id] = value === 'true'
+            if (table.getState().creatingRow) {
+              table.setCreatingRow(row)
+            } else if (table.getState().editingRow) {
+              table.setEditingRow(row)
+            }
+          }}
+        >
+          <SelectTrigger className="w-full">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="true">예</SelectItem>
+            <SelectItem value="false">아니오</SelectItem>
+          </SelectContent>
+        </Select>
+      ) : col.type === 'select' && 'options' in col && col.options ? ({ cell, column, row, table }) => (
+        <Select
+          value={String(cell.getValue() || '')}
+          onValueChange={(value) => {
+            row._valuesCache[column.id] = value
+            if (table.getState().creatingRow) {
+              table.setCreatingRow(row)
+            } else if (table.getState().editingRow) {
+              table.setEditingRow(row)
+            }
+          }}
+        >
+          <SelectTrigger className="w-full">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {col.options.map((option: string) => (
+              <SelectItem key={option} value={option}>
+                {option.toUpperCase()}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      ) : undefined,
       // 필터 텍스트 필드 커스터마이징
       muiFilterTextFieldProps: {
         placeholder: `${col.label} 검색...`,
@@ -251,120 +307,41 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
           }
         }
       },
-      Cell: ({ cell, row }: { cell: MRT_Cell<TableData>; row: MRT_Row<TableData> }) => {
+      Cell: ({ cell }: { cell: MRT_Cell<TableData> }) => {
         const value = cell.getValue()
 
-        if (editingRow === row.original.id) {
-          // 편집 모드
+        if (col.type === 'boolean') {
           return (
-            <div className="w-full">
-              {col.type === 'boolean' ? (
-                <Select
-                  value={editingData[col.key] ? 'true' : 'false'}
-                  onValueChange={(val) => setEditingData(prev => ({ ...prev, [col.key]: val === 'true' }))}
-                >
-                  <SelectTrigger className="h-8 bg-background border-input">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="bg-background border-input">
-                    <SelectItem value="true">예</SelectItem>
-                    <SelectItem value="false">아니오</SelectItem>
-                  </SelectContent>
-                </Select>
-              ) : col.type === 'select' && 'options' in col && col.options ? (
-                <Select
-                  value={String(editingData[col.key] || '')}
-                  onValueChange={(val) => setEditingData(prev => ({ ...prev, [col.key]: val }))}
-                >
-                  <SelectTrigger className="h-8 bg-background border-input">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="bg-background border-input">
-                    {col.options.map((option: string) => (
-                      <SelectItem key={option} value={option}>
-                        {option.toUpperCase()}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              ) : (
-                <Input
-                  type={col.type === 'password' ? 'password' : col.type === 'number' ? 'number' : 'text'}
-                  value={String(editingData[col.key] || '')}
-                  onChange={(e) => setEditingData(prev => ({ ...prev, [col.key]: e.target.value }))}
-                  className="h-8 bg-background border-input"
-                />
-              )}
+            <Badge variant={value ? 'default' : 'secondary'}>
+              {value ? '예' : '아니오'}
+            </Badge>
+          )
+        } else if (col.type === 'url' && value) {
+          return (
+            <a
+              href={value as string}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-600 dark:text-blue-400 hover:underline truncate block max-w-[200px]"
+            >
+              {value as string}
+            </a>
+          )
+        } else if (col.type === 'datetime' && value) {
+          return new Date(value as string).toLocaleString('ko-KR')
+        } else if (col.type === 'json' && value) {
+          return (
+            <div className="max-w-[200px] truncate" title={JSON.stringify(value)}>
+              {JSON.stringify(value).substring(0, 50)}...
             </div>
           )
-        } else {
-          // 읽기 모드
-          if (col.type === 'boolean') {
-            return (
-              <Badge variant={value ? 'default' : 'secondary'}>
-                {value ? '예' : '아니오'}
-              </Badge>
-            )
-          } else if (col.type === 'url' && value) {
-            return (
-              <a
-                href={value as string}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-blue-600 dark:text-blue-400 hover:underline truncate block max-w-[200px]"
-              >
-                {value as string}
-              </a>
-            )
-          } else if (col.type === 'datetime' && value) {
-            return new Date(value as string).toLocaleString('ko-KR')
-          } else if (col.type === 'json' && value) {
-            return (
-              <div className="max-w-[200px] truncate" title={JSON.stringify(value)}>
-                {JSON.stringify(value).substring(0, 50)}...
-              </div>
-            )
-          }
-          return <div className="truncate max-w-[200px]">{value as string}</div>
         }
+        return <div className="truncate max-w-[200px]">{value as string}</div>
       }
     }))
 
-    // 액션 컬럼 추가
-    const actionsColumn: MRT_ColumnDef<TableData> = {
-      accessorKey: 'actions',
-      header: '액션',
-      size: 120,
-      enableColumnFilter: false,
-      enableSorting: false,
-      Cell: ({ row }: { row: MRT_Row<TableData> }) => {
-        if (editingRow === row.original.id) {
-          return (
-            <div className="flex gap-1">
-              <Button size="sm" onClick={() => saveData(editingData)}>
-                <Save className="h-4 w-4" />
-              </Button>
-              <Button size="sm" variant="outline" onClick={cancelEditing}>
-                <X className="h-4 w-4" />
-              </Button>
-            </div>
-          )
-        }
-        return (
-          <div className="flex gap-1">
-            <Button size="sm" variant="outline" onClick={() => startEditing(row.original)}>
-              <Edit className="h-4 w-4" />
-            </Button>
-            <Button size="sm" variant="outline" onClick={() => deleteData(row.original.id)}>
-              <Trash2 className="h-4 w-4" />
-            </Button>
-          </div>
-        )
-      }
-    }
-
-    return [...dataColumns, actionsColumn]
-  }, [tableSchema, editingRow, editingData, saveData, deleteData, resolvedTheme])
+    return dataColumns
+  }, [tableSchema, resolvedTheme])
 
   // 테이블 설정
   const table = useMaterialReactTable({
@@ -382,12 +359,18 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
     enableColumnFilterModes: true, // 필터 모드 활성화
     columnFilterDisplayMode: 'subheader', // 필터를 서브헤더에 표시
     getRowId: (originalRow) => String(originalRow.id ?? ''),
-    enableRowActions: false,
+    enableRowActions: true,
+    positionActionsColumn: 'last',
     enableTopToolbar: true,
     enableBottomToolbar: true,
     enableDensityToggle: true,
     enableFullScreenToggle: true,
     enableHiding: true,
+    // 편집 및 생성 기능 활성화
+    enableEditing: true,
+    editDisplayMode: 'modal',
+    createDisplayMode: 'modal',
+    positionCreatingRow: 'top',
     // 포털 컨테이너 설정으로 z-index 문제 해결
     muiTableBodyProps: {
       sx: {
@@ -512,9 +495,56 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
     onPaginationChange: setPagination,
     onShowColumnFiltersChange: setShowColumnFilters,
     onShowGlobalFilterChange: setShowGlobalFilter,
-    renderTopToolbarCustomActions: () => (
+    // 편집 관련 콜백
+    onEditingRowSave: ({ values, table }) => {
+      saveData(values as TableData)
+      table.setEditingRow(null)
+    },
+    onEditingRowCancel: ({ table }) => {
+      table.setEditingRow(null)
+    },
+    // 생성 관련 콜백
+    onCreatingRowSave: ({ values, table }) => {
+      createData(values)
+      table.setCreatingRow(null)
+    },
+    onCreatingRowCancel: ({ table }) => {
+      table.setCreatingRow(null)
+    },
+    // 편집 모달 커스터마이징
+    muiEditRowDialogProps: {
+      maxWidth: 'md',
+      fullWidth: true,
+    },
+    // 생성 모달 커스터마이징
+    muiCreateRowDialogProps: {
+      maxWidth: 'md',
+      fullWidth: true,
+    },
+    renderRowActions: ({ row, table }) => (
+      <div className="flex gap-1">
+        <Button 
+          size="sm" 
+          variant="outline" 
+          onClick={() => table.setEditingRow(row)}
+        >
+          <Edit className="h-4 w-4" />
+        </Button>
+        <Button 
+          size="sm" 
+          variant="outline" 
+          onClick={() => deleteData(row.original.id)}
+        >
+          <Trash2 className="h-4 w-4" />
+        </Button>
+      </div>
+    ),
+    renderTopToolbarCustomActions: ({ table }) => (
       <div className="flex gap-2">
-        <Button onClick={addNew} disabled={editingRow !== null}>
+        <Button 
+          onClick={() => table.setCreatingRow(true)}
+          disabled={loading}
+        >
           <Plus className="h-4 w-4 mr-2" />
           새 데이터 추가
         </Button>
