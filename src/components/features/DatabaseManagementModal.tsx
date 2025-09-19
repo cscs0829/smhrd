@@ -101,7 +101,7 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
   const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 20 })
   const { resolvedTheme } = useTheme()
   const [globalFilter, setGlobalFilter] = useState('')
-  const [columnFilters, setColumnFilters] = useState<any[]>([])
+  const [columnFilters, setColumnFilters] = useState<Array<{ id: string; value: unknown }>>([])
   const [showColumnFilters, setShowColumnFilters] = useState(false)
   const [showGlobalFilter, setShowGlobalFilter] = useState(true)
 
@@ -217,7 +217,7 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
       filterSelectOptions: col.type === 'boolean' ? [
         { text: '예', value: 'true' },
         { text: '아니오', value: 'false' }
-      ] : col.type === 'select' && 'options' in col && col.options ? 
+      ] : col.type === 'select' && 'options' in col && col.options ?
         col.options.map(option => ({ text: option.toUpperCase(), value: option })) : undefined,
       // 필터 텍스트 필드 커스터마이징
       muiFilterTextFieldProps: {
@@ -354,7 +354,7 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
     }
 
     return [...dataColumns, actionsColumn]
-  }, [tableSchema, editingRow, editingData, saveData, deleteData])
+  }, [tableSchema, editingRow, editingData, saveData, deleteData, resolvedTheme])
 
   // 테이블 설정
   const table = useMaterialReactTable({
@@ -444,7 +444,7 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
     },
     // 컬럼 필터 모드 설정
     columnFilterModeOptions: ['contains', 'startsWith', 'endsWith', 'equals'],
-    
+
     // 전역 필터 텍스트 필드 props
     muiSearchTextFieldProps: {
       placeholder: '전체 검색...',
@@ -466,7 +466,7 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
         }
       }
     },
-    
+
     // 테이블 헤더 셀 props 설정
     muiTableHeadCellProps: {
       sx: {
@@ -477,7 +477,60 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
         }
       }
     },
-    
+
+    // 페이지네이션 props 설정 - 클릭 문제 해결
+    muiPaginationProps: {
+      sx: {
+        position: 'relative',
+        zIndex: 10,
+        pointerEvents: 'auto',
+        '& .MuiTablePagination-select': {
+          position: 'relative',
+          zIndex: 15,
+          pointerEvents: 'auto',
+          cursor: 'pointer',
+          '&:focus': {
+            backgroundColor: resolvedTheme === 'dark' ? '#374151' : '#ffffff',
+          }
+        },
+        '& .MuiTablePagination-selectLabel': {
+          position: 'relative',
+          zIndex: 15,
+          pointerEvents: 'auto',
+        },
+        '& .MuiTablePagination-displayedRows': {
+          position: 'relative',
+          zIndex: 15,
+          pointerEvents: 'auto',
+        },
+        '& .MuiTablePagination-actions': {
+          position: 'relative',
+          zIndex: 15,
+          pointerEvents: 'auto',
+          '& button': {
+            pointerEvents: 'auto',
+            cursor: 'pointer',
+          }
+        },
+        '& .MuiInputBase-root': {
+          position: 'relative',
+          zIndex: 20,
+          pointerEvents: 'auto',
+          cursor: 'pointer',
+          backgroundColor: resolvedTheme === 'dark' ? '#374151' : '#ffffff',
+          '&:hover': {
+            backgroundColor: resolvedTheme === 'dark' ? '#4b5563' : '#f9fafb',
+          }
+        },
+        '& .MuiSelect-select': {
+          position: 'relative',
+          zIndex: 25,
+          pointerEvents: 'auto',
+          cursor: 'pointer',
+        }
+      }
+    },
+
     // 필터 버튼 커스터마이징 - 토글 기능 강화
     renderToolbarInternalActions: ({ table }) => (
       <div className="flex items-center gap-1">
@@ -488,16 +541,15 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
             setShowColumnFilters(newValue)
             table.setShowColumnFilters(newValue)
           }}
-          className={`p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-700 ${
-            showColumnFilters ? 'bg-blue-100 dark:bg-blue-900' : ''
-          }`}
+          className={`p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-700 ${showColumnFilters ? 'bg-blue-100 dark:bg-blue-900' : ''
+            }`}
           title="컬럼 필터 토글"
         >
           <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-            <path d="M10.83 8H21V6H8.83zm5 5H18v-2h-4.17zM14 16.83V18h-4v-2h3.17l-3-3H6v-2h2.17l-3-3H3V6h.17L1.39 4.22 2.8 2.81l18.38 18.38-1.41 1.41z"/>
+            <path d="M10.83 8H21V6H8.83zm5 5H18v-2h-4.17zM14 16.83V18h-4v-2h3.17l-3-3H6v-2h2.17l-3-3H3V6h.17L1.39 4.22 2.8 2.81l18.38 18.38-1.41 1.41z" />
           </svg>
         </button>
-        
+
         {/* 글로벌 필터 토글 버튼 */}
         <button
           onClick={() => {
@@ -505,9 +557,8 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
             setShowGlobalFilter(newValue)
             table.setShowGlobalFilter(newValue)
           }}
-          className={`p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-700 ${
-            showGlobalFilter ? 'bg-blue-100 dark:bg-blue-900' : ''
-          }`}
+          className={`p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-700 ${showGlobalFilter ? 'bg-blue-100 dark:bg-blue-900' : ''
+            }`}
           title="검색 필터 토글"
         >
           <Search className="w-5 h-5" />
