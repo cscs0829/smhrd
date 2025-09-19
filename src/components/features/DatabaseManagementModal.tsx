@@ -557,48 +557,7 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
       }
     },
 
-    // Select 컴포넌트의 MenuProps 설정
-    muiSelectProps: {
-      MenuProps: {
-        disablePortal: false,
-        PaperProps: {
-          sx: {
-            backgroundColor: resolvedTheme === 'dark' ? '#374151' : '#ffffff',
-            border: `1px solid ${resolvedTheme === 'dark' ? '#4b5563' : '#d1d5db'}`,
-            borderRadius: '6px',
-            boxShadow: resolvedTheme === 'dark'
-              ? '0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.2)'
-              : '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
-            maxHeight: '200px',
-          }
-        },
-        anchorOrigin: {
-          vertical: 'bottom',
-          horizontal: 'left',
-        },
-        transformOrigin: {
-          vertical: 'top',
-          horizontal: 'left',
-        },
-        sx: {
-          zIndex: 9999,
-          '& .MuiMenuItem-root': {
-            color: resolvedTheme === 'dark' ? '#f9fafb' : '#1f2937',
-            fontSize: '14px',
-            padding: '8px 12px',
-            '&:hover': {
-              backgroundColor: resolvedTheme === 'dark' ? '#4b5563' : '#f3f4f6',
-            },
-            '&.Mui-selected': {
-              backgroundColor: resolvedTheme === 'dark' ? '#1e40af' : '#dbeafe',
-              '&:hover': {
-                backgroundColor: resolvedTheme === 'dark' ? '#1e3a8a' : '#bfdbfe',
-              },
-            },
-          },
-        }
-      }
-    },
+
 
     // 테이블 헤더 셀 props 설정
     muiTableHeadCellProps: {
