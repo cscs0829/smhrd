@@ -23,7 +23,6 @@ export const initializeMuiPaginationFix = () => {
         
         // Select 요소 찾기
         const selectInput = selectElement.querySelector('.MuiSelect-select') as HTMLElement
-        const selectIcon = selectElement.querySelector('.MuiSelect-icon') as HTMLElement
         
         if (selectInput) {
           // 포커스 설정
