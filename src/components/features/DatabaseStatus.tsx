@@ -63,7 +63,7 @@ export function DatabaseStatus({ onRefresh }: DatabaseStatusProps) {
     tableName: '',
     tableCount: 0
   })
-  const { resolvedTheme: _resolvedTheme } = useTheme()
+  const { resolvedTheme } = useTheme()
 
   // Context7 React Spring 패턴: 새로고침 애니메이션
   const [refreshSprings, refreshApi] = useSpring(() => ({

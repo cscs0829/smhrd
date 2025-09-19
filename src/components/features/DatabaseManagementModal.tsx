@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useMemo, useCallback } from 'react'
-import { MaterialReactTable, useMaterialReactTable, type MRT_ColumnDef, type MRT_ColumnFiltersState, type MRT_Cell, type MRT_Row } from 'material-react-table'
+import { MaterialReactTable, useMaterialReactTable, type MRT_ColumnDef, type MRT_Cell, type MRT_Row } from 'material-react-table'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -122,7 +122,6 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
   
   // 반응형 모달 크기 설정
   const isMobile = useMediaQuery('(max-width: 768px)')
-  const isTablet = useMediaQuery('(max-width: 1024px)')
 
   const tableSchema = TABLE_SCHEMAS[tableName as keyof typeof TABLE_SCHEMAS]
 
