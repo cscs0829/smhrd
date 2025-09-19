@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useMemo, useCallback } from 'react'
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { MaterialReactTable, useMaterialReactTable, type MRT_ColumnDef, type MRT_Cell, type MRT_Row } from 'material-react-table'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
@@ -98,9 +98,11 @@ const TABLE_SCHEMAS = {
 export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount }: DatabaseManagementModalProps) {
   const [data, setData] = useState<TableData[]>([])
   const [loading, setLoading] = useState(false)
+  const [totalCount, setTotalCount] = useState<number>(tableCount || 0)
   const [editingRow, setEditingRow] = useState<string | number | null>(null)
   const [editingData, setEditingData] = useState<TableData>({ id: '' })
   const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 10 })
+  const loadMoreRef = useRef<HTMLDivElement | null>(null)
   const { resolvedTheme } = useTheme()
   
   // 전역 필터 스토어 사용
@@ -124,14 +126,28 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
   const tableSchema = TABLE_SCHEMAS[tableName as keyof typeof TABLE_SCHEMAS]
 
   // 데이터 로드
-  const loadData = useCallback(async () => {
+  const loadData = useCallback(async (append: boolean = false) => {
     try {
       setLoading(true)
-      const response = await fetch(`/api/admin/table-data?table=${tableName}&page=${pagination.pageIndex}&limit=${pagination.pageSize}`)
+      const searchParam = encodeURIComponent(globalFilter || '')
+      const response = await fetch(`/api/admin/table-data?table=${tableName}&page=${pagination.pageIndex}&limit=${pagination.pageSize}&search=${searchParam}`)
       const result = await response.json()
       
       if (result.success) {
-        setData(result.data)
+        setTotalCount(result.pagination?.total ?? totalCount)
+        if (append) {
+          setData(prev => {
+            // 중복 방지: id 기준으로 병합
+            const existingIds = new Set(prev.map((it) => it.id))
+            const next = [...prev]
+            for (const row of result.data as TableData[]) {
+              if (!existingIds.has(row.id)) next.push(row)
+            }
+            return next
+          })
+        } else {
+          setData(result.data)
+        }
       } else {
         toast.error('데이터를 불러오는데 실패했습니다')
       }
@@ -141,7 +157,7 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
     } finally {
       setLoading(false)
     }
-  }, [tableName, pagination.pageIndex, pagination.pageSize])
+  }, [tableName, pagination.pageIndex, pagination.pageSize, totalCount, globalFilter])
 
   // 데이터 저장
   const saveData = useCallback(async (rowData: TableData) => {
@@ -445,20 +461,24 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
   const table = useMaterialReactTable({
     columns,
     data: filteredData,
+    // 서버 상태 동기화: 무한 스크롤 사용으로 내부 페이지네이션은 숨김
+    manualFiltering: true,
+    manualPagination: true,
+    rowCount: totalCount,
+    enablePagination: false,
+    autoResetPageIndex: false,
     enableColumnFilters: true,
     enableGlobalFilter: true,
     enableSorting: true,
-    enablePagination: true,
     enableRowActions: false,
     enableTopToolbar: true,
-    enableBottomToolbar: true,
+    enableBottomToolbar: false,
     enableDensityToggle: true,
     enableFullScreenToggle: true,
     enableHiding: true,
     state: {
       globalFilter,
-      columnFilters,
-      pagination
+      columnFilters
     },
     onGlobalFilterChange: (value) => {
       setTableFilters(tableName, { globalFilter: value })
@@ -467,7 +487,7 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
       const newValue = typeof value === 'function' ? value(columnFilters) : value
       setTableFilters(tableName, { columnFilters: newValue || [] })
     },
-    onPaginationChange: setPagination,
+    // pagination은 무한 스크롤로 대체
     renderTopToolbarCustomActions: () => (
       <Button onClick={addNew} disabled={editingRow !== null}>
         <Plus className="h-4 w-4 mr-2" />
@@ -684,11 +704,53 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
   })
 
   // 모달이 열릴 때 데이터 로드
+  // 초기 로드 및 테이블 변경 시 리셋 후 첫 페이지 로드
   useEffect(() => {
-    if (isOpen && tableName) {
-      loadData()
+    if (!isOpen || !tableName) return
+    setData([])
+    setTotalCount(tableCount || 0)
+    setPagination({ pageIndex: 0, pageSize: 10 })
+    // 첫 페이지 로드 (append 아님)
+    loadData(false)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, tableName])
+
+  // 글로벌 검색 변경 시 첫 페이지부터 다시 로드
+  useEffect(() => {
+    if (!isOpen || !tableName) return
+    setData([])
+    setPagination({ pageIndex: 0, pageSize: 10 })
+    loadData(false)
+  }, [globalFilter, isOpen, tableName, loadData])
+
+  // pageIndex 증가 시 다음 페이지 append 로드
+  useEffect(() => {
+    if (!isOpen || !tableName) return
+    if (pagination.pageIndex === 0) return
+    loadData(true)
+  }, [pagination.pageIndex, isOpen, tableName, loadData])
+
+  // IntersectionObserver로 무한 스크롤 처리
+  useEffect(() => {
+    if (!isOpen) return
+    const el = loadMoreRef.current
+    if (!el) return
+
+    const observer = new IntersectionObserver((entries) => {
+      const [entry] = entries
+      if (!entry.isIntersecting) return
+      const loaded = data.length
+      const hasMore = loaded < totalCount
+      if (hasMore && !loading) {
+        setPagination(prev => ({ ...prev, pageIndex: prev.pageIndex + 1 }))
+      }
+    }, { root: null, rootMargin: '200px', threshold: 0 })
+
+    observer.observe(el)
+    return () => {
+      observer.disconnect()
     }
-  }, [isOpen, tableName, pagination.pageIndex, pagination.pageSize, loadData])
+  }, [isOpen, data.length, totalCount, loading])
 
   // 테이블 변경 시 필터 상태 복원
   useEffect(() => {
@@ -733,7 +795,7 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
                 {tableSchema.displayName} 관리
               </DialogTitle>
               <DialogDescription className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                총 {tableCount.toLocaleString()}개의 데이터 중 {filteredData.length.toLocaleString()}개 표시 중
+                총 {totalCount.toLocaleString()}개의 데이터 중 {filteredData.length.toLocaleString()}개 표시 중
               </DialogDescription>
             </div>
             <div className="flex flex-col sm:flex-row gap-2">
@@ -858,6 +920,10 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
 
         <div className="flex-1 px-4 sm:px-6 pb-4 sm:pb-6 relative z-10">
           <MaterialReactTable table={table} />
+          {/* 무한 스크롤 센티넬 */}
+          <div ref={loadMoreRef} className="h-10 w-full flex items-center justify-center text-sm text-gray-500">
+            {loading ? '불러오는 중…' : (data.length < totalCount ? '아래로 스크롤하면 더 불러옵니다' : '모든 데이터를 불러왔습니다')}
+          </div>
         </div>
       </DialogContent>
     </Dialog>

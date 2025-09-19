@@ -24,7 +24,8 @@ export async function GET(request: NextRequest) {
       ? getSupabaseAdmin() 
       : getSupabaseClient()
 
-    let query = supabase.from(table).select('*')
+    // count 포함하여 total 반환
+    let query = supabase.from(table).select('*', { count: 'exact' })
 
     // 검색 필터 적용
     if (search) {
@@ -58,7 +59,7 @@ export async function GET(request: NextRequest) {
         page,
         limit,
         total: count || 0,
-        totalPages: Math.ceil((count || 0) / limit)
+        totalPages: Math.ceil((count || 0) / (limit || 1))
       }
     })
 
