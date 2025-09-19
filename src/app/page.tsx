@@ -4,7 +4,6 @@ import React, { useState } from 'react'
 import { FileUpload } from '@/components/features/FileUpload'
 import { ProcessButton } from '@/components/features/ProcessButton'
 import { AIModelSelector } from '@/components/features/AIModelSelector'
-import { ApiKeyManager } from '@/components/features/ApiKeyManager'
 import { AttachModal } from '@/components/features/AttachModal'
 import { DatabaseStatus } from '@/components/features/DatabaseStatus'
 import { DuplicateSearch } from '@/components/features/DuplicateSearch'
@@ -110,10 +109,10 @@ export default function Home() {
               <TabsContent value="settings">
           <Card>
             <CardHeader>
-              <CardTitle>API 키 관리</CardTitle>
+              <CardTitle>설정</CardTitle>
             </CardHeader>
             <CardContent>
-              <ApiKeyManager />
+              시스템 설정 항목 준비 중입니다.
             </CardContent>
           </Card>
         </TabsContent>
