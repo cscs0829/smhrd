@@ -168,7 +168,7 @@ async function generateTravelTitles(
 나라/도시: ${location}
 상품 유형: ${productType || '패키지 여행'}
 추가 키워드: ${additionalKeywords || '없음'}
-SEO 키워드: ${category.seoKeywords.join(', ')}${excludeInstruction}
+SEO 키워드: ${category.seoKeywords.join(' ')}${excludeInstruction}
 
 요구사항:
 - 20-30자 내외의 길이로 작성 (SEO 최적화)
@@ -177,30 +177,37 @@ SEO 키워드: ${category.seoKeywords.join(', ')}${excludeInstruction}
 - 여행의 매력과 특별함을 표현
 - 고급스럽고 품격 있는 문구 사용
 - 브랜드 가치를 높이는 프리미엄 이미지 강조
-- 이모지나 기호 사용 금지
+- 이모지나 기호 사용 완전 금지 (쉼표, 콜론, 따옴표, 느낌표, 물음표 등 모든 기호 사용 금지)
+- 실질 형태소(명사, 동사, 형용사, 부사)만 사용하여 자연스러운 문장 구성
 - 금지 단어: 특가, 땡처리, 반값, 무료, 횡재, 인하, 폭탄, 저가, 저렴한 등
 - 기존에 생성된 제목들과 중복되지 않도록 창의적이고 독창적인 제목을 작성하세요
+- 예시: "도쿄 프리미엄 패키지 여행" (기호 없이 자연스러운 문장)
 
 제목만 반환하고 다른 설명은 포함하지 마세요.`
 
       const title = await aiService.generateTitle(seoPrompt)
-      const trimmedTitle = title.trim()
+      // 기호 제거 및 정리
+      const cleanedTitle = title
+        .trim()
+        .replace(/[",:;.!?()[\]{}'"]/g, '') // 모든 기호 제거
+        .replace(/\s+/g, ' ') // 연속된 공백을 하나로
+        .trim()
       
       // 중복 검사: 이미 생성된 제목들과 제외할 제목들과 비교
-      const isDuplicate = titles.some(t => t.title === trimmedTitle) || 
-                         excludeTitles.includes(trimmedTitle)
+      const isDuplicate = titles.some(t => t.title === cleanedTitle) || 
+                         excludeTitles.includes(cleanedTitle)
       
       if (!isDuplicate) {
         // 키워드 추출 (SEO 최적화)
         const keywords = await generateKeywords(aiService, location, productType, additionalKeywords, category.seoKeywords)
         
         titles.push({
-          title: trimmedTitle,
+          title: cleanedTitle,
           category: category.name,
           keywords: keywords.slice(0, 5) // 최대 5개 키워드
         })
       } else {
-        console.log(`중복 제목 감지됨: ${trimmedTitle}`)
+        console.log(`중복 제목 감지됨: ${cleanedTitle}`)
       }
       
     } catch (error) {
@@ -240,7 +247,7 @@ async function generateKeywords(
 나라/도시: ${location}
 상품 유형: ${productType || '패키지 여행'}
 추가 키워드: ${additionalKeywords || '없음'}
-SEO 키워드: ${seoKeywords.join(', ')}
+SEO 키워드: ${seoKeywords.join(' ')}
 
 요구사항:
 - 여행과 관련된 키워드
@@ -250,6 +257,8 @@ SEO 키워드: ${seoKeywords.join(', ')}
 - 쉼표로 구분하여 나열
 - 지역명과 상품 유형을 포함한 롱테일 키워드
 - 검색 의도에 맞는 키워드
+- 기호 사용 금지 (실질 형태소만 사용)
+- 브랜드 가치를 훼손하는 단어 사용 금지
 
 키워드만 반환하고 다른 설명은 포함하지 마세요.`
 
