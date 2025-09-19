@@ -143,7 +143,7 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
       if (result.success) {
         toast.success(isNew ? '데이터가 추가되었습니다' : '데이터가 수정되었습니다')
         setEditingRow(null)
-        setEditingData({})
+        setEditingData({ id: '' })
         loadData()
       } else {
         toast.error(result.error || '저장에 실패했습니다')
@@ -186,13 +186,13 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
   // 편집 취소
   const cancelEditing = () => {
     setEditingRow(null)
-    setEditingData({})
+    setEditingData({ id: '' })
   }
 
   // 새 데이터 추가
   const addNew = () => {
     setEditingRow('new')
-    setEditingData({})
+    setEditingData({ id: '' })
   }
 
   // 컬럼 정의 생성
