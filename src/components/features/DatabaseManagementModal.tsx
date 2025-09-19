@@ -782,16 +782,19 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
 
   // 모달 닫힘/테이블 변경/언마운트 시 진행 중 요청 정리 및 상태 초기화
   useEffect(() => {
+    const abortSnapshot = abortRef.current
+    const inFlightSnapshot = inFlightPagesRef.current
+
     if (!isOpen) {
-      abortRef.current?.abort()
-      inFlightPagesRef.current.clear()
+      abortSnapshot?.abort()
+      inFlightSnapshot.clear()
       lastLoadedPageRef.current = -1
       setIsFetchingMore(false)
       setLoading(false)
     }
     return () => {
-      abortRef.current?.abort()
-      inFlightPagesRef.current.clear()
+      abortSnapshot?.abort()
+      inFlightSnapshot.clear()
     }
   }, [isOpen, tableName])
 
