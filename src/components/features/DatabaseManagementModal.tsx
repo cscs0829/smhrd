@@ -601,6 +601,8 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
           // aria-hidden 문제 해결을 위한 설정
           disableAutoFocusItem: true,
           autoFocus: false,
+          // 접근성 개선
+          keepMounted: false,
           // 메뉴 스타일 설정
           PaperProps: {
             'aria-hidden': false,
@@ -613,18 +615,15 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
                 : '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
               zIndex: 9999,
               maxHeight: '300px',
+              // 드롭다운 메뉴 아이템 스타일 - 데스크톱에서도 모바일 크기로 통일
               '& .MuiMenuItem-root': {
                 color: resolvedTheme === 'dark' ? '#f9fafb' : '#1f2937',
                 fontSize: '13px',
                 padding: '4px 8px',
                 minHeight: '28px',
                 cursor: 'pointer',
-                // 데스크톱에서도 모바일 크기로 통일
-                '@media (min-width: 768px)': {
-                  fontSize: '13px',
-                  padding: '4px 8px',
-                  minHeight: '28px',
-                },
+                display: 'flex',
+                alignItems: 'center',
                 '&:hover': {
                   backgroundColor: resolvedTheme === 'dark' ? '#4b5563' : '#f3f4f6',
                 },
@@ -854,8 +853,6 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
           position: relative !important;
           z-index: 10 !important;
           isolation: isolate !important;
-          /* aria-hidden 문제 방지 */
-          aria-hidden: false !important;
         }
         
         .MuiTablePagination-select .MuiSelect-select {
@@ -867,8 +864,6 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
           min-height: 32px !important;
           display: flex !important;
           align-items: center !important;
-          /* 포커스 가능하도록 설정 */
-          tabindex: 0 !important;
         }
         
         .MuiTablePagination-select .MuiSelect-icon {
@@ -883,8 +878,6 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
           z-index: 99999 !important;
           position: fixed !important;
           isolation: isolate !important;
-          /* aria-hidden 문제 방지 */
-          aria-hidden: false !important;
         }
         
         .MuiMenu-paper, .MuiPopover-paper {
@@ -999,71 +992,33 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
 
       document.head.appendChild(style)
 
-      // aria-hidden 문제 해결을 위한 DOM 조작
-      const handleAriaHiddenFix = () => {
-        // 모달 내부의 모든 포커스 가능한 요소들 확인
-        const focusableElements = document.querySelectorAll(`
-          [data-radix-popper-content-wrapper],
-          .MuiTablePagination-select,
-          .MuiSelect-root,
-          .MuiMenu-root,
-          .MuiPopover-root,
-          .MuiMenuItem-root
-        `)
-        
-        focusableElements.forEach((element) => {
-          const hiddenParent = element.closest('[aria-hidden="true"]')
-          if (hiddenParent && document.activeElement === element) {
-            // 포커스된 요소의 부모에서 aria-hidden 제거
-            hiddenParent.setAttribute('aria-hidden', 'false')
-          }
-        })
-      }
-
-      // 포커스 변경 감지
-      const handleFocusIn = () => {
-        handleAriaHiddenFix()
-      }
-
-      // 클릭 이벤트 처리 - 개선된 버전
-      const handleGlobalClick = (e: MouseEvent) => {
-        const target = e.target as HTMLElement
-
-        // MUI Select 관련 요소들 클릭 시
-        if (target.closest('.MuiTablePagination-select') ||
-          target.closest('.MuiSelect-root') ||
-          target.closest('.MuiMenu-root') ||
-          target.closest('.MuiPopover-root')) {
-          
-          // aria-hidden 문제 즉시 해결
-          handleAriaHiddenFix()
-          
-          // Select 컴포넌트의 경우 추가 처리
-          if (target.closest('.MuiTablePagination-select')) {
-            const selectElement = target.closest('.MuiTablePagination-select') as HTMLElement
-            if (selectElement) {
-              // 부모의 aria-hidden 제거
-              const hiddenParent = selectElement.closest('[aria-hidden="true"]')
-              if (hiddenParent) {
-                hiddenParent.setAttribute('aria-hidden', 'false')
-              }
-              
-              // 포커스 강제 설정
-              const selectInput = selectElement.querySelector('.MuiSelect-select') as HTMLElement
-              if (selectInput) {
-                selectInput.focus()
+      // 무한 루프 방지를 위한 MutationObserver 사용
+      const observer = new MutationObserver((mutations) => {
+        mutations.forEach((mutation) => {
+          if (mutation.type === 'attributes' && mutation.attributeName === 'aria-hidden') {
+            const target = mutation.target as HTMLElement
+            if (target.getAttribute('aria-hidden') === 'true') {
+              // 포커스된 요소가 있는지 확인
+              const focusedElement = document.activeElement
+              if (focusedElement && target.contains(focusedElement)) {
+                // 포커스된 요소가 있으면 aria-hidden 제거
+                target.setAttribute('aria-hidden', 'false')
               }
             }
           }
-        }
-      }
+        })
+      })
 
-      document.addEventListener('focusin', handleFocusIn, true)
-      document.addEventListener('click', handleGlobalClick, true)
+      // 모달 내부 요소들 관찰 시작
+      const modalElement = document.querySelector('[data-radix-dialog-content]') || document.body
+      observer.observe(modalElement, {
+        attributes: true,
+        subtree: true,
+        attributeFilter: ['aria-hidden']
+      })
 
       return () => {
-        document.removeEventListener('focusin', handleFocusIn, true)
-        document.removeEventListener('click', handleGlobalClick, true)
+        observer.disconnect()
         const styleElement = document.getElementById('mui-select-fix')
         if (styleElement) {
           styleElement.remove()
@@ -1122,12 +1077,6 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
             target.closest('[data-mui-internal-clone-element]') ||
             target.closest('[data-radix-popper-content-wrapper]')) {
             e.preventDefault()
-            
-            // aria-hidden 문제 즉시 해결
-            const hiddenParent = target.closest('[aria-hidden="true"]')
-            if (hiddenParent) {
-              hiddenParent.setAttribute('aria-hidden', 'false')
-            }
           }
         }}
         aria-describedby={undefined}
