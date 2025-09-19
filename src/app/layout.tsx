@@ -5,6 +5,7 @@ import { Header } from '@/components/layout/Header'
 import { Footer } from '@/components/layout/Footer'
 import { Toaster } from '@/components/ui/sonner'
 import { ApiKeyProvider } from '@/contexts/ApiKeyContext'
+import { ThemeProvider } from 'next-themes'
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -27,16 +28,23 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen flex flex-col`}>
-        <ApiKeyProvider>
-          <Header />
-          <main className="flex-1 container mx-auto px-4 py-6">
-            {children}
-          </main>
-          <Footer />
-          <Toaster richColors position="top-right" />
-        </ApiKeyProvider>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <ApiKeyProvider>
+            <Header />
+            <main className="flex-1 container mx-auto px-4 py-6">
+              {children}
+            </main>
+            <Footer />
+            <Toaster richColors position="top-right" />
+          </ApiKeyProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

@@ -1,6 +1,7 @@
 'use client'
 
 import { HelpModal } from '@/components/features/HelpModal'
+import { ThemeToggle } from '@/components/features/ThemeToggle'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Database, Settings } from 'lucide-react'
@@ -39,6 +40,9 @@ export function Header() {
             <Badge variant="outline" className="hidden md:inline-flex">
               v1.0.0
             </Badge>
+
+            {/* 테마 토글 */}
+            <ThemeToggle />
 
             {/* 도움말 버튼 */}
             <HelpModal />
