@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge'
 import { toast } from 'sonner'
 import { Plus, Edit, Trash2, Save, X, Search, Filter, FilterX, ChevronDown } from 'lucide-react'
 import { useTheme } from 'next-themes'
+import { useMediaQuery } from '@mui/material'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
 
 interface TableData {
@@ -111,6 +112,10 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
   const [advancedFilters, setAdvancedFilters] = useState<FilterCondition[]>([])
   const [isFilterOpen, setIsFilterOpen] = useState(false)
   const { resolvedTheme } = useTheme()
+  
+  // 반응형 모달 크기 설정
+  const isMobile = useMediaQuery('(max-width: 768px)')
+  const isTablet = useMediaQuery('(max-width: 1024px)')
 
   const tableSchema = TABLE_SCHEMAS[tableName as keyof typeof TABLE_SCHEMAS]
 
@@ -480,8 +485,8 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
     // 테이블 컨테이너 스타일링
     muiTableContainerProps: {
       sx: { 
-        maxHeight: '70vh',
-        minHeight: '400px',
+        maxHeight: isMobile ? '70vh' : '60vh',
+        minHeight: isMobile ? '200px' : '300px',
         position: 'relative',
         zIndex: 1,
         '&::-webkit-scrollbar': {
@@ -689,23 +694,29 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
   }
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-[95vw] w-full max-h-[95vh] h-full overflow-hidden p-0 relative z-50">
-        <DialogHeader className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
-          <div className="flex items-center justify-between">
-            <div>
-              <DialogTitle className="flex items-center gap-2 text-xl font-semibold">
-                <Filter className="h-6 w-6" />
+    <Dialog 
+      open={isOpen} 
+      onOpenChange={onClose}
+      fullScreen={isMobile}
+      maxWidth={isTablet ? 'sm' : 'lg'}
+      fullWidth
+    >
+      <DialogContent className={`${isMobile ? 'h-full' : 'max-h-[90vh] h-auto'} w-full overflow-hidden p-0 relative z-50`}>
+        <DialogHeader className="px-4 sm:px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex-1">
+              <DialogTitle className="flex items-center gap-2 text-lg sm:text-xl font-semibold">
+                <Filter className="h-5 w-5 sm:h-6 sm:w-6" />
                 {tableSchema.displayName} 관리
               </DialogTitle>
-              <DialogDescription className="text-sm text-gray-600 dark:text-gray-400">
+              <DialogDescription className="text-sm text-gray-600 dark:text-gray-400 mt-1">
                 총 {tableCount.toLocaleString()}개의 데이터 중 {filteredData.length.toLocaleString()}개 표시 중
               </DialogDescription>
             </div>
-            <div className="flex gap-2">
+            <div className="flex flex-col sm:flex-row gap-2">
               <Collapsible open={isFilterOpen} onOpenChange={setIsFilterOpen}>
                 <CollapsibleTrigger asChild>
-                  <Button variant="outline" size="sm">
+                  <Button variant="outline" size="sm" className="w-full sm:w-auto">
                     <Filter className="h-4 w-4 mr-2" />
                     고급 필터
                     <ChevronDown className={`h-4 w-4 ml-2 transition-transform ${isFilterOpen ? 'rotate-180' : ''}`} />
@@ -713,7 +724,7 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
                 </CollapsibleTrigger>
               </Collapsible>
               {advancedFilters.length > 0 && (
-                <Button variant="outline" size="sm" onClick={resetFilters}>
+                <Button variant="outline" size="sm" onClick={resetFilters} className="w-full sm:w-auto">
                   <FilterX className="h-4 w-4 mr-2" />
                   필터 초기화
                 </Button>
@@ -724,11 +735,11 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
 
         {/* 고급 필터 패널 */}
         <Collapsible open={isFilterOpen} onOpenChange={setIsFilterOpen}>
-          <CollapsibleContent className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
+          <CollapsibleContent className="px-4 sm:px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
             <div className="space-y-4">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                 <h3 className="font-medium text-gray-900 dark:text-gray-100">필터 조건</h3>
-                <Button size="sm" onClick={addFilter}>
+                <Button size="sm" onClick={addFilter} className="w-full sm:w-auto">
                   <Plus className="h-4 w-4 mr-2" />
                   조건 추가
                 </Button>
@@ -741,13 +752,13 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
               ) : (
                 <div className="space-y-3">
                   {advancedFilters.map((filter, index) => (
-                    <div key={index} className="flex items-center gap-3 p-3 bg-white dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600">
+                    <div key={index} className="flex flex-col sm:flex-row items-start sm:items-center gap-3 p-3 bg-white dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600">
                       {/* 컬럼 선택 */}
                       <Select
                         value={filter.column}
                         onValueChange={(value) => updateFilter(index, 'column', value)}
                       >
-                        <SelectTrigger className="w-40">
+                        <SelectTrigger className="w-full sm:w-40">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
@@ -764,7 +775,7 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
                         value={filter.operator}
                         onValueChange={(value) => updateFilter(index, 'operator', value)}
                       >
-                        <SelectTrigger className="w-32">
+                        <SelectTrigger className="w-full sm:w-32">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
@@ -782,23 +793,23 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
 
                       {/* 값 입력 */}
                       {filter.operator !== 'isNull' && filter.operator !== 'isNotNull' && (
-                        <div className="flex items-center gap-2">
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 w-full sm:w-auto">
                           <Input
                             type={tableSchema?.columns.find(col => col.key === filter.column)?.type === 'number' ? 'number' : 'text'}
                             value={filter.value}
                             onChange={(e) => updateFilter(index, 'value', e.target.value)}
                             placeholder="값 입력"
-                            className="w-40"
+                            className="w-full sm:w-40"
                           />
                           {filter.operator === 'between' && (
                             <>
-                              <span className="text-gray-500">~</span>
+                              <span className="text-gray-500 hidden sm:inline">~</span>
                               <Input
                                 type={tableSchema?.columns.find(col => col.key === filter.column)?.type === 'number' ? 'number' : 'text'}
                                 value={filter.value2 || ''}
                                 onChange={(e) => updateFilter(index, 'value2', e.target.value)}
                                 placeholder="최대값"
-                                className="w-40"
+                                className="w-full sm:w-40"
                               />
                             </>
                           )}
@@ -810,7 +821,7 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
                         size="sm"
                         variant="outline"
                         onClick={() => removeFilter(index)}
-                        className="text-red-600 hover:text-red-700"
+                        className="text-red-600 hover:text-red-700 w-full sm:w-auto"
                       >
                         <X className="h-4 w-4" />
                       </Button>
@@ -822,7 +833,7 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
           </CollapsibleContent>
         </Collapsible>
 
-        <div className="flex-1 overflow-hidden px-6 pb-6 relative z-10">
+        <div className="flex-1 overflow-hidden px-4 sm:px-6 pb-4 sm:pb-6 relative z-10">
           <MaterialReactTable table={table} />
         </div>
       </DialogContent>
