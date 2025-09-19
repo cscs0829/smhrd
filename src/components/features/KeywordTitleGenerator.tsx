@@ -32,6 +32,7 @@ export function KeywordTitleGenerator() {
   const [location, setLocation] = useState('')
   const [productType, setProductType] = useState('')
   const [additionalKeywords, setAdditionalKeywords] = useState('')
+  const [titleCount, setTitleCount] = useState<number>(5)
   const [isGenerating, setIsGenerating] = useState(false)
   const [generatedTitles, setGeneratedTitles] = useState<GeneratedTitle[]>([])
   const [selectedCategory, setSelectedCategory] = useState('all')
@@ -71,7 +72,7 @@ export function KeywordTitleGenerator() {
   const categories = [
     { value: 'all', label: '전체' },
     { value: 'luxury', label: '럭셔리' },
-    { value: 'budget', label: '저예산' },
+    { value: 'value', label: '가치' },
     { value: 'adventure', label: '모험' },
     { value: 'romantic', label: '로맨틱' },
     { value: 'family', label: '가족' },
@@ -96,6 +97,7 @@ export function KeywordTitleGenerator() {
           location: location.trim(),
           productType: productType || '패키지 여행',
           additionalKeywords: additionalKeywords.trim(),
+          titleCount,
           modelId: selectedModel,
           apiKeyId: selectedApiKeyId,
           temperature,
@@ -220,6 +222,23 @@ export function KeywordTitleGenerator() {
               onChange={(e) => setAdditionalKeywords(e.target.value)}
               disabled={isGenerating}
             />
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="titleCount">생성할 제목 개수</Label>
+            <Select value={titleCount.toString()} onValueChange={(value) => setTitleCount(parseInt(value))} disabled={isGenerating}>
+              <SelectTrigger>
+                <SelectValue placeholder="제목 개수를 선택하세요" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="3">3개</SelectItem>
+                <SelectItem value="5">5개</SelectItem>
+                <SelectItem value="8">8개</SelectItem>
+                <SelectItem value="10">10개</SelectItem>
+                <SelectItem value="15">15개</SelectItem>
+                <SelectItem value="20">20개</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           <Button 

@@ -20,6 +20,7 @@ export async function POST(request: NextRequest) {
       location, 
       productType, 
       additionalKeywords, 
+      titleCount,
       modelId, 
       apiKeyId, 
       temperature, 
@@ -30,6 +31,7 @@ export async function POST(request: NextRequest) {
       location,
       productType,
       additionalKeywords,
+      titleCount,
       modelId,
       apiKeyId,
       temperature,
@@ -80,7 +82,7 @@ export async function POST(request: NextRequest) {
     })
 
     // 상품 제목 생성
-    const titles = await generateTravelTitles(aiService, location, productType, additionalKeywords)
+    const titles = await generateTravelTitles(aiService, location, productType, additionalKeywords, titleCount || 5)
 
     return NextResponse.json({ titles })
   } catch (error) {
@@ -102,7 +104,8 @@ async function generateTravelTitles(
   aiService: AIService, 
   location: string, 
   productType: string, 
-  additionalKeywords: string
+  additionalKeywords: string,
+  titleCount: number = 5
 ): Promise<GeneratedTitle[]> {
   const titles: GeneratedTitle[] = []
   
@@ -111,41 +114,44 @@ async function generateTravelTitles(
     { 
       name: 'luxury', 
       prompt: '럭셔리하고 고급스러운',
-      seoKeywords: ['프리미엄', '럭셔리', '고급', 'VIP', '특별']
+      seoKeywords: ['프리미엄', '럭셔리', '고급', 'VIP', '특별', '엘리트', '독점']
     },
     { 
-      name: 'budget', 
-      prompt: '저렴하고 경제적인',
-      seoKeywords: ['저렴한', '경제적', '할인', '특가', '가성비']
+      name: 'value', 
+      prompt: '합리적이고 가치 있는',
+      seoKeywords: ['합리적', '가성비', '스마트', '효율적', '최적화', '선택']
     },
     { 
       name: 'adventure', 
       prompt: '모험적이고 스릴있는',
-      seoKeywords: ['모험', '스릴', '액티비티', '체험', '도전']
+      seoKeywords: ['모험', '스릴', '액티비티', '체험', '도전', '역동적']
     },
     { 
       name: 'romantic', 
       prompt: '로맨틱하고 낭만적인',
-      seoKeywords: ['로맨틱', '낭만', '커플', '신혼', '데이트']
+      seoKeywords: ['로맨틱', '낭만', '커플', '신혼', '데이트', '특별한']
     },
     { 
       name: 'family', 
       prompt: '가족 친화적이고 안전한',
-      seoKeywords: ['가족', '아이', '안전', '편안한', '친화적']
+      seoKeywords: ['가족', '안전', '편안한', '친화적', '포용적', '따뜻한']
     },
     { 
       name: 'cultural', 
       prompt: '문화적이고 교육적인',
-      seoKeywords: ['문화', '역사', '교육', '학습', '체험']
+      seoKeywords: ['문화', '역사', '교육', '학습', '체험', '탐구']
     },
     { 
       name: 'nature', 
       prompt: '자연 친화적이고 평화로운',
-      seoKeywords: ['자연', '힐링', '평화', '휴양', '그린']
+      seoKeywords: ['자연', '힐링', '평화', '휴양', '그린', '순수']
     }
   ]
 
-  for (const category of categories) {
+  // titleCount에 맞게 제목 생성
+  for (let i = 0; i < titleCount; i++) {
+    const category = categories[i % categories.length] // 카테고리를 순환
+    
     try {
       // SEO 최적화된 프롬프트 생성
       const seoPrompt = `다음 정보를 바탕으로 SEO에 최적화된 ${category.prompt} 여행 상품 제목을 생성해주세요.
@@ -156,14 +162,14 @@ async function generateTravelTitles(
 SEO 키워드: ${category.seoKeywords.join(', ')}
 
 요구사항:
-- 20-30자 내외의 길이 (SEO 최적화)
+- 20-30자 내외의 길이로 작성 (SEO 최적화)
 - 한국어로 작성
 - ${category.prompt} 느낌을 강조
 - 여행의 매력과 특별함을 표현
-- 마케팅에 적합한 문구
-- SEO 키워드를 자연스럽게 포함
-- 클릭을 유도하는 매력적인 문구
-- 검색량이 높을 것으로 예상되는 키워드 포함
+- 고급스럽고 품격 있는 문구 사용
+- 브랜드 가치를 높이는 프리미엄 이미지 강조
+- 이모지나 기호 사용 금지
+- 금지 단어: 특가, 땡처리, 반값, 무료, 횡재, 인하, 폭탄, 저가, 저렴한 등
 
 제목만 반환하고 다른 설명은 포함하지 마세요.`
 
