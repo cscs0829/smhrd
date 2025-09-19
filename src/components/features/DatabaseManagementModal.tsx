@@ -762,7 +762,7 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          {tableSchema?.columns.filter(col => col.editable).map((col) => (
+                          {tableSchema?.columns.map((col) => (
                             <SelectItem key={col.key} value={col.key}>
                               {col.label}
                             </SelectItem>
