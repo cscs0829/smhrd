@@ -76,7 +76,6 @@ const TABLE_SCHEMAS = {
       { key: 'id', label: 'ID', type: 'number', editable: false },
       { key: 'provider', label: '제공업체', type: 'select', editable: true, options: ['openai', 'anthropic', 'google'] },
       { key: 'name', label: '이름', type: 'text', editable: true },
-      { key: 'key_value', label: '키 값', type: 'password', editable: true },
       { key: 'is_active', label: '활성 상태', type: 'boolean', editable: true },
       { key: 'created_at', label: '생성일', type: 'datetime', editable: false }
     ]
@@ -96,7 +95,7 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
   const [data, setData] = useState<TableData[]>([])
   const [loading, setLoading] = useState(false)
   const [editingRow, setEditingRow] = useState<string | number | null>(null)
-  const [editingData, setEditingData] = useState<TableData>({})
+  const [editingData, setEditingData] = useState<TableData>({ id: '' })
   const [globalFilter, setGlobalFilter] = useState('')
   const [columnFilters, setColumnFilters] = useState<unknown[]>([])
   const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 10 })
