@@ -36,7 +36,6 @@ export function KeywordTitleGenerator() {
   const [titleCount, setTitleCount] = useState<number>(5)
   const [isGenerating, setIsGenerating] = useState(false)
   const [generatedTitles, setGeneratedTitles] = useState<GeneratedTitle[]>([])
-  const [selectedCategory, setSelectedCategory] = useState('all')
 
   // 활성 상태인 API 키를 자동으로 선택
   useEffect(() => {
@@ -70,16 +69,7 @@ export function KeywordTitleGenerator() {
     '쇼핑여행'
   ]
 
-  const categories = [
-    { value: 'all', label: '전체' },
-    { value: 'luxury', label: '럭셔리' },
-    { value: 'value', label: '가치' },
-    { value: 'adventure', label: '모험' },
-    { value: 'romantic', label: '로맨틱' },
-    { value: 'family', label: '가족' },
-    { value: 'cultural', label: '문화' },
-    { value: 'nature', label: '자연' }
-  ]
+  // 카테고리 필터링 제거 - 모든 제목을 통합 관리
 
   const generateTitles = async (excludeTitles: string[] = []) => {
     if (!location.trim()) {
@@ -165,9 +155,8 @@ export function KeywordTitleGenerator() {
     toast.success('생성된 제목이 모두 삭제되었습니다.')
   }
 
-  const filteredTitles = selectedCategory === 'all' 
-    ? generatedTitles 
-    : generatedTitles.filter(title => title.category === selectedCategory)
+  // 모든 제목 표시 (카테고리 필터링 제거)
+  const filteredTitles = generatedTitles
 
   return (
     <div className="space-y-6">
@@ -279,18 +268,6 @@ export function KeywordTitleGenerator() {
             <div className="flex items-center justify-between">
               <CardTitle>생성된 제목 ({filteredTitles.length}개)</CardTitle>
               <div className="flex gap-2">
-                <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                  <SelectTrigger className="w-32">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {categories.map((category) => (
-                      <SelectItem key={category.value} value={category.value}>
-                        {category.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
                 <Button variant="outline" size="sm" onClick={downloadTitles}>
                   <Download className="h-4 w-4 mr-1" />
                   다운로드
@@ -316,7 +293,6 @@ export function KeywordTitleGenerator() {
                     </Button>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Badge variant="secondary">{title.category}</Badge>
                     <span className="text-sm text-muted-foreground">
                       {title.createdAt.toLocaleString()}
                     </span>

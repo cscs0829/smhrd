@@ -111,43 +111,11 @@ async function generateTravelTitles(
 ): Promise<GeneratedTitle[]> {
   const titles: GeneratedTitle[] = []
   
-  // SEO 최적화된 카테고리별 제목 생성
-  const categories = [
-    { 
-      name: 'luxury', 
-      prompt: '럭셔리하고 고급스러운',
-      seoKeywords: ['프리미엄', '럭셔리', '고급', 'VIP', '특별', '엘리트', '독점']
-    },
-    { 
-      name: 'value', 
-      prompt: '합리적이고 가치 있는',
-      seoKeywords: ['합리적', '가성비', '스마트', '효율적', '최적화', '선택']
-    },
-    { 
-      name: 'adventure', 
-      prompt: '모험적이고 스릴있는',
-      seoKeywords: ['모험', '스릴', '액티비티', '체험', '도전', '역동적']
-    },
-    { 
-      name: 'romantic', 
-      prompt: '로맨틱하고 낭만적인',
-      seoKeywords: ['로맨틱', '낭만', '커플', '신혼', '데이트', '특별한']
-    },
-    { 
-      name: 'family', 
-      prompt: '가족 친화적이고 안전한',
-      seoKeywords: ['가족', '안전', '편안한', '친화적', '포용적', '따뜻한']
-    },
-    { 
-      name: 'cultural', 
-      prompt: '문화적이고 교육적인',
-      seoKeywords: ['문화', '역사', '교육', '학습', '체험', '탐구']
-    },
-    { 
-      name: 'nature', 
-      prompt: '자연 친화적이고 평화로운',
-      seoKeywords: ['자연', '힐링', '평화', '휴양', '그린', '순수']
-    }
+  // 공통 SEO 키워드
+  const commonSeoKeywords = [
+    '프리미엄', '럭셔리', '고급', '특별', '모험', '스릴', '액티비티', '체험', '도전',
+    '로맨틱', '낭만', '커플', '신혼', '데이트', '가족', '안전', '편안한', '친화적',
+    '문화', '역사', '교육', '학습', '힐링', '휴양'
   ]
 
   // titleCount에 맞게 제목 생성 (중복 방지 로직 포함)
@@ -155,26 +123,23 @@ async function generateTravelTitles(
   const maxAttempts = titleCount * 3 // 최대 시도 횟수
   
   while (titles.length < titleCount && attempts < maxAttempts) {
-    const category = categories[titles.length % categories.length] // 카테고리를 순환
-    
     try {
       // SEO 최적화된 프롬프트 생성 (중복 방지를 위한 추가 지침 포함)
       const excludeInstruction = excludeTitles.length > 0 
         ? `\n- 다음 제목들과 유사하거나 중복되지 않도록 주의하세요: ${excludeTitles.join(', ')}`
         : ''
       
-      const seoPrompt = `다음 정보를 바탕으로 SEO에 최적화된 ${category.prompt} 여행 상품 제목을 생성해주세요.
+      const seoPrompt = `다음 정보를 바탕으로 SEO에 최적화된 여행 상품 제목을 생성해주세요.
 
 나라/도시: ${location}
 상품 유형: ${productType || '패키지 여행'}
 추가 키워드: ${additionalKeywords || '없음'}
-SEO 키워드: ${category.seoKeywords.join(' ')}${excludeInstruction}
+SEO 키워드: ${commonSeoKeywords.join(' ')}${excludeInstruction}
 
 요구사항:
 - 35-50자 내외의 길이로 작성 (SEO 최적화)
 - 최소 12개 이상의 키워드로 구성
 - 한국어로 작성
-- ${category.prompt} 느낌을 강조
 - 네이버 가격 비교 상위 노출 스타일로 작성
 - 다음 요소들을 모두 포함: 지역명, 여행기간, 계절/월, 도시명, 여행유형, 특별활동, 추가키워드
 - 핵심 키워드 중심으로 구성하되 불필요한 수식어 사용 금지
@@ -219,11 +184,11 @@ SEO 키워드: ${category.seoKeywords.join(' ')}${excludeInstruction}
       
       if (!isDuplicate) {
         // 키워드 추출 (SEO 최적화)
-        const keywords = await generateKeywords(aiService, location, productType, additionalKeywords, category.seoKeywords)
+        const keywords = await generateKeywords(aiService, location, productType, additionalKeywords, commonSeoKeywords)
         
         titles.push({
           title: cleanedTitle,
-          category: category.name,
+          category: 'travel', // 통합 카테고리
           keywords: keywords.slice(0, 5) // 최대 5개 키워드
         })
       } else {
@@ -231,16 +196,16 @@ SEO 키워드: ${category.seoKeywords.join(' ')}${excludeInstruction}
       }
       
     } catch (error) {
-      console.error(`${category.name} 카테고리 제목 생성 오류:`, error)
+      console.error('제목 생성 오류:', error)
       // 폴백 제목 생성 (중복 검사 포함)
-      const fallbackTitle = `${location} ${category.prompt} ${productType || '여행'} ${Date.now()}`
+      const fallbackTitle = `${location} 여행 ${productType || '패키지'} ${Date.now()}`
       const isDuplicate = titles.some(t => t.title === fallbackTitle) || 
                          excludeTitles.includes(fallbackTitle)
       
       if (!isDuplicate) {
         titles.push({
           title: fallbackTitle,
-          category: category.name,
+          category: 'travel',
           keywords: [`${location} 여행`, `${location} 관광`, `${productType || '여행'}`]
         })
       }
