@@ -557,6 +557,49 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
       }
     },
 
+    // Select 컴포넌트의 MenuProps 설정
+    muiSelectProps: {
+      MenuProps: {
+        disablePortal: false,
+        PaperProps: {
+          sx: {
+            backgroundColor: resolvedTheme === 'dark' ? '#374151' : '#ffffff',
+            border: `1px solid ${resolvedTheme === 'dark' ? '#4b5563' : '#d1d5db'}`,
+            borderRadius: '6px',
+            boxShadow: resolvedTheme === 'dark'
+              ? '0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.2)'
+              : '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+            maxHeight: '200px',
+          }
+        },
+        anchorOrigin: {
+          vertical: 'bottom',
+          horizontal: 'left',
+        },
+        transformOrigin: {
+          vertical: 'top',
+          horizontal: 'left',
+        },
+        sx: {
+          zIndex: 9999,
+          '& .MuiMenuItem-root': {
+            color: resolvedTheme === 'dark' ? '#f9fafb' : '#1f2937',
+            fontSize: '14px',
+            padding: '8px 12px',
+            '&:hover': {
+              backgroundColor: resolvedTheme === 'dark' ? '#4b5563' : '#f3f4f6',
+            },
+            '&.Mui-selected': {
+              backgroundColor: resolvedTheme === 'dark' ? '#1e40af' : '#dbeafe',
+              '&:hover': {
+                backgroundColor: resolvedTheme === 'dark' ? '#1e3a8a' : '#bfdbfe',
+              },
+            },
+          },
+        }
+      }
+    },
+
     // 테이블 헤더 셀 props 설정
     muiTableHeadCellProps: {
       sx: {
@@ -571,106 +614,62 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
     // 페이지네이션 props 설정 - 데스크톱 클릭 문제 해결
     muiPaginationProps: {
       sx: {
-        position: 'relative !important',
-        zIndex: '9999 !important',
-        pointerEvents: 'auto !important',
-        isolation: 'isolate',
-        '& *': {
-          pointerEvents: 'auto !important',
+        // 기본 스타일 초기화
+        '& .MuiTablePagination-root': {
+          position: 'relative',
+          zIndex: 1,
         },
-        '& .MuiTablePagination-toolbar': {
-          position: 'relative !important',
-          zIndex: '10000 !important',
-          pointerEvents: 'auto !important',
-          isolation: 'isolate',
-        },
+        // Select 컴포넌트 스타일 수정
         '& .MuiTablePagination-select': {
-          position: 'relative !important',
-          zIndex: '10001 !important',
-          pointerEvents: 'auto !important',
-          cursor: 'pointer !important',
-          userSelect: 'none !important',
-          '&:focus': {
+          // 기본 MUI Input 스타일 제거하고 클릭 가능하게 만들기
+          '&.MuiInputBase-root': {
             backgroundColor: resolvedTheme === 'dark' ? '#374151' : '#ffffff',
-          },
-          '&:hover': {
-            backgroundColor: resolvedTheme === 'dark' ? '#4b5563 !important' : '#f9fafb !important',
-          }
-        },
-        '& .MuiTablePagination-selectLabel': {
-          position: 'relative !important',
-          zIndex: '10000 !important',
-          pointerEvents: 'auto !important',
-          cursor: 'default !important',
-        },
-        '& .MuiTablePagination-displayedRows': {
-          position: 'relative !important',
-          zIndex: '10000 !important',
-          pointerEvents: 'auto !important',
-        },
-        '& .MuiTablePagination-actions': {
-          position: 'relative !important',
-          zIndex: '10000 !important',
-          pointerEvents: 'auto !important',
-          '& button': {
-            pointerEvents: 'auto !important',
-            cursor: 'pointer !important',
-            zIndex: '10001 !important',
-            position: 'relative !important',
-          }
-        },
-        '& .MuiInputBase-root': {
-          position: 'relative !important',
-          zIndex: '10002 !important',
-          pointerEvents: 'auto !important',
-          cursor: 'pointer !important',
-          backgroundColor: `${resolvedTheme === 'dark' ? '#374151' : '#ffffff'} !important`,
-          isolation: 'isolate',
-          '&:hover': {
-            backgroundColor: `${resolvedTheme === 'dark' ? '#4b5563' : '#f9fafb'} !important`,
-          },
-          '&.Mui-focused': {
-            backgroundColor: `${resolvedTheme === 'dark' ? '#374151' : '#ffffff'} !important`,
-          },
-          '&::before': {
-            display: 'none !important',
-          },
-          '&::after': {
-            display: 'none !important',
-          }
-        },
-        '& .MuiSelect-select': {
-          position: 'relative !important',
-          zIndex: '10003 !important',
-          pointerEvents: 'auto !important',
-          cursor: 'pointer !important',
-          userSelect: 'none !important',
-          '&:focus': {
-            backgroundColor: 'transparent !important',
-          }
-        },
-        '& .MuiSelect-icon': {
-          position: 'relative !important',
-          zIndex: '10003 !important',
-          pointerEvents: 'auto !important',
-          cursor: 'pointer !important',
-        },
-        // 데스크톱 전용 추가 스타일
-        '@media (min-width: 768px)': {
-          '& .MuiInputBase-root': {
-            minHeight: '32px !important',
+            border: `1px solid ${resolvedTheme === 'dark' ? '#4b5563' : '#d1d5db'}`,
+            borderRadius: '6px',
+            minHeight: '32px',
             '&:hover': {
-              backgroundColor: `${resolvedTheme === 'dark' ? '#4b5563' : '#f9fafb'} !important`,
-            }
+              backgroundColor: resolvedTheme === 'dark' ? '#4b5563' : '#f9fafb',
+              borderColor: resolvedTheme === 'dark' ? '#6b7280' : '#9ca3af',
+            },
+            '&.Mui-focused': {
+              backgroundColor: resolvedTheme === 'dark' ? '#374151' : '#ffffff',
+              borderColor: resolvedTheme === 'dark' ? '#3b82f6' : '#2563eb',
+              boxShadow: `0 0 0 1px ${resolvedTheme === 'dark' ? '#3b82f6' : '#2563eb'}`,
+            },
+            // 기본 MUI underline 제거
+            '&::before, &::after': {
+              display: 'none',
+            },
           },
+          // Select 내부 요소들
           '& .MuiSelect-select': {
-            paddingTop: '8px !important',
-            paddingBottom: '8px !important',
-            '&:hover': {
-              backgroundColor: 'transparent !important',
-            }
-          }
-        }
+            padding: '6px 32px 6px 12px',
+            minHeight: 'auto',
+            display: 'flex',
+            alignItems: 'center',
+            '&:focus': {
+              backgroundColor: 'transparent',
+            },
+          },
+          '& .MuiSelect-icon': {
+            right: '8px',
+            color: resolvedTheme === 'dark' ? '#9ca3af' : '#6b7280',
+          },
+        },
+        // 페이지네이션 버튼들
+        '& .MuiTablePagination-actions button': {
+          color: resolvedTheme === 'dark' ? '#f9fafb' : '#1f2937',
+          '&:hover': {
+            backgroundColor: resolvedTheme === 'dark' ? '#374151' : '#f3f4f6',
+          },
+          '&.Mui-disabled': {
+            color: resolvedTheme === 'dark' ? '#6b7280' : '#9ca3af',
+          },
+        },
+        // 텍스트 색상
+        '& .MuiTablePagination-selectLabel, & .MuiTablePagination-displayedRows': {
+          color: resolvedTheme === 'dark' ? '#f9fafb' : '#1f2937',
+        },
       }
     },
 
@@ -683,12 +682,35 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
         backgroundColor: resolvedTheme === 'dark' ? '#1f2937' : '#ffffff',
         position: 'relative',
         zIndex: 1,
+        // Select 드롭다운 메뉴 스타일링
         '& .MuiPopover-root': {
-          zIndex: 2000,
+          zIndex: 9999,
         },
         '& .MuiMenu-root': {
-          zIndex: 2000,
-        }
+          zIndex: 9999,
+        },
+        '& .MuiMenu-paper': {
+          backgroundColor: resolvedTheme === 'dark' ? '#374151' : '#ffffff',
+          border: `1px solid ${resolvedTheme === 'dark' ? '#4b5563' : '#d1d5db'}`,
+          borderRadius: '6px',
+          boxShadow: resolvedTheme === 'dark'
+            ? '0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.2)'
+            : '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+        },
+        '& .MuiMenuItem-root': {
+          color: resolvedTheme === 'dark' ? '#f9fafb' : '#1f2937',
+          fontSize: '14px',
+          padding: '8px 12px',
+          '&:hover': {
+            backgroundColor: resolvedTheme === 'dark' ? '#4b5563' : '#f3f4f6',
+          },
+          '&.Mui-selected': {
+            backgroundColor: resolvedTheme === 'dark' ? '#1e40af' : '#dbeafe',
+            '&:hover': {
+              backgroundColor: resolvedTheme === 'dark' ? '#1e3a8a' : '#bfdbfe',
+            },
+          },
+        },
       }
     },
 
@@ -743,7 +765,7 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
     loadData()
   }, [isOpen, tableName, pagination.pageIndex, pagination.pageSize, globalFilter, loadData])
 
-  // 모달 열림/닫힘 시 포커스 관리
+  // 모달 열림/닫힘 시 포커스 관리 및 MUI Select 클릭 문제 해결
   useEffect(() => {
     if (isOpen) {
       // 모달이 열릴 때 aria-hidden 문제 방지
@@ -754,13 +776,51 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
         }
       }
 
+      // MUI Select 클릭 문제 해결을 위한 전역 스타일 추가
+      const style = document.createElement('style')
+      style.textContent = `
+        /* MUI Select 데스크톱 클릭 문제 해결 */
+        .MuiTablePagination-select.MuiInputBase-root {
+          pointer-events: auto !important;
+          cursor: pointer !important;
+        }
+        
+        .MuiTablePagination-select .MuiSelect-select {
+          pointer-events: auto !important;
+          cursor: pointer !important;
+          user-select: none !important;
+        }
+        
+        .MuiTablePagination-select .MuiSelect-icon {
+          pointer-events: auto !important;
+          cursor: pointer !important;
+        }
+        
+        .MuiMenu-root {
+          z-index: 9999 !important;
+        }
+        
+        .MuiPopover-root {
+          z-index: 9999 !important;
+        }
+        
+        /* 데스크톱에서 Select 호버 효과 */
+        @media (min-width: 768px) {
+          .MuiTablePagination-select.MuiInputBase-root:hover {
+            background-color: ${resolvedTheme === 'dark' ? '#4b5563' : '#f9fafb'} !important;
+          }
+        }
+      `
+      document.head.appendChild(style)
+
       document.addEventListener('focusin', handleFocusCapture, true)
 
       return () => {
         document.removeEventListener('focusin', handleFocusCapture, true)
+        document.head.removeChild(style)
       }
     }
-  }, [isOpen])
+  }, [isOpen, resolvedTheme])
 
 
 
@@ -792,13 +852,18 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
         size="full"
         className="w-full p-0 relative z-50"
         onInteractOutside={(e) => {
-          // 페이지네이션 셀렉트 박스 클릭 시 모달이 닫히지 않도록 방지
+          // 페이지네이션 셀렉트 박스 및 MUI 컴포넌트 클릭 시 모달이 닫히지 않도록 방지
           const target = e.target as HTMLElement
           if (target.closest('.MuiSelect-root') ||
             target.closest('.MuiMenu-root') ||
             target.closest('.MuiPopover-root') ||
+            target.closest('.MuiMenuItem-root') ||
+            target.closest('.MuiTablePagination-select') ||
+            target.closest('.MuiInputBase-root') ||
             target.closest('[role="listbox"]') ||
-            target.closest('[role="option"]')) {
+            target.closest('[role="option"]') ||
+            target.closest('[role="presentation"]') ||
+            target.closest('[data-testid="select-option"]')) {
             e.preventDefault()
           }
         }}
@@ -818,10 +883,11 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
         </DialogHeader>
 
         {/* 테이블 컨테이너 */}
-        <div 
+        <div
           className="flex-1 px-4 sm:px-6 pb-4 sm:pb-6 relative z-10 max-h-[70vh] overflow-auto"
           style={{
-            isolation: 'isolate'
+            isolation: 'isolate',
+            pointerEvents: 'auto'
           }}
         >
           <MaterialReactTable table={table} />
