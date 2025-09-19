@@ -725,7 +725,10 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
       open={isOpen} 
       onOpenChange={onClose}
     >
-      <DialogContent className={`${isMobile ? 'h-full max-w-full top-0' : 'max-h-[85vh] h-auto max-w-[1280px] sm:top-[6%] sm:translate-y-0'} w-full overflow-hidden p-0 relative z-50`}>
+      <DialogContent 
+        size="full"
+        className={`${isMobile ? 'h-full max-w-full top-0' : 'max-h-[85vh] h-auto max-w-[1280px] sm:top-[6%] sm:translate-y-0'} w-full overflow-hidden p-0 relative z-50`}
+      >
         <DialogHeader className="px-4 sm:px-6 py-4 border-b border-gray-200 dark:border-gray-700">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="flex-1">
