@@ -10,7 +10,6 @@ import { Badge } from '@/components/ui/badge'
 import { toast } from 'sonner'
 import { Plus, Edit, Trash2, Save, X, Search, Filter, FilterX, ChevronDown } from 'lucide-react'
 import { useTheme } from 'next-themes'
-import { useMediaQuery } from '@mui/material'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
 import { useFilterStore, type FilterCondition } from '@/stores/filterStore'
 
@@ -120,8 +119,7 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
     columnFilters 
   } = tableFilters
   
-  // 반응형 모달 크기 설정
-  const isMobile = useMediaQuery('(max-width: 768px)')
+  // 반응형 모달 크기 설정 (현재 페이지 스크롤 전략으로 내부 높이 제한 제거)
 
   const tableSchema = TABLE_SCHEMAS[tableName as keyof typeof TABLE_SCHEMAS]
 
