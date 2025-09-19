@@ -734,14 +734,17 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
             '&.MuiInputBase-root': {
               cursor: 'pointer',
               pointerEvents: 'auto',
-          // 데스크톱에서 더 명확한 스타일 - 너비 제한
+          // 데스크톱에서 더 명확한 스타일 - 버튼 크기에 맞춤
           '@media (min-width: 768px)': {
             border: `1px solid ${resolvedTheme === 'dark' ? '#4b5563' : '#d1d5db'}`,
             borderRadius: '6px',
             backgroundColor: resolvedTheme === 'dark' ? '#374151' : '#ffffff',
-            width: '80px', // 데스크톱에서 너비 제한
-            minWidth: '80px',
-            maxWidth: '80px',
+            width: '60px', // 버튼 크기에 맞춤
+            minWidth: '60px',
+            maxWidth: '60px',
+            height: '32px',
+            minHeight: '32px',
+            maxHeight: '32px',
             '&:hover': {
               backgroundColor: resolvedTheme === 'dark' ? '#4b5563' : '#f9fafb',
               borderColor: resolvedTheme === 'dark' ? '#6b7280' : '#9ca3af',
@@ -758,12 +761,25 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
               userSelect: 'none',
               position: 'relative',
               zIndex: 11,
+              // 데스크톱에서 패딩 조정
+              '@media (min-width: 768px)': {
+                padding: '4px 24px 4px 8px',
+                height: '24px',
+                minHeight: '24px',
+                lineHeight: '24px',
+              },
             },
             '& .MuiSelect-icon': {
               cursor: 'pointer',
               pointerEvents: 'auto',
               position: 'relative',
               zIndex: 11,
+              // 데스크톱에서 아이콘 위치 조정
+              '@media (min-width: 768px)': {
+                right: '6px',
+                top: '50%',
+                transform: 'translateY(-50%)',
+              },
             },
           },
         },
@@ -835,24 +851,13 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
     loadData()
   }, [isOpen, tableName, pagination.pageIndex, pagination.pageSize, globalFilter, loadData])
 
-  // 모달 열림/닫힘 시 포커스 관리 및 MUI Select 클릭 문제 해결
+  // 모달 열림/닫힘 시 MUI Select 클릭 문제 해결 - 무한 루프 방지
   useEffect(() => {
     if (isOpen) {
       // aria-hidden 문제 해결을 위한 전역 스타일 추가
       const style = document.createElement('style')
       style.id = 'mui-select-fix'
       style.textContent = `
-        /* aria-hidden 문제 해결 - 포커스된 요소를 숨기지 않도록 설정 (무한 루프 방지) */
-        [aria-hidden="true"]:focus-within {
-          aria-hidden: false !important;
-        }
-        
-        /* MUI Select 컴포넌트들에 대한 안전한 처리 */
-        [aria-hidden="true"] .MuiSelect-root:focus-within,
-        [aria-hidden="true"] .MuiTablePagination-select:focus-within {
-          /* CSS로는 aria-hidden을 직접 변경할 수 없으므로 JavaScript에서 처리 */
-        }
-        
         /* MUI Select 데스크톱 클릭 문제 해결 - 접근성 개선 */
         .MuiTablePagination-select.MuiInputBase-root {
           pointer-events: auto !important;
@@ -929,15 +934,18 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
           pointer-events: auto !important;
         }
         
-        /* 데스크톱 특화 스타일 - 너비 제한 */
+        /* 데스크톱 특화 스타일 - 버튼 크기에 맞춤 */
         @media (min-width: 768px) {
           .MuiTablePagination-select.MuiInputBase-root {
             border: 1px solid ${resolvedTheme === 'dark' ? '#4b5563' : '#d1d5db'} !important;
             border-radius: 6px !important;
             background-color: ${resolvedTheme === 'dark' ? '#374151' : '#ffffff'} !important;
-            width: 80px !important;
-            min-width: 80px !important;
-            max-width: 80px !important;
+            width: 60px !important;
+            min-width: 60px !important;
+            max-width: 60px !important;
+            height: 32px !important;
+            min-height: 32px !important;
+            max-height: 32px !important;
           }
           
           .MuiTablePagination-select.MuiInputBase-root:hover {
@@ -957,7 +965,16 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
           }
           
           .MuiTablePagination-select .MuiSelect-select {
-            padding: 6px 32px 6px 12px !important;
+            padding: 4px 24px 4px 8px !important;
+            height: 24px !important;
+            min-height: 24px !important;
+            line-height: 24px !important;
+          }
+          
+          .MuiTablePagination-select .MuiSelect-icon {
+            right: 6px !important;
+            top: 50% !important;
+            transform: translateY(-50%) !important;
           }
         }
         
@@ -1002,22 +1019,7 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
 
       document.head.appendChild(style)
 
-      // MutationObserver 대신 이벤트 리스너 사용으로 무한 루프 방지
-      const handleFocusIn = (event: FocusEvent) => {
-        const target = event.target as HTMLElement
-        const ariaHiddenElement = target.closest('[aria-hidden="true"]')
-        if (ariaHiddenElement) {
-          // 포커스된 요소가 aria-hidden="true"인 요소 안에 있으면 제거
-          ariaHiddenElement.setAttribute('aria-hidden', 'false')
-        }
-      }
-
-      // 포커스 이벤트 리스너 추가
-      document.addEventListener('focusin', handleFocusIn, true)
-
       return () => {
-        // 이벤트 리스너 제거
-        document.removeEventListener('focusin', handleFocusIn, true)
         const styleElement = document.getElementById('mui-select-fix')
         if (styleElement) {
           styleElement.remove()
