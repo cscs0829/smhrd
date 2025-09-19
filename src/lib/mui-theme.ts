@@ -14,18 +14,37 @@ export const createMuiTheme = () => {
 
   return createTheme({
     components: {
-      // Popover 컴포넌트 설정 (Select 드롭다운에서 사용)
+      // Popover 컴포넌트 설정 (Select 드롭다운에서 사용) - 강화된 버전
       MuiPopover: {
         defaultProps: {
           container: getRootElement,
           disablePortal: false,
+          // 데스크톱에서 더 나은 위치 조정
+          anchorOrigin: {
+            vertical: 'bottom',
+            horizontal: 'left',
+          },
+          transformOrigin: {
+            vertical: 'top',
+            horizontal: 'left',
+          },
         },
         styleOverrides: {
           root: {
-            zIndex: 9999,
+            zIndex: 99999,
+            isolation: 'isolate',
+            '&[data-popper-placement]': {
+              zIndex: 99999,
+            },
           },
           paper: {
-            zIndex: 9999,
+            zIndex: 99999,
+            isolation: 'isolate',
+            cursor: 'auto',
+            pointerEvents: 'auto',
+            '& *': {
+              pointerEvents: 'auto',
+            },
           },
         },
       },
@@ -41,18 +60,58 @@ export const createMuiTheme = () => {
           },
         },
       },
-      // Menu 컴포넌트 설정
+      // Menu 컴포넌트 설정 - 강화된 버전
       MuiMenu: {
         defaultProps: {
           container: getRootElement,
           disablePortal: false,
+          // 메뉴 위치 최적화
+          anchorOrigin: {
+            vertical: 'bottom',
+            horizontal: 'left',
+          },
+          transformOrigin: {
+            vertical: 'top',
+            horizontal: 'left',
+          },
         },
         styleOverrides: {
           root: {
-            zIndex: 9999,
+            zIndex: 99999,
+            isolation: 'isolate',
+            '&[data-popper-placement]': {
+              zIndex: 99999,
+            },
           },
           paper: {
-            zIndex: 9999,
+            zIndex: 99999,
+            isolation: 'isolate',
+            cursor: 'auto',
+            pointerEvents: 'auto',
+            maxHeight: '300px',
+            overflowY: 'auto',
+            '& *': {
+              pointerEvents: 'auto',
+            },
+          },
+          list: {
+            padding: '4px 0',
+            '& .MuiMenuItem-root': {
+              cursor: 'pointer',
+              pointerEvents: 'auto',
+              userSelect: 'none',
+              minHeight: '36px',
+              padding: '8px 16px',
+              '&:hover': {
+                backgroundColor: 'rgba(0, 0, 0, 0.04)',
+              },
+              '&.Mui-selected': {
+                backgroundColor: 'rgba(25, 118, 210, 0.12)',
+                '&:hover': {
+                  backgroundColor: 'rgba(25, 118, 210, 0.16)',
+                },
+              },
+            },
           },
         },
       },
@@ -123,10 +182,63 @@ export const createMuiTheme = () => {
       },
       // TablePagination 컴포넌트 설정
       MuiTablePagination: {
+        defaultProps: {
+          // Select 컴포넌트의 기본 props 설정
+          SelectProps: {
+            MenuProps: {
+              container: getRootElement,
+              disablePortal: false,
+              anchorOrigin: {
+                vertical: 'bottom',
+                horizontal: 'left',
+              },
+              transformOrigin: {
+                vertical: 'top',
+                horizontal: 'left',
+              },
+              PaperProps: {
+                sx: {
+                  zIndex: 9999,
+                  maxHeight: '300px',
+                  '& .MuiMenuItem-root': {
+                    cursor: 'pointer',
+                    pointerEvents: 'auto',
+                    userSelect: 'none',
+                    '&:hover': {
+                      backgroundColor: 'rgba(0, 0, 0, 0.04)',
+                    },
+                    '&.Mui-selected': {
+                      backgroundColor: 'rgba(25, 118, 210, 0.12)',
+                      '&:hover': {
+                        backgroundColor: 'rgba(25, 118, 210, 0.16)',
+                      },
+                    },
+                  },
+                },
+              },
+            },
+            sx: {
+              cursor: 'pointer',
+              pointerEvents: 'auto',
+              '& .MuiSelect-select': {
+                cursor: 'pointer',
+                pointerEvents: 'auto',
+                userSelect: 'none',
+              },
+              '& .MuiSelect-icon': {
+                cursor: 'pointer',
+                pointerEvents: 'auto',
+              },
+            },
+          },
+        },
         styleOverrides: {
           root: {
             position: 'relative',
             zIndex: 1,
+            '& *': {
+              pointerEvents: 'auto',
+            },
           },
           select: {
             cursor: 'pointer',
@@ -134,6 +246,8 @@ export const createMuiTheme = () => {
             '&.MuiInputBase-root': {
               cursor: 'pointer',
               pointerEvents: 'auto',
+              position: 'relative',
+              zIndex: 10,
               '&:hover': {
                 backgroundColor: 'rgba(0, 0, 0, 0.04)',
               },
@@ -145,17 +259,28 @@ export const createMuiTheme = () => {
           selectIcon: {
             cursor: 'pointer',
             pointerEvents: 'auto',
+            position: 'relative',
+            zIndex: 11,
           },
           actions: {
             '& button': {
               cursor: 'pointer',
+              pointerEvents: 'auto',
+              position: 'relative',
+              zIndex: 10,
+            },
+          },
+          toolbar: {
+            position: 'relative',
+            zIndex: 5,
+            '& *': {
               pointerEvents: 'auto',
             },
           },
         },
       },
     },
-    // z-index 값 설정
+    // z-index 값 설정 - 더 높은 값으로 업데이트
     zIndex: {
       mobileStepper: 1000,
       fab: 1050,
@@ -164,7 +289,7 @@ export const createMuiTheme = () => {
       drawer: 1200,
       modal: 9998,
       snackbar: 1400,
-      tooltip: 9999,
+      tooltip: 99999,
     },
   })
 }

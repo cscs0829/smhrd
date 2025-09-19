@@ -378,6 +378,15 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
     enableDensityToggle: true,
     enableFullScreenToggle: true,
     enableHiding: true,
+    // 포털 컨테이너 설정으로 z-index 문제 해결
+    muiTableBodyProps: {
+      sx: {
+        '& .MuiTableCell-root': {
+          position: 'relative',
+          zIndex: 1,
+        },
+      },
+    },
     // 한국어 로컬라이제이션
     localization: {
       language: 'ko',
@@ -572,20 +581,51 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
 
     // 페이지네이션 props 설정 - 데스크톱 클릭 문제 해결
     muiPaginationProps: {
-      sx: {
-        // 기본 스타일 초기화
-        '& .MuiTablePagination-root': {
-          position: 'relative',
-          zIndex: 1,
+      // Select 컴포넌트의 MenuProps 설정으로 드롭다운 문제 해결
+      SelectProps: {
+        MenuProps: {
+          // 메뉴가 올바른 컨테이너에 렌더링되도록 설정
+          container: typeof document !== 'undefined' ? document.body : undefined,
+          // 포털 사용하여 z-index 문제 해결
+          disablePortal: false,
+          // 메뉴 스타일 설정
+          PaperProps: {
+            sx: {
+              backgroundColor: resolvedTheme === 'dark' ? '#374151' : '#ffffff',
+              border: `1px solid ${resolvedTheme === 'dark' ? '#4b5563' : '#d1d5db'}`,
+              borderRadius: '6px',
+              boxShadow: resolvedTheme === 'dark'
+                ? '0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.2)'
+                : '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+              zIndex: 9999,
+              maxHeight: '300px',
+              '& .MuiMenuItem-root': {
+                color: resolvedTheme === 'dark' ? '#f9fafb' : '#1f2937',
+                fontSize: '14px',
+                padding: '8px 12px',
+                cursor: 'pointer',
+                '&:hover': {
+                  backgroundColor: resolvedTheme === 'dark' ? '#4b5563' : '#f3f4f6',
+                },
+                '&.Mui-selected': {
+                  backgroundColor: resolvedTheme === 'dark' ? '#1e40af' : '#dbeafe',
+                  '&:hover': {
+                    backgroundColor: resolvedTheme === 'dark' ? '#1e3a8a' : '#bfdbfe',
+                  },
+                },
+              },
+            },
+          },
         },
-        // Select 컴포넌트 스타일 수정
-        '& .MuiTablePagination-select': {
-          // 기본 MUI Input 스타일 제거하고 클릭 가능하게 만들기
+        // Select 자체 스타일 설정
+        sx: {
           '&.MuiInputBase-root': {
             backgroundColor: resolvedTheme === 'dark' ? '#374151' : '#ffffff',
             border: `1px solid ${resolvedTheme === 'dark' ? '#4b5563' : '#d1d5db'}`,
             borderRadius: '6px',
             minHeight: '32px',
+            cursor: 'pointer',
+            pointerEvents: 'auto',
             '&:hover': {
               backgroundColor: resolvedTheme === 'dark' ? '#4b5563' : '#f9fafb',
               borderColor: resolvedTheme === 'dark' ? '#6b7280' : '#9ca3af',
@@ -606,6 +646,8 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
             minHeight: 'auto',
             display: 'flex',
             alignItems: 'center',
+            cursor: 'pointer',
+            pointerEvents: 'auto',
             '&:focus': {
               backgroundColor: 'transparent',
             },
@@ -613,11 +655,22 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
           '& .MuiSelect-icon': {
             right: '8px',
             color: resolvedTheme === 'dark' ? '#9ca3af' : '#6b7280',
+            cursor: 'pointer',
+            pointerEvents: 'auto',
           },
+        },
+      },
+      sx: {
+        // 기본 스타일 초기화
+        '& .MuiTablePagination-root': {
+          position: 'relative',
+          zIndex: 1,
         },
         // 페이지네이션 버튼들
         '& .MuiTablePagination-actions button': {
           color: resolvedTheme === 'dark' ? '#f9fafb' : '#1f2937',
+          cursor: 'pointer',
+          pointerEvents: 'auto',
           '&:hover': {
             backgroundColor: resolvedTheme === 'dark' ? '#374151' : '#f3f4f6',
           },
@@ -632,7 +685,7 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
       }
     },
 
-    // 테이블 페이퍼에 포털 컨테이너 설정
+    // 테이블 페이퍼에 포털 컨테이너 설정 - 개선된 버전
     muiTablePaperProps: {
       elevation: 0,
       sx: {
@@ -642,56 +695,68 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
         position: 'relative',
         zIndex: 1,
         isolation: 'isolate',
-        // Select 드롭다운 메뉴 스타일링
-        '& .MuiPopover-root': {
-          zIndex: '9999 !important',
-          position: 'fixed !important',
-        },
-        '& .MuiMenu-root': {
-          zIndex: '9999 !important',
-          position: 'fixed !important',
-        },
-        '& .MuiMenu-paper': {
-          backgroundColor: resolvedTheme === 'dark' ? '#374151' : '#ffffff',
-          border: `1px solid ${resolvedTheme === 'dark' ? '#4b5563' : '#d1d5db'}`,
-          borderRadius: '6px',
-          boxShadow: resolvedTheme === 'dark'
-            ? '0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.2)'
-            : '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
-          zIndex: '9999 !important',
-          position: 'relative !important',
-        },
-        '& .MuiMenuItem-root': {
-          color: resolvedTheme === 'dark' ? '#f9fafb' : '#1f2937',
-          fontSize: '14px',
-          padding: '8px 12px',
-          cursor: 'pointer !important',
+        // 모든 상호작용 요소들이 클릭 가능하도록 설정
+        '& *': {
           pointerEvents: 'auto !important',
-          userSelect: 'none',
-          '&:hover': {
-            backgroundColor: resolvedTheme === 'dark' ? '#4b5563' : '#f3f4f6',
-          },
-          '&.Mui-selected': {
-            backgroundColor: resolvedTheme === 'dark' ? '#1e40af' : '#dbeafe',
-            '&:hover': {
-              backgroundColor: resolvedTheme === 'dark' ? '#1e3a8a' : '#bfdbfe',
+        },
+        // 페이지네이션 영역 특별 처리
+        '& .MuiTablePagination-root': {
+          position: 'relative',
+          zIndex: 5,
+          isolation: 'isolate',
+          // Select 컴포넌트 강화
+          '& .MuiTablePagination-select': {
+            position: 'relative',
+            zIndex: 10,
+            isolation: 'isolate',
+            cursor: 'pointer',
+            pointerEvents: 'auto',
+            '&.MuiInputBase-root': {
+              cursor: 'pointer',
+              pointerEvents: 'auto',
+              // 데스크톱에서 더 명확한 스타일
+              '@media (min-width: 768px)': {
+                border: `1px solid ${resolvedTheme === 'dark' ? '#4b5563' : '#d1d5db'}`,
+                borderRadius: '6px',
+                backgroundColor: resolvedTheme === 'dark' ? '#374151' : '#ffffff',
+                '&:hover': {
+                  backgroundColor: resolvedTheme === 'dark' ? '#4b5563' : '#f9fafb',
+                  borderColor: resolvedTheme === 'dark' ? '#6b7280' : '#9ca3af',
+                },
+                '&.Mui-focused': {
+                  borderColor: resolvedTheme === 'dark' ? '#3b82f6' : '#2563eb',
+                  boxShadow: `0 0 0 1px ${resolvedTheme === 'dark' ? '#3b82f6' : '#2563eb'}`,
+                },
+              },
+            },
+            '& .MuiSelect-select': {
+              cursor: 'pointer',
+              pointerEvents: 'auto',
+              userSelect: 'none',
+              position: 'relative',
+              zIndex: 11,
+            },
+            '& .MuiSelect-icon': {
+              cursor: 'pointer',
+              pointerEvents: 'auto',
+              position: 'relative',
+              zIndex: 11,
             },
           },
         },
-        // 툴바 버튼들 클릭 가능하게 설정
-        '& .MuiIconButton-root': {
+        // 툴바 버튼들
+        '& .MuiIconButton-root, & .MuiButton-root, & .MuiButtonBase-root': {
           cursor: 'pointer !important',
           pointerEvents: 'auto !important',
           position: 'relative',
           zIndex: 10,
         },
-        // 페이지네이션 영역 클릭 가능하게 설정
-        '& .MuiTablePagination-root': {
+        // 테이블 헤더 액션 버튼들
+        '& .MuiTableHead-root .MuiIconButton-root': {
+          cursor: 'pointer !important',
+          pointerEvents: 'auto !important',
           position: 'relative',
-          zIndex: 5,
-          '& *': {
-            pointerEvents: 'auto !important',
-          },
+          zIndex: 10,
         },
       }
     },
@@ -762,12 +827,13 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
       const style = document.createElement('style')
       style.id = 'mui-select-fix'
       style.textContent = `
-        /* MUI Select 데스크톱 클릭 문제 해결 */
+        /* MUI Select 데스크톱 클릭 문제 해결 - 개선된 버전 */
         .MuiTablePagination-select.MuiInputBase-root {
           pointer-events: auto !important;
           cursor: pointer !important;
           position: relative !important;
           z-index: 10 !important;
+          isolation: isolate !important;
         }
         
         .MuiTablePagination-select .MuiSelect-select {
@@ -776,6 +842,10 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
           user-select: none !important;
           position: relative !important;
           z-index: 11 !important;
+          /* 데스크톱에서 클릭 영역 확장 */
+          min-height: 32px !important;
+          display: flex !important;
+          align-items: center !important;
         }
         
         .MuiTablePagination-select .MuiSelect-icon {
@@ -785,38 +855,45 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
           z-index: 11 !important;
         }
         
-        /* MUI 포털 컴포넌트들의 z-index 강제 설정 */
-        .MuiMenu-root {
-          z-index: 9999 !important;
+        /* MUI 포털 컴포넌트들 - 더 강력한 z-index 설정 */
+        .MuiMenu-root, .MuiPopover-root {
+          z-index: 99999 !important;
           position: fixed !important;
+          isolation: isolate !important;
         }
         
-        .MuiPopover-root {
-          z-index: 9999 !important;
-          position: fixed !important;
-        }
-        
-        .MuiMenu-paper {
-          z-index: 9999 !important;
+        .MuiMenu-paper, .MuiPopover-paper {
+          z-index: 99999 !important;
           position: relative !important;
           pointer-events: auto !important;
+          isolation: isolate !important;
         }
         
         .MuiMenuItem-root {
           pointer-events: auto !important;
           cursor: pointer !important;
           user-select: none !important;
+          /* 클릭 영역 확장 */
+          min-height: 36px !important;
+          display: flex !important;
+          align-items: center !important;
         }
         
-        /* 햄버거 메뉴 버튼 클릭 문제 해결 */
-        .MuiIconButton-root {
+        /* 모든 MUI 버튼 요소들 클릭 가능하게 */
+        .MuiIconButton-root, .MuiButton-root, .MuiButtonBase-root {
           pointer-events: auto !important;
           cursor: pointer !important;
           position: relative !important;
           z-index: 10 !important;
         }
         
-        /* 테이블 툴바 버튼들 */
+        /* 테이블 페이지네이션 전체 영역 */
+        .MuiTablePagination-root {
+          position: relative !important;
+          z-index: 5 !important;
+          isolation: isolate !important;
+        }
+        
         .MuiTablePagination-toolbar {
           position: relative !important;
           z-index: 5 !important;
@@ -826,58 +903,134 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
           pointer-events: auto !important;
         }
         
-        /* 데스크톱에서 Select 호버 효과 */
+        /* 데스크톱 특화 스타일 */
         @media (min-width: 768px) {
+          .MuiTablePagination-select.MuiInputBase-root {
+            /* 데스크톱에서 더 명확한 클릭 영역 */
+            border: 1px solid ${resolvedTheme === 'dark' ? '#4b5563' : '#d1d5db'} !important;
+            border-radius: 6px !important;
+            background-color: ${resolvedTheme === 'dark' ? '#374151' : '#ffffff'} !important;
+          }
+          
           .MuiTablePagination-select.MuiInputBase-root:hover {
             background-color: ${resolvedTheme === 'dark' ? '#4b5563' : '#f9fafb'} !important;
+            border-color: ${resolvedTheme === 'dark' ? '#6b7280' : '#9ca3af'} !important;
           }
           
           .MuiMenuItem-root:hover {
             background-color: ${resolvedTheme === 'dark' ? '#4b5563' : '#f3f4f6'} !important;
           }
+          
+          /* 데스크톱에서 Select 드롭다운 위치 조정 */
+          .MuiTablePagination-select .MuiSelect-select {
+            padding: 6px 32px 6px 12px !important;
+          }
         }
         
-        /* 모바일에서도 클릭 가능하도록 */
+        /* 모바일 터치 최적화 */
         @media (max-width: 767px) {
-          .MuiTablePagination-select.MuiInputBase-root {
+          .MuiTablePagination-select.MuiInputBase-root,
+          .MuiMenuItem-root,
+          .MuiIconButton-root {
             touch-action: manipulation !important;
+            -webkit-tap-highlight-color: transparent !important;
+          }
+          
+          /* 모바일에서 더 큰 터치 영역 */
+          .MuiTablePagination-select .MuiSelect-select {
+            min-height: 44px !important;
+            padding: 10px 32px 10px 12px !important;
           }
           
           .MuiMenuItem-root {
-            touch-action: manipulation !important;
+            min-height: 44px !important;
+            padding: 12px 16px !important;
           }
         }
+        
+        /* 포커스 상태 개선 */
+        .MuiTablePagination-select.MuiInputBase-root.Mui-focused {
+          border-color: ${resolvedTheme === 'dark' ? '#3b82f6' : '#2563eb'} !important;
+          box-shadow: 0 0 0 1px ${resolvedTheme === 'dark' ? '#3b82f6' : '#2563eb'} !important;
+        }
+        
+        /* underline 제거 */
+        .MuiTablePagination-select.MuiInputBase-root::before,
+        .MuiTablePagination-select.MuiInputBase-root::after {
+          display: none !important;
+        }
       `
-      
+
       // 기존 스타일이 있으면 제거
       const existingStyle = document.getElementById('mui-select-fix')
       if (existingStyle) {
         existingStyle.remove()
       }
-      
+
       document.head.appendChild(style)
 
-      // 클릭 이벤트 전파 방지를 위한 전역 핸들러
+      // 클릭 이벤트 전파 방지를 위한 전역 핸들러 - 개선된 버전
       const handleGlobalClick = (e: MouseEvent) => {
         const target = e.target as HTMLElement
-        
-        // MUI 컴포넌트 클릭 시 이벤트 전파 허용
+
+        // MUI 컴포넌트 클릭 시 이벤트 전파 허용 및 강제 실행
         if (target.closest('.MuiMenu-root') ||
-            target.closest('.MuiPopover-root') ||
-            target.closest('.MuiMenuItem-root') ||
-            target.closest('.MuiTablePagination-select') ||
-            target.closest('.MuiIconButton-root') ||
-            target.closest('.MuiSelect-root')) {
+          target.closest('.MuiPopover-root') ||
+          target.closest('.MuiMenuItem-root') ||
+          target.closest('.MuiTablePagination-select') ||
+          target.closest('.MuiIconButton-root') ||
+          target.closest('.MuiSelect-root') ||
+          target.closest('.MuiButton-root') ||
+          target.closest('.MuiButtonBase-root')) {
+          
+          // 이벤트가 제대로 처리되도록 보장
           e.stopPropagation()
+          
+          // Select 컴포넌트의 경우 추가 처리
+          if (target.closest('.MuiTablePagination-select')) {
+            const selectElement = target.closest('.MuiTablePagination-select') as HTMLElement
+            if (selectElement) {
+              // 포커스 강제 설정
+              const selectInput = selectElement.querySelector('.MuiSelect-select') as HTMLElement
+              if (selectInput) {
+                selectInput.focus()
+              }
+            }
+          }
+        }
+      }
+
+      // 마우스다운 이벤트도 처리 (Select 드롭다운 열기 보장)
+      const handleGlobalMouseDown = (e: MouseEvent) => {
+        const target = e.target as HTMLElement
+        
+        if (target.closest('.MuiTablePagination-select')) {
+          // Select 컴포넌트 클릭 시 드롭다운이 열리도록 보장
+          e.stopPropagation()
+          
+          // 약간의 지연 후 클릭 이벤트 강제 발생
+          setTimeout(() => {
+            const selectElement = target.closest('.MuiTablePagination-select') as HTMLElement
+            if (selectElement) {
+              const event = new MouseEvent('click', {
+                bubbles: true,
+                cancelable: true,
+                view: window
+              })
+              selectElement.dispatchEvent(event)
+            }
+          }, 0)
         }
       }
 
       document.addEventListener('focusin', handleFocusCapture, true)
       document.addEventListener('click', handleGlobalClick, true)
+      document.addEventListener('mousedown', handleGlobalMouseDown, true)
 
       return () => {
         document.removeEventListener('focusin', handleFocusCapture, true)
         document.removeEventListener('click', handleGlobalClick, true)
+        document.removeEventListener('mousedown', handleGlobalMouseDown, true)
         const styleElement = document.getElementById('mui-select-fix')
         if (styleElement) {
           styleElement.remove()
