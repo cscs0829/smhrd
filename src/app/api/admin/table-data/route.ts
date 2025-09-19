@@ -288,7 +288,8 @@ function getDefaultSortColumn(table: string, requested: string): string {
     city_images: ['created_at', 'id'],
     titles: ['created_at', 'id'],
     api_keys: ['created_at', 'id'],
-    deleted_items: ['deleted_at', 'id'],
+    // deleted_items에는 deleted_at 컬럼이 없으므로 created_at로 정렬
+    deleted_items: ['created_at', 'id'],
   }
   const allowed = tableToColumns[table] || ['id']
   // 요청한 컬럼이 허용 목록에 있으면 사용, 아니면 첫 번째 기본값으로 대체
