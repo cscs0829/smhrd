@@ -734,20 +734,23 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
             '&.MuiInputBase-root': {
               cursor: 'pointer',
               pointerEvents: 'auto',
-              // 데스크톱에서 더 명확한 스타일
-              '@media (min-width: 768px)': {
-                border: `1px solid ${resolvedTheme === 'dark' ? '#4b5563' : '#d1d5db'}`,
-                borderRadius: '6px',
-                backgroundColor: resolvedTheme === 'dark' ? '#374151' : '#ffffff',
-                '&:hover': {
-                  backgroundColor: resolvedTheme === 'dark' ? '#4b5563' : '#f9fafb',
-                  borderColor: resolvedTheme === 'dark' ? '#6b7280' : '#9ca3af',
-                },
-                '&.Mui-focused': {
-                  borderColor: resolvedTheme === 'dark' ? '#3b82f6' : '#2563eb',
-                  boxShadow: `0 0 0 1px ${resolvedTheme === 'dark' ? '#3b82f6' : '#2563eb'}`,
-                },
-              },
+          // 데스크톱에서 더 명확한 스타일 - 너비 제한
+          '@media (min-width: 768px)': {
+            border: `1px solid ${resolvedTheme === 'dark' ? '#4b5563' : '#d1d5db'}`,
+            borderRadius: '6px',
+            backgroundColor: resolvedTheme === 'dark' ? '#374151' : '#ffffff',
+            width: '80px', // 데스크톱에서 너비 제한
+            minWidth: '80px',
+            maxWidth: '80px',
+            '&:hover': {
+              backgroundColor: resolvedTheme === 'dark' ? '#4b5563' : '#f9fafb',
+              borderColor: resolvedTheme === 'dark' ? '#6b7280' : '#9ca3af',
+            },
+            '&.Mui-focused': {
+              borderColor: resolvedTheme === 'dark' ? '#3b82f6' : '#2563eb',
+              boxShadow: `0 0 0 1px ${resolvedTheme === 'dark' ? '#3b82f6' : '#2563eb'}`,
+            },
+          },
             },
             '& .MuiSelect-select': {
               cursor: 'pointer',
@@ -839,11 +842,15 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
       const style = document.createElement('style')
       style.id = 'mui-select-fix'
       style.textContent = `
-        /* aria-hidden 문제 해결 - 포커스된 요소를 숨기지 않도록 설정 */
-        [aria-hidden="true"]:focus-within,
+        /* aria-hidden 문제 해결 - 포커스된 요소를 숨기지 않도록 설정 (무한 루프 방지) */
+        [aria-hidden="true"]:focus-within {
+          aria-hidden: false !important;
+        }
+        
+        /* MUI Select 컴포넌트들에 대한 안전한 처리 */
         [aria-hidden="true"] .MuiSelect-root:focus-within,
         [aria-hidden="true"] .MuiTablePagination-select:focus-within {
-          aria-hidden: false !important;
+          /* CSS로는 aria-hidden을 직접 변경할 수 없으므로 JavaScript에서 처리 */
         }
         
         /* MUI Select 데스크톱 클릭 문제 해결 - 접근성 개선 */
@@ -922,12 +929,15 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
           pointer-events: auto !important;
         }
         
-        /* 데스크톱 특화 스타일 */
+        /* 데스크톱 특화 스타일 - 너비 제한 */
         @media (min-width: 768px) {
           .MuiTablePagination-select.MuiInputBase-root {
             border: 1px solid ${resolvedTheme === 'dark' ? '#4b5563' : '#d1d5db'} !important;
             border-radius: 6px !important;
             background-color: ${resolvedTheme === 'dark' ? '#374151' : '#ffffff'} !important;
+            width: 80px !important;
+            min-width: 80px !important;
+            max-width: 80px !important;
           }
           
           .MuiTablePagination-select.MuiInputBase-root:hover {
@@ -992,33 +1002,22 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
 
       document.head.appendChild(style)
 
-      // 무한 루프 방지를 위한 MutationObserver 사용
-      const observer = new MutationObserver((mutations) => {
-        mutations.forEach((mutation) => {
-          if (mutation.type === 'attributes' && mutation.attributeName === 'aria-hidden') {
-            const target = mutation.target as HTMLElement
-            if (target.getAttribute('aria-hidden') === 'true') {
-              // 포커스된 요소가 있는지 확인
-              const focusedElement = document.activeElement
-              if (focusedElement && target.contains(focusedElement)) {
-                // 포커스된 요소가 있으면 aria-hidden 제거
-                target.setAttribute('aria-hidden', 'false')
-              }
-            }
-          }
-        })
-      })
+      // MutationObserver 대신 이벤트 리스너 사용으로 무한 루프 방지
+      const handleFocusIn = (event: FocusEvent) => {
+        const target = event.target as HTMLElement
+        const ariaHiddenElement = target.closest('[aria-hidden="true"]')
+        if (ariaHiddenElement) {
+          // 포커스된 요소가 aria-hidden="true"인 요소 안에 있으면 제거
+          ariaHiddenElement.setAttribute('aria-hidden', 'false')
+        }
+      }
 
-      // 모달 내부 요소들 관찰 시작
-      const modalElement = document.querySelector('[data-radix-dialog-content]') || document.body
-      observer.observe(modalElement, {
-        attributes: true,
-        subtree: true,
-        attributeFilter: ['aria-hidden']
-      })
+      // 포커스 이벤트 리스너 추가
+      document.addEventListener('focusin', handleFocusIn, true)
 
       return () => {
-        observer.disconnect()
+        // 이벤트 리스너 제거
+        document.removeEventListener('focusin', handleFocusIn, true)
         const styleElement = document.getElementById('mui-select-fix')
         if (styleElement) {
           styleElement.remove()
