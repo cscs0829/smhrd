@@ -10,7 +10,7 @@ export async function GET(request: NextRequest) {
     const page = parseInt(searchParams.get('page') || '0')
     const limit = parseInt(searchParams.get('limit') || '10')
     const search = searchParams.get('search') || ''
-    const sortBy = searchParams.get('sortBy') || 'created_at'
+    const sortByParam = searchParams.get('sortBy') || 'created_at'
     const sortOrder = searchParams.get('sortOrder') || 'desc'
 
     if (!table || !ALLOWED_TABLES.includes(table)) {
@@ -24,28 +24,54 @@ export async function GET(request: NextRequest) {
       ? getSupabaseAdmin() 
       : getSupabaseClient()
 
-    // count 포함하여 total 반환
-    let query = supabase.from(table).select('*', { count: 'exact' })
+    // 동일한 필터/정렬을 두 번 적용해야 하므로, 빌더를 각자 구성
+    // 1) total count 전용 쿼리 (head=true로 데이터 미반환)
+    let countQuery = supabase.from(table).select('*', { count: 'exact', head: true })
+    // 2) 데이터 조회 쿼리
+    let dataQuery = supabase.from(table).select('*')
 
-    // 검색 필터 적용
+    // 검색 필터 적용 (api_keys 별도 처리)
     if (search) {
-      const searchColumns = getSearchColumns(table)
-      const searchConditions = searchColumns.map(col => `${col}.ilike.%${search}%`).join(',')
-      query = query.or(searchConditions)
+      if (table === 'api_keys') {
+        const lowered = search.toLowerCase()
+        const providerCandidates = ['openai', 'anthropic', 'google']
+        const matchedProviders = providerCandidates.filter((p) => p === lowered)
+        const conditions: string[] = []
+        conditions.push(`name.ilike.%${search}%`)
+        matchedProviders.forEach((p) => conditions.push(`provider.eq.${p}`))
+        const orExpr = conditions.join(',')
+        if (orExpr) {
+          countQuery = countQuery.or(orExpr)
+          dataQuery = dataQuery.or(orExpr)
+        }
+      } else {
+        const searchColumns = getSearchColumns(table)
+        const searchConditions = searchColumns.map(col => `${col}.ilike.%${search}%`).join(',')
+        if (searchConditions) {
+          countQuery = countQuery.or(searchConditions)
+          dataQuery = dataQuery.or(searchConditions)
+        }
+      }
     }
 
-    // 정렬 적용
-    query = query.order(sortBy, { ascending: sortOrder === 'asc' })
+    // 정렬 적용: 테이블별 안전한 기본 컬럼 사용
+    const safeSortBy = getDefaultSortColumn(table, sortByParam)
+    dataQuery = dataQuery.order(safeSortBy, { ascending: sortOrder === 'asc' })
 
     // 페이지네이션 적용
-    const from = page * limit
-    const to = from + limit - 1
-    query = query.range(from, to)
+    const safeLimit = Number.isFinite(limit) && limit > 0 ? limit : 10
+    const safePage = Number.isFinite(page) && page >= 0 ? page : 0
+    const from = safePage * safeLimit
+    const to = from + safeLimit - 1
+    dataQuery = dataQuery.range(from, to)
 
-    const { data, error, count } = await query
+    const [{ count, error: countError }, { data, error: dataError }] = await Promise.all([
+      countQuery,
+      dataQuery,
+    ])
 
-    if (error) {
-      console.error(`테이블 ${table} 데이터 조회 오류:`, error)
+    if (countError || dataError) {
+      console.error(`테이블 ${table} 데이터 조회 오류:`, countError || dataError)
       return NextResponse.json({ 
         success: false, 
         error: '데이터를 불러오는데 실패했습니다.' 
@@ -253,4 +279,18 @@ function getSearchColumns(table: string): string[] {
   }
   
   return searchColumns[table] || []
+}
+
+// 테이블별 기본 정렬 컬럼 (요청 컬럼이 유효하지 않을 경우 대체)
+function getDefaultSortColumn(table: string, requested: string): string {
+  const tableToColumns: Record<string, string[]> = {
+    ep_data: ['created_at', 'updated_at', 'id'],
+    city_images: ['created_at', 'id'],
+    titles: ['created_at', 'id'],
+    api_keys: ['created_at', 'id'],
+    deleted_items: ['deleted_at', 'id'],
+  }
+  const allowed = tableToColumns[table] || ['id']
+  // 요청한 컬럼이 허용 목록에 있으면 사용, 아니면 첫 번째 기본값으로 대체
+  return allowed.includes(requested) ? requested : allowed[0]
 }
