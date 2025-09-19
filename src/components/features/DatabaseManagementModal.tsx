@@ -12,18 +12,13 @@ import { Plus, Edit, Trash2, Save, X, Search, Filter, FilterX, ChevronDown } fro
 import { useTheme } from 'next-themes'
 import { useMediaQuery } from '@mui/material'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
+import { useFilterStore, type FilterCondition } from '@/stores/filterStore'
 
 interface TableData {
   id: string | number
   [key: string]: unknown
 }
 
-interface FilterCondition {
-  column: string
-  operator: 'equals' | 'contains' | 'startsWith' | 'endsWith' | 'greaterThan' | 'lessThan' | 'between' | 'isNull' | 'isNotNull'
-  value: string | number
-  value2?: string | number // for 'between' operator
-}
 
 interface DatabaseManagementModalProps {
   isOpen: boolean
@@ -106,12 +101,24 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
   const [loading, setLoading] = useState(false)
   const [editingRow, setEditingRow] = useState<string | number | null>(null)
   const [editingData, setEditingData] = useState<TableData>({ id: '' })
-  const [globalFilter, setGlobalFilter] = useState('')
-  const [columnFilters, setColumnFilters] = useState<MRT_ColumnFiltersState>([])
   const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 10 })
-  const [advancedFilters, setAdvancedFilters] = useState<FilterCondition[]>([])
-  const [isFilterOpen, setIsFilterOpen] = useState(false)
   const { resolvedTheme } = useTheme()
+  
+  // 전역 필터 스토어 사용
+  const { 
+    getTableFilters, 
+    setTableFilters, 
+    resetTableFilters 
+  } = useFilterStore()
+  
+  // 현재 테이블의 필터 상태 가져오기
+  const tableFilters = getTableFilters(tableName)
+  const { 
+    advancedFilters, 
+    isFilterOpen, 
+    globalFilter, 
+    columnFilters 
+  } = tableFilters
   
   // 반응형 모달 크기 설정
   const isMobile = useMediaQuery('(max-width: 768px)')
@@ -214,30 +221,35 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
 
   // 필터 조건 추가
   const addFilter = () => {
-    setAdvancedFilters(prev => [...prev, {
+    const newFilter: FilterCondition = {
       column: tableSchema?.columns[0]?.key || 'id',
       operator: 'contains',
       value: ''
-    }])
+    }
+    setTableFilters(tableName, {
+      advancedFilters: [...advancedFilters, newFilter]
+    })
   }
 
   // 필터 조건 제거
   const removeFilter = (index: number) => {
-    setAdvancedFilters(prev => prev.filter((_, i) => i !== index))
+    setTableFilters(tableName, {
+      advancedFilters: advancedFilters.filter((_: FilterCondition, i: number) => i !== index)
+    })
   }
 
   // 필터 조건 업데이트
   const updateFilter = (index: number, field: keyof FilterCondition, value: string | number) => {
-    setAdvancedFilters(prev => prev.map((filter, i) => 
-      i === index ? { ...filter, [field]: value } : filter
-    ))
+    setTableFilters(tableName, {
+      advancedFilters: advancedFilters.map((filter: FilterCondition, i: number) => 
+        i === index ? { ...filter, [field]: value } : filter
+      )
+    })
   }
 
   // 필터 초기화
   const resetFilters = () => {
-    setAdvancedFilters([])
-    setGlobalFilter('')
-    setColumnFilters([])
+    resetTableFilters(tableName)
   }
 
   // 필터 적용된 데이터 필터링
@@ -245,7 +257,7 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
     if (advancedFilters.length === 0) return data
 
     return data.filter(item => {
-      return advancedFilters.every(filter => {
+      return advancedFilters.every((filter: FilterCondition) => {
         const cellValue = item[filter.column]
         
         if (filter.operator === 'isNull') {
@@ -451,8 +463,13 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
       columnFilters,
       pagination
     },
-    onGlobalFilterChange: setGlobalFilter,
-    onColumnFiltersChange: setColumnFilters,
+    onGlobalFilterChange: (value) => {
+      setTableFilters(tableName, { globalFilter: value })
+    },
+    onColumnFiltersChange: (value) => {
+      const newValue = typeof value === 'function' ? value(columnFilters) : value
+      setTableFilters(tableName, { columnFilters: newValue || [] })
+    },
     onPaginationChange: setPagination,
     renderTopToolbarCustomActions: () => (
       <Button onClick={addNew} disabled={editingRow !== null}>
@@ -678,6 +695,17 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
     }
   }, [isOpen, tableName, pagination.pageIndex, pagination.pageSize, loadData])
 
+  // 테이블 변경 시 필터 상태 복원
+  useEffect(() => {
+    if (isOpen && tableName) {
+      // 테이블 변경 시 필터 상태가 자동으로 복원됨 (전역 스토어에서)
+      // 필터가 적용된 상태로 데이터를 다시 로드
+      if (advancedFilters.length > 0) {
+        loadData()
+      }
+    }
+  }, [tableName, isOpen, advancedFilters.length, loadData])
+
   if (!tableSchema) {
     return (
       <Dialog open={isOpen} onOpenChange={onClose}>
@@ -697,9 +725,6 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
     <Dialog 
       open={isOpen} 
       onOpenChange={onClose}
-      fullScreen={isMobile}
-      maxWidth={isTablet ? 'sm' : 'lg'}
-      fullWidth
     >
       <DialogContent className={`${isMobile ? 'h-full' : 'max-h-[90vh] h-auto'} w-full overflow-hidden p-0 relative z-50`}>
         <DialogHeader className="px-4 sm:px-6 py-4 border-b border-gray-200 dark:border-gray-700">
@@ -714,7 +739,7 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
               </DialogDescription>
             </div>
             <div className="flex flex-col sm:flex-row gap-2">
-              <Collapsible open={isFilterOpen} onOpenChange={setIsFilterOpen}>
+              <Collapsible open={isFilterOpen} onOpenChange={(open) => setTableFilters(tableName, { isFilterOpen: open })}>
                 <CollapsibleTrigger asChild>
                   <Button variant="outline" size="sm" className="w-full sm:w-auto">
                     <Filter className="h-4 w-4 mr-2" />
@@ -734,7 +759,7 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
         </DialogHeader>
 
         {/* 고급 필터 패널 */}
-        <Collapsible open={isFilterOpen} onOpenChange={setIsFilterOpen}>
+        <Collapsible open={isFilterOpen} onOpenChange={(open) => setTableFilters(tableName, { isFilterOpen: open })}>
           <CollapsibleContent className="px-4 sm:px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
             <div className="space-y-4">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
@@ -751,7 +776,7 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
                 </p>
               ) : (
                 <div className="space-y-3">
-                  {advancedFilters.map((filter, index) => (
+                  {advancedFilters.map((filter: FilterCondition, index: number) => (
                     <div key={index} className="flex flex-col sm:flex-row items-start sm:items-center gap-3 p-3 bg-white dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600">
                       {/* 컬럼 선택 */}
                       <Select
