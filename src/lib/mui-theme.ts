@@ -2,6 +2,8 @@
 
 import { createTheme } from '@mui/material/styles'
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 // MUI 컴포넌트의 포털 컨테이너 설정
 export const createMuiTheme = () => {
   // Next.js의 루트 엘리먼트 찾기
