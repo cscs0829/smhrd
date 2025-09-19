@@ -106,6 +106,9 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
   const tableScrollRef = useRef<HTMLDivElement | null>(null)
   const { resolvedTheme } = useTheme()
   const [isFetchingMore, setIsFetchingMore] = useState(false)
+  const inFlightPagesRef = useRef<Set<number>>(new Set())
+  const lastLoadedPageRef = useRef<number>(-1)
+  const abortRef = useRef<AbortController | null>(null)
   
   // 전역 필터 스토어 사용
   const { 
@@ -132,12 +135,20 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
     try {
       if (append) {
         if (isFetchingMore || loading) return
+        // 같은 페이지 중복 요청 방지
+        if (inFlightPagesRef.current.has(pagination.pageIndex)) return
         setIsFetchingMore(true)
+        inFlightPagesRef.current.add(pagination.pageIndex)
       } else {
+        // 초기/갱신 로드 시 진행 중 요청 취소
+        abortRef.current?.abort()
+        abortRef.current = new AbortController()
+        inFlightPagesRef.current.clear()
+        lastLoadedPageRef.current = -1
         setLoading(true)
       }
       const searchParam = encodeURIComponent(globalFilter || '')
-      const response = await fetch(`/api/admin/table-data?table=${tableName}&page=${pagination.pageIndex}&limit=${pagination.pageSize}&search=${searchParam}`)
+      const response = await fetch(`/api/admin/table-data?table=${tableName}&page=${pagination.pageIndex}&limit=${pagination.pageSize}&search=${searchParam}`,{ signal: abortRef.current?.signal })
       const result = await response.json()
       
       if (result.success) {
@@ -151,8 +162,10 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
             }
             return next
           })
+          lastLoadedPageRef.current = Math.max(lastLoadedPageRef.current, pagination.pageIndex)
         } else {
           setData(result.data)
+          lastLoadedPageRef.current = pagination.pageIndex
         }
       } else {
         toast.error('데이터를 불러오는데 실패했습니다')
@@ -161,8 +174,10 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
       console.error('데이터 로드 오류:', error)
       toast.error('데이터를 불러올 수 없습니다')
     } finally {
-      if (append) setIsFetchingMore(false)
-      else setLoading(false)
+      if (append) {
+        inFlightPagesRef.current.delete(pagination.pageIndex)
+        setIsFetchingMore(false)
+      } else setLoading(false)
     }
   }, [tableName, pagination.pageIndex, pagination.pageSize, totalCount, globalFilter, isFetchingMore, loading])
 
@@ -732,6 +747,8 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
   useEffect(() => {
     if (!isOpen || !tableName) return
     if (pagination.pageIndex === 0) return
+    // 이미 로드된 페이지면 스킵
+    if (pagination.pageIndex <= lastLoadedPageRef.current) return
     loadData(true)
   }, [pagination.pageIndex, isOpen, tableName, loadData])
 
@@ -741,14 +758,20 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
     const el = loadMoreRef.current
     if (!el) return
 
+    let tick = false
     const observer = new IntersectionObserver((entries) => {
       const [entry] = entries
       if (!entry.isIntersecting) return
       const loaded = data.length
       const hasMore = loaded < totalCount
-      if (hasMore && !isFetchingMore) {
+      if (!hasMore || isFetchingMore) return
+      if (tick) return
+      tick = true
+      // 약간의 디바운스로 중복 증가 방지
+      setTimeout(() => {
         setPagination(prev => ({ ...prev, pageIndex: prev.pageIndex + 1 }))
-      }
+        tick = false
+      }, 50)
     }, { root: tableScrollRef.current, rootMargin: '400px 0px', threshold: 0.1 })
 
     observer.observe(el)
@@ -756,6 +779,21 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
       observer.disconnect()
     }
   }, [isOpen, data.length, totalCount, isFetchingMore])
+
+  // 모달 닫힘/테이블 변경/언마운트 시 진행 중 요청 정리 및 상태 초기화
+  useEffect(() => {
+    if (!isOpen) {
+      abortRef.current?.abort()
+      inFlightPagesRef.current.clear()
+      lastLoadedPageRef.current = -1
+      setIsFetchingMore(false)
+      setLoading(false)
+    }
+    return () => {
+      abortRef.current?.abort()
+      inFlightPagesRef.current.clear()
+    }
+  }, [isOpen, tableName])
 
   // 테이블 변경 시 필터 상태 복원
   useEffect(() => {
