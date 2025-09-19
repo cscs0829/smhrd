@@ -108,14 +108,13 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
 
   const tableSchema = TABLE_SCHEMAS[tableName as keyof typeof TABLE_SCHEMAS]
 
-  // MUI Pagination 클릭 문제 해결 - 모바일과 동일한 동작 보장
+  // MUI Pagination 클릭 문제 해결 - CSS로만 처리 (무한 루프 방지)
   useEffect(() => {
     if (!isOpen) return
 
-    // 모달이 열릴 때 수정사항 적용
-    const cleanup = applyMuiPaginationFixes()
-
-    return cleanup
+    // CSS 스타일만으로 처리하므로 JavaScript 수정사항은 비활성화
+    // const cleanup = applyMuiPaginationFixes()
+    // return cleanup
   }, [isOpen])
 
   // 데이터 로드
