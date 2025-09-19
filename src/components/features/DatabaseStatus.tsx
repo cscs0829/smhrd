@@ -9,7 +9,6 @@ import { Database, RefreshCw, CheckCircle, XCircle, AlertTriangle, Settings } fr
 import { toast } from 'sonner'
 import { useSpring, animated } from '@react-spring/web' // Context7 React Spring 패턴
 import { DatabaseManagementModal } from './DatabaseManagementModal'
-import { useTheme } from 'next-themes'
 
 interface TableCounts {
   ep_data: number
@@ -63,7 +62,6 @@ export function DatabaseStatus({ onRefresh }: DatabaseStatusProps) {
     tableName: '',
     tableCount: 0
   })
-  const { resolvedTheme } = useTheme()
 
   // Context7 React Spring 패턴: 새로고침 애니메이션
   const [refreshSprings, refreshApi] = useSpring(() => ({
