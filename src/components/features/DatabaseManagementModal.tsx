@@ -8,10 +8,8 @@ import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Badge } from '@/components/ui/badge'
 import { toast } from 'sonner'
-import { Plus, Edit, Trash2, Save, X, Search, Filter, FilterX, ChevronDown } from 'lucide-react'
+import { Plus, Edit, Trash2, Save, X, Search } from 'lucide-react'
 import { useTheme } from 'next-themes'
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
-import { useFilterStore, type FilterCondition } from '@/stores/filterStore'
 
 interface TableData {
   id: string | number
@@ -102,22 +100,10 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
   const [editingData, setEditingData] = useState<TableData>({ id: '' })
   const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 20 })
   const { resolvedTheme } = useTheme()
-  
-  // 전역 필터 스토어 사용
-  const { 
-    getTableFilters, 
-    setTableFilters, 
-    resetTableFilters 
-  } = useFilterStore()
-  
-  // 현재 테이블의 필터 상태 가져오기
-  const tableFilters = getTableFilters(tableName)
-  const { 
-    advancedFilters, 
-    isFilterOpen, 
-    globalFilter, 
-    columnFilters 
-  } = tableFilters
+  const [globalFilter, setGlobalFilter] = useState('')
+  const [columnFilters, setColumnFilters] = useState<any[]>([])
+  const [showColumnFilters, setShowColumnFilters] = useState(false)
+  const [showGlobalFilter, setShowGlobalFilter] = useState(true)
 
   const tableSchema = TABLE_SCHEMAS[tableName as keyof typeof TABLE_SCHEMAS]
 
@@ -128,7 +114,7 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
       const searchParam = encodeURIComponent(globalFilter || '')
       const response = await fetch(`/api/admin/table-data?table=${tableName}&page=${pagination.pageIndex}&limit=${pagination.pageSize}&search=${searchParam}`)
       const result = await response.json()
-      
+
       if (result.success) {
         setData(result.data)
         setTotalCount(result.pagination?.total ?? totalCount)
@@ -147,20 +133,20 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
   const saveData = useCallback(async (rowData: TableData) => {
     try {
       const isNew = !rowData.id || editingRow === 'new'
-      const url = isNew 
+      const url = isNew
         ? `/api/admin/table-data?table=${tableName}`
         : `/api/admin/table-data?table=${tableName}&id=${rowData.id}`
-      
+
       const method = isNew ? 'POST' : 'PUT'
-      
+
       const response = await fetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(rowData)
       })
-      
+
       const result = await response.json()
-      
+
       if (result.success) {
         toast.success(isNew ? '데이터가 추가되었습니다' : '데이터가 수정되었습니다')
         setEditingRow(null)
@@ -183,9 +169,9 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
       const response = await fetch(`/api/admin/table-data?table=${tableName}&id=${id}`, {
         method: 'DELETE'
       })
-      
+
       const result = await response.json()
-      
+
       if (result.success) {
         toast.success('데이터가 삭제되었습니다')
         loadData()
@@ -216,103 +202,48 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
     setEditingData({ id: '' })
   }
 
-  // 필터 조건 추가
-  const addFilter = () => {
-    const newFilter: FilterCondition = {
-      column: tableSchema?.columns[0]?.key || 'id',
-      operator: 'contains',
-      value: ''
-    }
-    setTableFilters(tableName, {
-      advancedFilters: [...advancedFilters, newFilter]
-    })
-  }
-
-  // 필터 조건 제거
-  const removeFilter = (index: number) => {
-    setTableFilters(tableName, {
-      advancedFilters: advancedFilters.filter((_: FilterCondition, i: number) => i !== index)
-    })
-  }
-
-  // 필터 조건 업데이트
-  const updateFilter = (index: number, field: keyof FilterCondition, value: string | number) => {
-    setTableFilters(tableName, {
-      advancedFilters: advancedFilters.map((filter: FilterCondition, i: number) => 
-        i === index ? { ...filter, [field]: value } : filter
-      )
-    })
-  }
-
-  // 필터 초기화
-  const resetFilters = () => {
-    resetTableFilters(tableName)
-  }
-
-  // 필터 적용된 데이터 필터링
-  const getFilteredData = useCallback((data: TableData[]) => {
-    if (advancedFilters.length === 0) return data
-
-    return data.filter(item => {
-      return advancedFilters.every((filter: FilterCondition) => {
-        const cellValue = item[filter.column]
-        
-        if (filter.operator === 'isNull') {
-          return cellValue === null || cellValue === undefined || cellValue === ''
-        }
-        
-        if (filter.operator === 'isNotNull') {
-          return cellValue !== null && cellValue !== undefined && cellValue !== ''
-        }
-
-        if (cellValue === null || cellValue === undefined) return false
-
-        const stringValue = String(cellValue).toLowerCase()
-        const filterValue = String(filter.value).toLowerCase()
-
-        switch (filter.operator) {
-          case 'equals':
-            return stringValue === filterValue
-          case 'contains':
-            return stringValue.includes(filterValue)
-          case 'startsWith':
-            return stringValue.startsWith(filterValue)
-          case 'endsWith':
-            return stringValue.endsWith(filterValue)
-          case 'greaterThan':
-            return Number(cellValue) > Number(filter.value)
-          case 'lessThan':
-            return Number(cellValue) < Number(filter.value)
-          case 'between':
-            const numValue = Number(cellValue)
-            const minValue = Number(filter.value)
-            const maxValue = Number(filter.value2)
-            return numValue >= minValue && numValue <= maxValue
-          default:
-            return true
-        }
-      })
-    })
-  }, [advancedFilters])
-
-  // 필터된 데이터
-  const filteredData = useMemo(() => {
-    return getFilteredData(data)
-  }, [data, getFilteredData])
-
   // 컬럼 정의 생성
   const columns = useMemo<MRT_ColumnDef<TableData>[]>(() => {
     if (!tableSchema) return []
 
-    return tableSchema.columns.map((col) => ({
+    const dataColumns: MRT_ColumnDef<TableData>[] = tableSchema.columns.map((col) => ({
       accessorKey: col.key,
       header: col.label,
       size: col.key === 'id' ? 80 : 150,
       enableColumnFilter: true,
       enableSorting: true,
+      // 컬럼별 필터 설정
+      filterVariant: col.type === 'boolean' ? 'select' : 'text',
+      filterSelectOptions: col.type === 'boolean' ? [
+        { text: '예', value: 'true' },
+        { text: '아니오', value: 'false' }
+      ] : col.type === 'select' && 'options' in col && col.options ? 
+        col.options.map(option => ({ text: option.toUpperCase(), value: option })) : undefined,
+      // 필터 텍스트 필드 커스터마이징
+      muiFilterTextFieldProps: {
+        placeholder: `${col.label} 검색...`,
+        variant: 'outlined' as const,
+        size: 'small' as const,
+        sx: {
+          minWidth: '120px',
+          '& .MuiInputBase-root': {
+            backgroundColor: resolvedTheme === 'dark' ? '#374151' : '#ffffff',
+            color: resolvedTheme === 'dark' ? '#f9fafb' : '#1f2937',
+          },
+          '& .MuiOutlinedInput-notchedOutline': {
+            borderColor: resolvedTheme === 'dark' ? '#4b5563' : '#d1d5db',
+          },
+          '&:hover .MuiOutlinedInput-notchedOutline': {
+            borderColor: resolvedTheme === 'dark' ? '#6b7280' : '#9ca3af',
+          },
+          '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+            borderColor: resolvedTheme === 'dark' ? '#3b82f6' : '#2563eb',
+          }
+        }
+      },
       Cell: ({ cell, row }: { cell: MRT_Cell<TableData>; row: MRT_Row<TableData> }) => {
         const value = cell.getValue()
-        
+
         if (editingRow === row.original.id) {
           // 편집 모드
           return (
@@ -366,9 +297,9 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
             )
           } else if (col.type === 'url' && value) {
             return (
-              <a 
-                href={value as string} 
-                target="_blank" 
+              <a
+                href={value as string}
+                target="_blank"
                 rel="noopener noreferrer"
                 className="text-blue-600 dark:text-blue-400 hover:underline truncate block max-w-[200px]"
               >
@@ -387,47 +318,49 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
           return <div className="truncate max-w-[200px]">{value as string}</div>
         }
       }
-    })).concat([
-      // 액션 컬럼
-      {
-        accessorKey: 'actions',
-        header: '액션',
-        size: 120,
-        enableColumnFilter: false,
-        enableSorting: false,
-        Cell: ({ row }: { row: MRT_Row<TableData> }) => {
-          if (editingRow === row.original.id) {
-            return (
-              <div className="flex gap-1">
-                <Button size="sm" onClick={() => saveData(editingData)}>
-                  <Save className="h-4 w-4" />
-                </Button>
-                <Button size="sm" variant="outline" onClick={cancelEditing}>
-                  <X className="h-4 w-4" />
-                </Button>
-              </div>
-            )
-          }
+    }))
+
+    // 액션 컬럼 추가
+    const actionsColumn: MRT_ColumnDef<TableData> = {
+      accessorKey: 'actions',
+      header: '액션',
+      size: 120,
+      enableColumnFilter: false,
+      enableSorting: false,
+      Cell: ({ row }: { row: MRT_Row<TableData> }) => {
+        if (editingRow === row.original.id) {
           return (
             <div className="flex gap-1">
-              <Button size="sm" variant="outline" onClick={() => startEditing(row.original)}>
-                <Edit className="h-4 w-4" />
+              <Button size="sm" onClick={() => saveData(editingData)}>
+                <Save className="h-4 w-4" />
               </Button>
-              <Button size="sm" variant="outline" onClick={() => deleteData(row.original.id)}>
-                <Trash2 className="h-4 w-4" />
+              <Button size="sm" variant="outline" onClick={cancelEditing}>
+                <X className="h-4 w-4" />
               </Button>
             </div>
           )
         }
+        return (
+          <div className="flex gap-1">
+            <Button size="sm" variant="outline" onClick={() => startEditing(row.original)}>
+              <Edit className="h-4 w-4" />
+            </Button>
+            <Button size="sm" variant="outline" onClick={() => deleteData(row.original.id)}>
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </div>
+        )
       }
-    ])
+    }
+
+    return [...dataColumns, actionsColumn]
   }, [tableSchema, editingRow, editingData, saveData, deleteData])
 
   // 테이블 설정
   const table = useMaterialReactTable({
     columns,
-    data: filteredData,
-    manualFiltering: true,
+    data: data,
+    manualFiltering: false, // 클라이언트 사이드 필터링 활성화
     manualPagination: true,
     rowCount: totalCount,
     enablePagination: true,
@@ -436,6 +369,8 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
     enableColumnFilters: true,
     enableGlobalFilter: true,
     enableSorting: true,
+    enableColumnFilterModes: true, // 필터 모드 활성화
+    columnFilterDisplayMode: 'subheader', // 필터를 서브헤더에 표시
     getRowId: (originalRow) => String(originalRow.id ?? ''),
     enableRowActions: false,
     enableTopToolbar: true,
@@ -443,21 +378,29 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
     enableDensityToggle: true,
     enableFullScreenToggle: true,
     enableHiding: true,
+    initialState: {
+      showColumnFilters: showColumnFilters,
+      showGlobalFilter: showGlobalFilter,
+    },
     state: {
       globalFilter,
       columnFilters,
       pagination,
       isLoading: loading,
+      showColumnFilters,
+      showGlobalFilter,
     },
     onGlobalFilterChange: (value) => {
-      setTableFilters(tableName, { globalFilter: value })
+      setGlobalFilter(value || '')
       setPagination(prev => ({ ...prev, pageIndex: 0 }))
     },
     onColumnFiltersChange: (value) => {
       const newValue = typeof value === 'function' ? value(columnFilters) : value
-      setTableFilters(tableName, { columnFilters: newValue || [] })
+      setColumnFilters(newValue || [])
     },
     onPaginationChange: setPagination,
+    onShowColumnFiltersChange: setShowColumnFilters,
+    onShowGlobalFilterChange: setShowGlobalFilter,
     renderTopToolbarCustomActions: () => (
       <div className="flex gap-2">
         <Button onClick={addNew} disabled={editingRow !== null}>
@@ -484,7 +427,7 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
       selectedRowBackgroundColor: resolvedTheme === 'dark' ? '#1e3a8a' : '#bfdbfe',
     },
     muiTableContainerProps: {
-      sx: { 
+      sx: {
         maxHeight: '60vh',
         overflow: 'auto',
         position: 'relative',
@@ -498,7 +441,79 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
         border: `1px solid ${resolvedTheme === 'dark' ? '#374151' : '#e5e7eb'}`,
         backgroundColor: resolvedTheme === 'dark' ? '#1f2937' : '#ffffff',
       }
-    }
+    },
+    // 컬럼 필터 모드 설정
+    columnFilterModeOptions: ['contains', 'startsWith', 'endsWith', 'equals'],
+    
+    // 전역 필터 텍스트 필드 props
+    muiSearchTextFieldProps: {
+      placeholder: '전체 검색...',
+      variant: 'outlined' as const,
+      size: 'small' as const,
+      sx: {
+        '& .MuiInputBase-root': {
+          backgroundColor: resolvedTheme === 'dark' ? '#374151' : '#ffffff',
+          color: resolvedTheme === 'dark' ? '#f9fafb' : '#1f2937',
+        },
+        '& .MuiOutlinedInput-notchedOutline': {
+          borderColor: resolvedTheme === 'dark' ? '#4b5563' : '#d1d5db',
+        },
+        '&:hover .MuiOutlinedInput-notchedOutline': {
+          borderColor: resolvedTheme === 'dark' ? '#6b7280' : '#9ca3af',
+        },
+        '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+          borderColor: resolvedTheme === 'dark' ? '#3b82f6' : '#2563eb',
+        }
+      }
+    },
+    
+    // 테이블 헤더 셀 props 설정
+    muiTableHeadCellProps: {
+      sx: {
+        '& .MuiIconButton-root': {
+          '&:hover': {
+            backgroundColor: resolvedTheme === 'dark' ? '#374151' : '#f1f5f9',
+          }
+        }
+      }
+    },
+    
+    // 필터 버튼 커스터마이징 - 토글 기능 강화
+    renderToolbarInternalActions: ({ table }) => (
+      <div className="flex items-center gap-1">
+        {/* 컬럼 필터 토글 버튼 */}
+        <button
+          onClick={() => {
+            const newValue = !showColumnFilters
+            setShowColumnFilters(newValue)
+            table.setShowColumnFilters(newValue)
+          }}
+          className={`p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-700 ${
+            showColumnFilters ? 'bg-blue-100 dark:bg-blue-900' : ''
+          }`}
+          title="컬럼 필터 토글"
+        >
+          <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M10.83 8H21V6H8.83zm5 5H18v-2h-4.17zM14 16.83V18h-4v-2h3.17l-3-3H6v-2h2.17l-3-3H3V6h.17L1.39 4.22 2.8 2.81l18.38 18.38-1.41 1.41z"/>
+          </svg>
+        </button>
+        
+        {/* 글로벌 필터 토글 버튼 */}
+        <button
+          onClick={() => {
+            const newValue = !showGlobalFilter
+            setShowGlobalFilter(newValue)
+            table.setShowGlobalFilter(newValue)
+          }}
+          className={`p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-700 ${
+            showGlobalFilter ? 'bg-blue-100 dark:bg-blue-900' : ''
+          }`}
+          title="검색 필터 토글"
+        >
+          <Search className="w-5 h-5" />
+        </button>
+      </div>
+    )
   })
 
   // 모달이 열릴 때 데이터 로드
@@ -514,13 +529,7 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
     loadData()
   }, [isOpen, tableName, pagination.pageIndex, pagination.pageSize, globalFilter, loadData])
 
-  // 고급 필터 변경 시 데이터 로드
-  useEffect(() => {
-    if (!isOpen || !tableName) return
-    if (advancedFilters.length > 0) {
-      loadData()
-    }
-  }, [advancedFilters, isOpen, tableName, loadData])
+
 
   if (!tableSchema) {
     return (
@@ -544,132 +553,14 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="flex-1">
               <DialogTitle className="flex items-center gap-2 text-lg sm:text-xl font-semibold">
-                <Filter className="h-5 w-5 sm:h-6 sm:w-6" />
                 {tableSchema.displayName} 관리
               </DialogTitle>
               <DialogDescription className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                총 {totalCount.toLocaleString()}개의 데이터 중 {filteredData.length.toLocaleString()}개 표시 중
+                총 {totalCount.toLocaleString()}개의 데이터 표시 중
               </DialogDescription>
-            </div>
-            <div className="flex flex-col sm:flex-row gap-2">
-              <Collapsible open={isFilterOpen} onOpenChange={(open) => setTableFilters(tableName, { isFilterOpen: open })}>
-                <CollapsibleTrigger asChild>
-                  <Button variant="outline" size="sm" className="w-full sm:w-auto">
-                    <Filter className="h-4 w-4 mr-2" />
-                    고급 필터
-                    <ChevronDown className={`h-4 w-4 ml-2 transition-transform ${isFilterOpen ? 'rotate-180' : ''}`} />
-                  </Button>
-                </CollapsibleTrigger>
-              </Collapsible>
-              {advancedFilters.length > 0 && (
-                <Button variant="outline" size="sm" onClick={resetFilters} className="w-full sm:w-auto">
-                  <FilterX className="h-4 w-4 mr-2" />
-                  필터 초기화
-                </Button>
-              )}
             </div>
           </div>
         </DialogHeader>
-
-        {/* 고급 필터 패널 */}
-        <Collapsible open={isFilterOpen} onOpenChange={(open) => setTableFilters(tableName, { isFilterOpen: open })}>
-          <CollapsibleContent className="px-4 sm:px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
-            <div className="space-y-4">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                <h3 className="font-medium text-gray-900 dark:text-gray-100">필터 조건</h3>
-                <Button size="sm" onClick={addFilter} className="w-full sm:w-auto">
-                  <Plus className="h-4 w-4 mr-2" />
-                  조건 추가
-                </Button>
-              </div>
-              
-              {advancedFilters.length === 0 ? (
-                <p className="text-sm text-gray-500 dark:text-gray-400 text-center py-4">
-                  필터 조건을 추가하여 원하는 데이터를 찾아보세요
-                </p>
-              ) : (
-                <div className="space-y-3">
-                  {advancedFilters.map((filter: FilterCondition, index: number) => (
-                    <div key={index} className="flex flex-col sm:flex-row items-start sm:items-center gap-3 p-3 bg-white dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600">
-                      {/* 컬럼 선택 */}
-                      <Select
-                        value={filter.column}
-                        onValueChange={(value) => updateFilter(index, 'column', value)}
-                      >
-                        <SelectTrigger className="w-full sm:w-40">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {tableSchema?.columns.map((col) => (
-                            <SelectItem key={col.key} value={col.key}>
-                              {col.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-
-                      {/* 연산자 선택 */}
-                      <Select
-                        value={filter.operator}
-                        onValueChange={(value) => updateFilter(index, 'operator', value)}
-                      >
-                        <SelectTrigger className="w-full sm:w-32">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="equals">같음</SelectItem>
-                          <SelectItem value="contains">포함</SelectItem>
-                          <SelectItem value="startsWith">시작</SelectItem>
-                          <SelectItem value="endsWith">끝</SelectItem>
-                          <SelectItem value="greaterThan">보다 큼</SelectItem>
-                          <SelectItem value="lessThan">보다 작음</SelectItem>
-                          <SelectItem value="between">범위</SelectItem>
-                          <SelectItem value="isNull">비어있음</SelectItem>
-                          <SelectItem value="isNotNull">비어있지 않음</SelectItem>
-                        </SelectContent>
-                      </Select>
-
-                      {/* 값 입력 */}
-                      {filter.operator !== 'isNull' && filter.operator !== 'isNotNull' && (
-                        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 w-full sm:w-auto">
-                          <Input
-                            type={tableSchema?.columns.find(col => col.key === filter.column)?.type === 'number' ? 'number' : 'text'}
-                            value={filter.value}
-                            onChange={(e) => updateFilter(index, 'value', e.target.value)}
-                            placeholder="값 입력"
-                            className="w-full sm:w-40"
-                          />
-                          {filter.operator === 'between' && (
-                            <>
-                              <span className="text-gray-500 hidden sm:inline">~</span>
-                              <Input
-                                type={tableSchema?.columns.find(col => col.key === filter.column)?.type === 'number' ? 'number' : 'text'}
-                                value={filter.value2 || ''}
-                                onChange={(e) => updateFilter(index, 'value2', e.target.value)}
-                                placeholder="최대값"
-                                className="w-full sm:w-40"
-                              />
-                            </>
-                          )}
-                        </div>
-                      )}
-
-                      {/* 삭제 버튼 */}
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => removeFilter(index)}
-                        className="text-red-600 hover:text-red-700 w-full sm:w-auto"
-                      >
-                        <X className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          </CollapsibleContent>
-        </Collapsible>
 
         {/* 테이블 컨테이너 */}
         <div className="flex-1 px-4 sm:px-6 pb-4 sm:pb-6 relative z-10 max-h-[70vh] overflow-auto">
