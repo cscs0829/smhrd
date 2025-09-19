@@ -524,6 +524,12 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
         overflow: 'auto',
         position: 'relative',
         zIndex: 1,
+        // 페이지네이션 영역은 더 높은 z-index 허용
+        '& .MuiTablePagination-root': {
+          position: 'relative',
+          zIndex: 9999,
+          isolation: 'isolate',
+        }
       }
     },
     // 컬럼 필터 모드 설정
@@ -562,69 +568,108 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
       }
     },
 
-    // 페이지네이션 props 설정 - 클릭 문제 해결
+    // 페이지네이션 props 설정 - 데스크톱 클릭 문제 해결
     muiPaginationProps: {
       sx: {
-        position: 'relative',
-        zIndex: 1000,
-        pointerEvents: 'auto',
+        position: 'relative !important',
+        zIndex: '9999 !important',
+        pointerEvents: 'auto !important',
+        isolation: 'isolate',
+        '& *': {
+          pointerEvents: 'auto !important',
+        },
         '& .MuiTablePagination-toolbar': {
-          position: 'relative',
-          zIndex: 1001,
-          pointerEvents: 'auto',
+          position: 'relative !important',
+          zIndex: '10000 !important',
+          pointerEvents: 'auto !important',
+          isolation: 'isolate',
         },
         '& .MuiTablePagination-select': {
-          position: 'relative',
-          zIndex: 1002,
+          position: 'relative !important',
+          zIndex: '10001 !important',
           pointerEvents: 'auto !important',
           cursor: 'pointer !important',
+          userSelect: 'none !important',
           '&:focus': {
             backgroundColor: resolvedTheme === 'dark' ? '#374151' : '#ffffff',
+          },
+          '&:hover': {
+            backgroundColor: resolvedTheme === 'dark' ? '#4b5563 !important' : '#f9fafb !important',
           }
         },
         '& .MuiTablePagination-selectLabel': {
-          position: 'relative',
-          zIndex: 1001,
-          pointerEvents: 'auto',
+          position: 'relative !important',
+          zIndex: '10000 !important',
+          pointerEvents: 'auto !important',
+          cursor: 'default !important',
         },
         '& .MuiTablePagination-displayedRows': {
-          position: 'relative',
-          zIndex: 1001,
-          pointerEvents: 'auto',
+          position: 'relative !important',
+          zIndex: '10000 !important',
+          pointerEvents: 'auto !important',
         },
         '& .MuiTablePagination-actions': {
-          position: 'relative',
-          zIndex: 1001,
-          pointerEvents: 'auto',
+          position: 'relative !important',
+          zIndex: '10000 !important',
+          pointerEvents: 'auto !important',
           '& button': {
             pointerEvents: 'auto !important',
             cursor: 'pointer !important',
+            zIndex: '10001 !important',
+            position: 'relative !important',
           }
         },
         '& .MuiInputBase-root': {
-          position: 'relative',
-          zIndex: 1003,
+          position: 'relative !important',
+          zIndex: '10002 !important',
           pointerEvents: 'auto !important',
           cursor: 'pointer !important',
-          backgroundColor: resolvedTheme === 'dark' ? '#374151' : '#ffffff',
+          backgroundColor: `${resolvedTheme === 'dark' ? '#374151' : '#ffffff'} !important`,
+          isolation: 'isolate',
           '&:hover': {
-            backgroundColor: resolvedTheme === 'dark' ? '#4b5563' : '#f9fafb',
+            backgroundColor: `${resolvedTheme === 'dark' ? '#4b5563' : '#f9fafb'} !important`,
           },
           '&.Mui-focused': {
-            backgroundColor: resolvedTheme === 'dark' ? '#374151' : '#ffffff',
+            backgroundColor: `${resolvedTheme === 'dark' ? '#374151' : '#ffffff'} !important`,
+          },
+          '&::before': {
+            display: 'none !important',
+          },
+          '&::after': {
+            display: 'none !important',
           }
         },
         '& .MuiSelect-select': {
-          position: 'relative',
-          zIndex: 1004,
+          position: 'relative !important',
+          zIndex: '10003 !important',
+          pointerEvents: 'auto !important',
+          cursor: 'pointer !important',
+          userSelect: 'none !important',
+          '&:focus': {
+            backgroundColor: 'transparent !important',
+          }
+        },
+        '& .MuiSelect-icon': {
+          position: 'relative !important',
+          zIndex: '10003 !important',
           pointerEvents: 'auto !important',
           cursor: 'pointer !important',
         },
-        '& .MuiSelect-icon': {
-          position: 'relative',
-          zIndex: 1004,
-          pointerEvents: 'auto !important',
-          cursor: 'pointer !important',
+        // 데스크톱 전용 추가 스타일
+        '@media (min-width: 768px)': {
+          '& .MuiInputBase-root': {
+            minHeight: '32px !important',
+            '&:hover': {
+              backgroundColor: `${resolvedTheme === 'dark' ? '#4b5563' : '#f9fafb'} !important`,
+            }
+          },
+          '& .MuiSelect-select': {
+            paddingTop: '8px !important',
+            paddingBottom: '8px !important',
+            '&:hover': {
+              backgroundColor: 'transparent !important',
+            }
+          }
         }
       }
     },
@@ -708,9 +753,9 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
           e.stopPropagation()
         }
       }
-      
+
       document.addEventListener('focusin', handleFocusCapture, true)
-      
+
       return () => {
         document.removeEventListener('focusin', handleFocusCapture, true)
       }
@@ -735,25 +780,25 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
   }
 
   return (
-    <Dialog 
-      open={isOpen} 
+    <Dialog
+      open={isOpen}
       onOpenChange={(open) => {
         if (!open) {
           onClose()
         }
       }}
     >
-      <DialogContent 
-        size="full" 
+      <DialogContent
+        size="full"
         className="w-full p-0 relative z-50"
         onInteractOutside={(e) => {
           // 페이지네이션 셀렉트 박스 클릭 시 모달이 닫히지 않도록 방지
           const target = e.target as HTMLElement
-          if (target.closest('.MuiSelect-root') || 
-              target.closest('.MuiMenu-root') || 
-              target.closest('.MuiPopover-root') ||
-              target.closest('[role="listbox"]') ||
-              target.closest('[role="option"]')) {
+          if (target.closest('.MuiSelect-root') ||
+            target.closest('.MuiMenu-root') ||
+            target.closest('.MuiPopover-root') ||
+            target.closest('[role="listbox"]') ||
+            target.closest('[role="option"]')) {
             e.preventDefault()
           }
         }}
@@ -773,7 +818,12 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
         </DialogHeader>
 
         {/* 테이블 컨테이너 */}
-        <div className="flex-1 px-4 sm:px-6 pb-4 sm:pb-6 relative z-10 max-h-[70vh] overflow-auto">
+        <div 
+          className="flex-1 px-4 sm:px-6 pb-4 sm:pb-6 relative z-10 max-h-[70vh] overflow-auto"
+          style={{
+            isolation: 'isolate'
+          }}
+        >
           <MaterialReactTable table={table} />
         </div>
       </DialogContent>
