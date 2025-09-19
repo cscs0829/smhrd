@@ -615,9 +615,16 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
               maxHeight: '300px',
               '& .MuiMenuItem-root': {
                 color: resolvedTheme === 'dark' ? '#f9fafb' : '#1f2937',
-                fontSize: '14px',
-                padding: '8px 12px',
+                fontSize: '13px',
+                padding: '4px 8px',
+                minHeight: '28px',
                 cursor: 'pointer',
+                // 데스크톱에서도 모바일 크기로 통일
+                '@media (min-width: 768px)': {
+                  fontSize: '13px',
+                  padding: '4px 8px',
+                  minHeight: '28px',
+                },
                 '&:hover': {
                   backgroundColor: resolvedTheme === 'dark' ? '#4b5563' : '#f3f4f6',
                 },
@@ -891,9 +898,11 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
           pointer-events: auto !important;
           cursor: pointer !important;
           user-select: none !important;
-          min-height: 36px !important;
+          min-height: 28px !important;
           display: flex !important;
           align-items: center !important;
+          font-size: 13px !important;
+          padding: 4px 8px !important;
         }
         
         /* 모든 MUI 버튼 요소들 클릭 가능하게 */
@@ -931,6 +940,13 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
           .MuiTablePagination-select.MuiInputBase-root:hover {
             background-color: ${resolvedTheme === 'dark' ? '#4b5563' : '#f9fafb'} !important;
             border-color: ${resolvedTheme === 'dark' ? '#6b7280' : '#9ca3af'} !important;
+          }
+          
+          /* 데스크톱에서 드롭다운 메뉴 아이템을 모바일 크기로 맞춤 */
+          .MuiMenuItem-root {
+            min-height: 28px !important;
+            font-size: 13px !important;
+            padding: 4px 8px !important;
           }
           
           .MuiMenuItem-root:hover {
@@ -1005,7 +1021,7 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
       }
 
       // 포커스 변경 감지
-      const handleFocusIn = (e: FocusEvent) => {
+      const handleFocusIn = () => {
         handleAriaHiddenFix()
       }
 
