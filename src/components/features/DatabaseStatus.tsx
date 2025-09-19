@@ -9,6 +9,7 @@ import { Database, RefreshCw, CheckCircle, XCircle, AlertTriangle, Settings } fr
 import { toast } from 'sonner'
 import { useSpring, animated } from '@react-spring/web' // Context7 React Spring 패턴
 import { DatabaseManagementModal } from './DatabaseManagementModal'
+import { useTheme } from 'next-themes'
 
 interface TableCounts {
   ep_data: number
@@ -62,6 +63,7 @@ export function DatabaseStatus({ onRefresh }: DatabaseStatusProps) {
     tableName: '',
     tableCount: 0
   })
+  const { resolvedTheme } = useTheme()
 
   // Context7 React Spring 패턴: 새로고침 애니메이션
   const [refreshSprings, refreshApi] = useSpring(() => ({
@@ -166,8 +168,8 @@ export function DatabaseStatus({ onRefresh }: DatabaseStatusProps) {
   if (!dbStatus) {
     return (
       <div className="text-center py-8">
-        <Database className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-        <p className="text-gray-500">데이터베이스 상태를 확인하려면 새로고침 버튼을 클릭하세요</p>
+        <Database className="h-12 w-12 text-gray-400 dark:text-gray-600 mx-auto mb-4" />
+        <p className="text-gray-500 dark:text-gray-400">데이터베이스 상태를 확인하려면 새로고침 버튼을 클릭하세요</p>
         <animated.div
           style={{
             ...refreshSprings
@@ -226,8 +228,8 @@ export function DatabaseStatus({ onRefresh }: DatabaseStatusProps) {
         <CardContent>
           {loading ? (
             <div className="text-center py-4">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto"></div>
-              <p className="mt-2 text-sm text-gray-500">데이터베이스 상태를 확인하는 중...</p>
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 dark:border-gray-100 mx-auto"></div>
+              <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">데이터베이스 상태를 확인하는 중...</p>
             </div>
           ) : dbStatus ? (
             <div className="space-y-6">
@@ -252,13 +254,13 @@ export function DatabaseStatus({ onRefresh }: DatabaseStatusProps) {
                   {Object.entries(dbStatus.tableCounts).map(([tableName, count]) => (
                     <div 
                       key={tableName} 
-                      className="text-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer transition-colors group"
+                      className="text-center p-3 bg-gray-50 dark:bg-gray-800 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer transition-colors group border border-gray-200 dark:border-gray-700"
                       onClick={() => openManagementModal(tableName, count)}
                     >
-                      <div className="text-2xl font-bold text-blue-600 group-hover:text-blue-700">
+                      <div className="text-2xl font-bold text-blue-600 dark:text-blue-400 group-hover:text-blue-700 dark:group-hover:text-blue-300">
                         {count.toLocaleString()}
                       </div>
-                      <div className="text-sm text-gray-600 capitalize mb-2">
+                      <div className="text-sm text-gray-600 dark:text-gray-300 capitalize mb-2">
                         {tableName.replace('_', ' ')}
                       </div>
                       <Button size="sm" variant="outline" className="h-6 text-xs">
@@ -275,107 +277,116 @@ export function DatabaseStatus({ onRefresh }: DatabaseStatusProps) {
                 {/* EP 데이터 */}
                 {safeRecentData.ep_data?.length > 0 && (
                   <div>
-                    <h3 className="font-medium mb-2">최근 EP 데이터 (상위 5개)</h3>
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>ID</TableHead>
-                          <TableHead>제목</TableHead>
-                          <TableHead>도시</TableHead>
-                          <TableHead>생성일</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {(safeRecentData.ep_data || []).map((item) => (
-                          <TableRow key={item.id}>
-                            <TableCell className="font-mono text-xs">{item.id}</TableCell>
-                            <TableCell className="max-w-xs truncate">{item.title}</TableCell>
-                            <TableCell>{item.city}</TableCell>
-                            <TableCell className="text-sm">{formatDate(item.created_at)}</TableCell>
+                    <h3 className="font-medium mb-2 text-gray-900 dark:text-gray-100">최근 EP 데이터 (상위 5개)</h3>
+                    <div className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+                      <Table>
+                        <TableHeader>
+                          <TableRow className="bg-gray-50 dark:bg-gray-800">
+                            <TableHead className="text-gray-700 dark:text-gray-300">ID</TableHead>
+                            <TableHead className="text-gray-700 dark:text-gray-300">제목</TableHead>
+                            <TableHead className="text-gray-700 dark:text-gray-300">도시</TableHead>
+                            <TableHead className="text-gray-700 dark:text-gray-300">생성일</TableHead>
                           </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
+                        </TableHeader>
+                        <TableBody>
+                          {(safeRecentData.ep_data || []).map((item) => (
+                            <TableRow key={item.id} className="hover:bg-gray-50 dark:hover:bg-gray-800">
+                              <TableCell className="font-mono text-xs text-gray-600 dark:text-gray-400">{item.id}</TableCell>
+                              <TableCell className="max-w-xs truncate text-gray-900 dark:text-gray-100">{item.title}</TableCell>
+                              <TableCell className="text-gray-700 dark:text-gray-300">{item.city}</TableCell>
+                              <TableCell className="text-sm text-gray-600 dark:text-gray-400">{formatDate(item.created_at)}</TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
                   </div>
                 )}
 
                 {/* 도시 이미지 데이터 */}
                 {safeRecentData.city_images?.length > 0 && (
                   <div>
-                    <h3 className="font-medium mb-2">최근 도시 이미지 데이터 (상위 5개)</h3>
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>ID</TableHead>
-                          <TableHead>도시</TableHead>
-                          <TableHead>이미지 링크</TableHead>
-                          <TableHead>메인 이미지</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {(safeRecentData.city_images || []).map((item) => (
-                          <TableRow key={item.id}>
-                            <TableCell>{item.id}</TableCell>
-                            <TableCell>{item.city}</TableCell>
-                            <TableCell className="max-w-xs truncate">
-                              <a href={item.image_link} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
-                                {item.image_link}
-                              </a>
-                            </TableCell>
-                            <TableCell>
-                              <Badge variant={item.is_main_image === 1 ? 'default' : 'secondary'}>
-                                {item.is_main_image === 1 ? '메인' : '추가'}
-                              </Badge>
-                            </TableCell>
+                    <h3 className="font-medium mb-2 text-gray-900 dark:text-gray-100">최근 도시 이미지 데이터 (상위 5개)</h3>
+                    <div className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+                      <Table>
+                        <TableHeader>
+                          <TableRow className="bg-gray-50 dark:bg-gray-800">
+                            <TableHead className="text-gray-700 dark:text-gray-300">ID</TableHead>
+                            <TableHead className="text-gray-700 dark:text-gray-300">도시</TableHead>
+                            <TableHead className="text-gray-700 dark:text-gray-300">이미지 링크</TableHead>
+                            <TableHead className="text-gray-700 dark:text-gray-300">메인 이미지</TableHead>
                           </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
+                        </TableHeader>
+                        <TableBody>
+                          {(safeRecentData.city_images || []).map((item) => (
+                            <TableRow key={item.id} className="hover:bg-gray-50 dark:hover:bg-gray-800">
+                              <TableCell className="text-gray-700 dark:text-gray-300">{item.id}</TableCell>
+                              <TableCell className="text-gray-900 dark:text-gray-100">{item.city}</TableCell>
+                              <TableCell className="max-w-xs truncate">
+                                <a href={item.image_link} target="_blank" rel="noopener noreferrer" className="text-blue-600 dark:text-blue-400 hover:underline">
+                                  {item.image_link}
+                                </a>
+                              </TableCell>
+                              <TableCell>
+                                <Badge variant={item.is_main_image === 1 ? 'default' : 'secondary'}>
+                                  {item.is_main_image === 1 ? '메인' : '추가'}
+                                </Badge>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
                   </div>
                 )}
 
                 {/* API 키 데이터 */}
                 {safeRecentData.api_keys?.length > 0 && (
                   <div>
-                    <h3 className="font-medium mb-2">등록된 API 키 (상위 5개)</h3>
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>ID</TableHead>
-                          <TableHead>제공업체</TableHead>
-                          <TableHead>이름</TableHead>
-                          <TableHead>상태</TableHead>
-                          <TableHead>생성일</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {(safeRecentData.api_keys || []).map((item) => (
-                          <TableRow key={item.id}>
-                            <TableCell>{item.id}</TableCell>
-                            <TableCell>
-                              <Badge className={item.provider === 'openai' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'}>
-                                {item.provider.toUpperCase()}
-                              </Badge>
-                            </TableCell>
-                            <TableCell>{item.name}</TableCell>
-                            <TableCell>
-                              <Badge variant={item.is_active ? 'default' : 'secondary'}>
-                                {item.is_active ? '활성' : '비활성'}
-                              </Badge>
-                            </TableCell>
-                            <TableCell className="text-sm">{formatDate(item.created_at)}</TableCell>
+                    <h3 className="font-medium mb-2 text-gray-900 dark:text-gray-100">등록된 API 키 (상위 5개)</h3>
+                    <div className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+                      <Table>
+                        <TableHeader>
+                          <TableRow className="bg-gray-50 dark:bg-gray-800">
+                            <TableHead className="text-gray-700 dark:text-gray-300">ID</TableHead>
+                            <TableHead className="text-gray-700 dark:text-gray-300">제공업체</TableHead>
+                            <TableHead className="text-gray-700 dark:text-gray-300">이름</TableHead>
+                            <TableHead className="text-gray-700 dark:text-gray-300">상태</TableHead>
+                            <TableHead className="text-gray-700 dark:text-gray-300">생성일</TableHead>
                           </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
+                        </TableHeader>
+                        <TableBody>
+                          {(safeRecentData.api_keys || []).map((item) => (
+                            <TableRow key={item.id} className="hover:bg-gray-50 dark:hover:bg-gray-800">
+                              <TableCell className="text-gray-700 dark:text-gray-300">{item.id}</TableCell>
+                              <TableCell>
+                                <Badge className={item.provider === 'openai' 
+                                  ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' 
+                                  : 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300'
+                                }>
+                                  {item.provider.toUpperCase()}
+                                </Badge>
+                              </TableCell>
+                              <TableCell className="text-gray-900 dark:text-gray-100">{item.name}</TableCell>
+                              <TableCell>
+                                <Badge variant={item.is_active ? 'default' : 'secondary'}>
+                                  {item.is_active ? '활성' : '비활성'}
+                                </Badge>
+                              </TableCell>
+                              <TableCell className="text-sm text-gray-600 dark:text-gray-400">{formatDate(item.created_at)}</TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
                   </div>
                 )}
               </div>
             </div>
           ) : (
             <div className="text-center py-8">
-              <Database className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <p className="text-gray-500">데이터베이스 상태를 불러올 수 없습니다</p>
+              <Database className="h-12 w-12 text-gray-400 dark:text-gray-600 mx-auto mb-4" />
+              <p className="text-gray-500 dark:text-gray-400">데이터베이스 상태를 불러올 수 없습니다</p>
               <Button onClick={loadDbStatus} className="mt-4">
                 다시 시도
               </Button>

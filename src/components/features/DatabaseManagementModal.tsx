@@ -8,11 +8,20 @@ import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Badge } from '@/components/ui/badge'
 import { toast } from 'sonner'
-import { Plus, Edit, Trash2, Save, X, Search, Filter } from 'lucide-react'
+import { Plus, Edit, Trash2, Save, X, Search, Filter, FilterX, ChevronDown } from 'lucide-react'
+import { useTheme } from 'next-themes'
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
 
 interface TableData {
   id: string | number
   [key: string]: unknown
+}
+
+interface FilterCondition {
+  column: string
+  operator: 'equals' | 'contains' | 'startsWith' | 'endsWith' | 'greaterThan' | 'lessThan' | 'between' | 'isNull' | 'isNotNull'
+  value: string | number
+  value2?: string | number // for 'between' operator
 }
 
 interface DatabaseManagementModalProps {
@@ -99,6 +108,9 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
   const [globalFilter, setGlobalFilter] = useState('')
   const [columnFilters, setColumnFilters] = useState<MRT_ColumnFiltersState>([])
   const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 10 })
+  const [advancedFilters, setAdvancedFilters] = useState<FilterCondition[]>([])
+  const [isFilterOpen, setIsFilterOpen] = useState(false)
+  const { resolvedTheme } = useTheme()
 
   const tableSchema = TABLE_SCHEMAS[tableName as keyof typeof TABLE_SCHEMAS]
 
@@ -195,6 +207,85 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
     setEditingData({ id: '' })
   }
 
+  // 필터 조건 추가
+  const addFilter = () => {
+    setAdvancedFilters(prev => [...prev, {
+      column: tableSchema?.columns[0]?.key || 'id',
+      operator: 'contains',
+      value: ''
+    }])
+  }
+
+  // 필터 조건 제거
+  const removeFilter = (index: number) => {
+    setAdvancedFilters(prev => prev.filter((_, i) => i !== index))
+  }
+
+  // 필터 조건 업데이트
+  const updateFilter = (index: number, field: keyof FilterCondition, value: any) => {
+    setAdvancedFilters(prev => prev.map((filter, i) => 
+      i === index ? { ...filter, [field]: value } : filter
+    ))
+  }
+
+  // 필터 초기화
+  const resetFilters = () => {
+    setAdvancedFilters([])
+    setGlobalFilter('')
+    setColumnFilters([])
+  }
+
+  // 필터 적용된 데이터 필터링
+  const getFilteredData = useCallback((data: TableData[]) => {
+    if (advancedFilters.length === 0) return data
+
+    return data.filter(item => {
+      return advancedFilters.every(filter => {
+        const cellValue = item[filter.column]
+        
+        if (filter.operator === 'isNull') {
+          return cellValue === null || cellValue === undefined || cellValue === ''
+        }
+        
+        if (filter.operator === 'isNotNull') {
+          return cellValue !== null && cellValue !== undefined && cellValue !== ''
+        }
+
+        if (cellValue === null || cellValue === undefined) return false
+
+        const stringValue = String(cellValue).toLowerCase()
+        const filterValue = String(filter.value).toLowerCase()
+
+        switch (filter.operator) {
+          case 'equals':
+            return stringValue === filterValue
+          case 'contains':
+            return stringValue.includes(filterValue)
+          case 'startsWith':
+            return stringValue.startsWith(filterValue)
+          case 'endsWith':
+            return stringValue.endsWith(filterValue)
+          case 'greaterThan':
+            return Number(cellValue) > Number(filter.value)
+          case 'lessThan':
+            return Number(cellValue) < Number(filter.value)
+          case 'between':
+            const numValue = Number(cellValue)
+            const minValue = Number(filter.value)
+            const maxValue = Number(filter.value2)
+            return numValue >= minValue && numValue <= maxValue
+          default:
+            return true
+        }
+      })
+    })
+  }, [advancedFilters])
+
+  // 필터된 데이터
+  const filteredData = useMemo(() => {
+    return getFilteredData(data)
+  }, [data, getFilteredData])
+
   // 컬럼 정의 생성
   const columns = useMemo<MRT_ColumnDef<TableData>[]>(() => {
     if (!tableSchema) return []
@@ -217,10 +308,10 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
                   value={editingData[col.key] ? 'true' : 'false'}
                   onValueChange={(val) => setEditingData(prev => ({ ...prev, [col.key]: val === 'true' }))}
                 >
-                  <SelectTrigger className="h-8">
+                  <SelectTrigger className="h-8 bg-background border-input">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="bg-background border-input">
                     <SelectItem value="true">예</SelectItem>
                     <SelectItem value="false">아니오</SelectItem>
                   </SelectContent>
@@ -230,10 +321,10 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
                   value={String(editingData[col.key] || '')}
                   onValueChange={(val) => setEditingData(prev => ({ ...prev, [col.key]: val }))}
                 >
-                  <SelectTrigger className="h-8">
+                  <SelectTrigger className="h-8 bg-background border-input">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="bg-background border-input">
                     {col.options.map((option: string) => (
                       <SelectItem key={option} value={option}>
                         {option.toUpperCase()}
@@ -246,7 +337,7 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
                   type={col.type === 'password' ? 'password' : col.type === 'number' ? 'number' : 'text'}
                   value={String(editingData[col.key] || '')}
                   onChange={(e) => setEditingData(prev => ({ ...prev, [col.key]: e.target.value }))}
-                  className="h-8"
+                  className="h-8 bg-background border-input"
                 />
               )}
             </div>
@@ -265,7 +356,7 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
                 href={value as string} 
                 target="_blank" 
                 rel="noopener noreferrer"
-                className="text-blue-600 hover:underline truncate block max-w-[200px]"
+                className="text-blue-600 dark:text-blue-400 hover:underline truncate block max-w-[200px]"
               >
                 {value as string}
               </a>
@@ -339,7 +430,7 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
   // 테이블 설정
   const table = useMaterialReactTable({
     columns,
-    data,
+    data: filteredData,
     enableColumnFilters: true,
     enableGlobalFilter: true,
     enableSorting: true,
@@ -377,14 +468,150 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
         </Button>
       </div>
     ),
+    // 다크모드 지원을 위한 테마 설정
+    mrtTheme: {
+      baseBackgroundColor: resolvedTheme === 'dark' ? '#1f2937' : '#ffffff',
+      draggingBorderColor: resolvedTheme === 'dark' ? '#3b82f6' : '#2563eb',
+      matchHighlightColor: resolvedTheme === 'dark' ? '#fbbf24' : '#fde047',
+      menuBackgroundColor: resolvedTheme === 'dark' ? '#374151' : '#f9fafb',
+      pinnedRowBackgroundColor: resolvedTheme === 'dark' ? '#1e40af' : '#dbeafe',
+      selectedRowBackgroundColor: resolvedTheme === 'dark' ? '#1e3a8a' : '#bfdbfe',
+    },
+    // 테이블 컨테이너 스타일링
     muiTableContainerProps: {
-      sx: { maxHeight: '600px' }
+      sx: { 
+        maxHeight: '70vh',
+        minHeight: '400px',
+        '&::-webkit-scrollbar': {
+          width: '8px',
+          height: '8px',
+        },
+        '&::-webkit-scrollbar-track': {
+          backgroundColor: resolvedTheme === 'dark' ? '#374151' : '#f1f5f9',
+          borderRadius: '4px',
+        },
+        '&::-webkit-scrollbar-thumb': {
+          backgroundColor: resolvedTheme === 'dark' ? '#6b7280' : '#cbd5e1',
+          borderRadius: '4px',
+          '&:hover': {
+            backgroundColor: resolvedTheme === 'dark' ? '#9ca3af' : '#94a3b8',
+          },
+        },
+      }
     },
+    // 테이블 페이퍼 스타일링
+    muiTablePaperProps: {
+      elevation: 0,
+      sx: {
+        borderRadius: '12px',
+        border: `1px solid ${resolvedTheme === 'dark' ? '#374151' : '#e5e7eb'}`,
+        backgroundColor: resolvedTheme === 'dark' ? '#1f2937' : '#ffffff',
+        boxShadow: resolvedTheme === 'dark' 
+          ? '0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.1)'
+          : '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+      }
+    },
+    // 헤더 셀 스타일링
     muiTableHeadCellProps: {
-      sx: { fontSize: '0.875rem', fontWeight: 600 }
+      sx: { 
+        fontSize: '0.875rem', 
+        fontWeight: 600,
+        backgroundColor: resolvedTheme === 'dark' ? '#374151' : '#f8fafc',
+        color: resolvedTheme === 'dark' ? '#f9fafb' : '#1f2937',
+        borderBottom: `1px solid ${resolvedTheme === 'dark' ? '#4b5563' : '#e5e7eb'}`,
+        '&:hover': {
+          backgroundColor: resolvedTheme === 'dark' ? '#4b5563' : '#f1f5f9',
+        }
+      }
     },
+    // 바디 셀 스타일링
     muiTableBodyCellProps: {
-      sx: { fontSize: '0.875rem' }
+      sx: { 
+        fontSize: '0.875rem',
+        color: resolvedTheme === 'dark' ? '#f9fafb' : '#1f2937',
+        borderBottom: `1px solid ${resolvedTheme === 'dark' ? '#374151' : '#f1f5f9'}`,
+        '&:focus-visible': {
+          outline: `2px solid ${resolvedTheme === 'dark' ? '#3b82f6' : '#2563eb'}`,
+          outlineOffset: '-2px',
+        }
+      }
+    },
+    // 바디 행 스타일링
+    muiTableBodyRowProps: ({ row }) => ({
+      sx: {
+        '&:nth-of-type(odd)': {
+          backgroundColor: resolvedTheme === 'dark' ? '#1f2937' : '#ffffff',
+        },
+        '&:nth-of-type(even)': {
+          backgroundColor: resolvedTheme === 'dark' ? '#111827' : '#f9fafb',
+        },
+        '&:hover': {
+          backgroundColor: resolvedTheme === 'dark' ? '#374151' : '#f1f5f9',
+        }
+      }
+    }),
+    // 페이지네이션 스타일링
+    muiPaginationProps: {
+      sx: {
+        '& .MuiPaginationItem-root': {
+          color: resolvedTheme === 'dark' ? '#f9fafb' : '#1f2937',
+          '&.Mui-selected': {
+            backgroundColor: resolvedTheme === 'dark' ? '#3b82f6' : '#2563eb',
+            color: '#ffffff',
+            '&:hover': {
+              backgroundColor: resolvedTheme === 'dark' ? '#2563eb' : '#1d4ed8',
+            }
+          },
+          '&:hover': {
+            backgroundColor: resolvedTheme === 'dark' ? '#374151' : '#f1f5f9',
+          }
+        },
+        '& .MuiPaginationItem-ellipsis': {
+          color: resolvedTheme === 'dark' ? '#9ca3af' : '#6b7280',
+        }
+      }
+    },
+    // 검색 필드 스타일링
+    muiSearchTextFieldProps: {
+      sx: {
+        '& .MuiOutlinedInput-root': {
+          backgroundColor: resolvedTheme === 'dark' ? '#374151' : '#ffffff',
+          color: resolvedTheme === 'dark' ? '#f9fafb' : '#1f2937',
+          '& fieldset': {
+            borderColor: resolvedTheme === 'dark' ? '#4b5563' : '#d1d5db',
+          },
+          '&:hover fieldset': {
+            borderColor: resolvedTheme === 'dark' ? '#6b7280' : '#9ca3af',
+          },
+          '&.Mui-focused fieldset': {
+            borderColor: resolvedTheme === 'dark' ? '#3b82f6' : '#2563eb',
+          }
+        },
+        '& .MuiInputLabel-root': {
+          color: resolvedTheme === 'dark' ? '#9ca3af' : '#6b7280',
+        }
+      }
+    },
+    // 필터 필드 스타일링
+    muiFilterTextFieldProps: {
+      sx: {
+        '& .MuiOutlinedInput-root': {
+          backgroundColor: resolvedTheme === 'dark' ? '#374151' : '#ffffff',
+          color: resolvedTheme === 'dark' ? '#f9fafb' : '#1f2937',
+          '& fieldset': {
+            borderColor: resolvedTheme === 'dark' ? '#4b5563' : '#d1d5db',
+          },
+          '&:hover fieldset': {
+            borderColor: resolvedTheme === 'dark' ? '#6b7280' : '#9ca3af',
+          },
+          '&.Mui-focused fieldset': {
+            borderColor: resolvedTheme === 'dark' ? '#3b82f6' : '#2563eb',
+          }
+        },
+        '& .MuiInputLabel-root': {
+          color: resolvedTheme === 'dark' ? '#9ca3af' : '#6b7280',
+        }
+      }
     }
   })
 
@@ -412,19 +639,139 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-7xl max-h-[90vh] overflow-hidden">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Filter className="h-5 w-5" />
-            {tableSchema.displayName} 관리
-          </DialogTitle>
-          <DialogDescription>
-            총 {tableCount.toLocaleString()}개의 데이터를 관리할 수 있습니다. 
-            필터링, 검색, 편집, 삭제 기능을 사용하세요.
-          </DialogDescription>
+      <DialogContent className="max-w-[95vw] w-full max-h-[95vh] h-full overflow-hidden p-0">
+        <DialogHeader className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+          <div className="flex items-center justify-between">
+            <div>
+              <DialogTitle className="flex items-center gap-2 text-xl font-semibold">
+                <Filter className="h-6 w-6" />
+                {tableSchema.displayName} 관리
+              </DialogTitle>
+              <DialogDescription className="text-sm text-gray-600 dark:text-gray-400">
+                총 {tableCount.toLocaleString()}개의 데이터 중 {filteredData.length.toLocaleString()}개 표시 중
+              </DialogDescription>
+            </div>
+            <div className="flex gap-2">
+              <Collapsible open={isFilterOpen} onOpenChange={setIsFilterOpen}>
+                <CollapsibleTrigger asChild>
+                  <Button variant="outline" size="sm">
+                    <Filter className="h-4 w-4 mr-2" />
+                    고급 필터
+                    <ChevronDown className={`h-4 w-4 ml-2 transition-transform ${isFilterOpen ? 'rotate-180' : ''}`} />
+                  </Button>
+                </CollapsibleTrigger>
+              </Collapsible>
+              {advancedFilters.length > 0 && (
+                <Button variant="outline" size="sm" onClick={resetFilters}>
+                  <FilterX className="h-4 w-4 mr-2" />
+                  필터 초기화
+                </Button>
+              )}
+            </div>
+          </div>
         </DialogHeader>
 
-        <div className="flex-1 overflow-hidden">
+        {/* 고급 필터 패널 */}
+        <Collapsible open={isFilterOpen} onOpenChange={setIsFilterOpen}>
+          <CollapsibleContent className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h3 className="font-medium text-gray-900 dark:text-gray-100">필터 조건</h3>
+                <Button size="sm" onClick={addFilter}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  조건 추가
+                </Button>
+              </div>
+              
+              {advancedFilters.length === 0 ? (
+                <p className="text-sm text-gray-500 dark:text-gray-400 text-center py-4">
+                  필터 조건을 추가하여 원하는 데이터를 찾아보세요
+                </p>
+              ) : (
+                <div className="space-y-3">
+                  {advancedFilters.map((filter, index) => (
+                    <div key={index} className="flex items-center gap-3 p-3 bg-white dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600">
+                      {/* 컬럼 선택 */}
+                      <Select
+                        value={filter.column}
+                        onValueChange={(value) => updateFilter(index, 'column', value)}
+                      >
+                        <SelectTrigger className="w-40">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {tableSchema?.columns.filter(col => col.editable).map((col) => (
+                            <SelectItem key={col.key} value={col.key}>
+                              {col.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+
+                      {/* 연산자 선택 */}
+                      <Select
+                        value={filter.operator}
+                        onValueChange={(value) => updateFilter(index, 'operator', value)}
+                      >
+                        <SelectTrigger className="w-32">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="equals">같음</SelectItem>
+                          <SelectItem value="contains">포함</SelectItem>
+                          <SelectItem value="startsWith">시작</SelectItem>
+                          <SelectItem value="endsWith">끝</SelectItem>
+                          <SelectItem value="greaterThan">보다 큼</SelectItem>
+                          <SelectItem value="lessThan">보다 작음</SelectItem>
+                          <SelectItem value="between">범위</SelectItem>
+                          <SelectItem value="isNull">비어있음</SelectItem>
+                          <SelectItem value="isNotNull">비어있지 않음</SelectItem>
+                        </SelectContent>
+                      </Select>
+
+                      {/* 값 입력 */}
+                      {filter.operator !== 'isNull' && filter.operator !== 'isNotNull' && (
+                        <div className="flex items-center gap-2">
+                          <Input
+                            type={tableSchema?.columns.find(col => col.key === filter.column)?.type === 'number' ? 'number' : 'text'}
+                            value={filter.value}
+                            onChange={(e) => updateFilter(index, 'value', e.target.value)}
+                            placeholder="값 입력"
+                            className="w-40"
+                          />
+                          {filter.operator === 'between' && (
+                            <>
+                              <span className="text-gray-500">~</span>
+                              <Input
+                                type={tableSchema?.columns.find(col => col.key === filter.column)?.type === 'number' ? 'number' : 'text'}
+                                value={filter.value2 || ''}
+                                onChange={(e) => updateFilter(index, 'value2', e.target.value)}
+                                placeholder="최대값"
+                                className="w-40"
+                              />
+                            </>
+                          )}
+                        </div>
+                      )}
+
+                      {/* 삭제 버튼 */}
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => removeFilter(index)}
+                        className="text-red-600 hover:text-red-700"
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </CollapsibleContent>
+        </Collapsible>
+
+        <div className="flex-1 overflow-hidden px-6 pb-6">
           <MaterialReactTable table={table} />
         </div>
       </DialogContent>
