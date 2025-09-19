@@ -498,11 +498,9 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
       pinnedRowBackgroundColor: resolvedTheme === 'dark' ? '#1e40af' : '#dbeafe',
       selectedRowBackgroundColor: resolvedTheme === 'dark' ? '#1e3a8a' : '#bfdbfe',
     },
-    // 테이블 컨테이너 스타일링
+    // 테이블 컨테이너 스타일링 (내부 스크롤 제거: 페이지 스크롤 사용)
     muiTableContainerProps: {
       sx: { 
-        maxHeight: isMobile ? '70vh' : '60vh',
-        minHeight: isMobile ? '200px' : '300px',
         position: 'relative',
         zIndex: 1,
         '&::-webkit-scrollbar': {
@@ -727,7 +725,7 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
     >
       <DialogContent 
         size="full"
-        className="w-full overflow-hidden p-0 relative z-50"
+        className="w-full p-0 relative z-50"
       >
         <DialogHeader className="px-4 sm:px-6 py-4 border-b border-gray-200 dark:border-gray-700">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -860,7 +858,7 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
           </CollapsibleContent>
         </Collapsible>
 
-        <div className="flex-1 overflow-hidden px-4 sm:px-6 pb-4 sm:pb-6 relative z-10">
+        <div className="flex-1 px-4 sm:px-6 pb-4 sm:pb-6 relative z-10">
           <MaterialReactTable table={table} />
         </div>
       </DialogContent>
