@@ -60,7 +60,7 @@ export const createMuiTheme = () => {
           },
         },
       },
-      // Menu 컴포넌트 설정 - 강화된 버전
+      // Menu 컴포넌트 설정 - aria-hidden 문제 해결
       MuiMenu: {
         defaultProps: {
           container: getRootElement,
@@ -82,6 +82,12 @@ export const createMuiTheme = () => {
             '&[data-popper-placement]': {
               zIndex: 99999,
             },
+            // aria-hidden 무시 - CSS 문자열로 처리
+            '&[aria-hidden="true"]': {
+              visibility: 'visible !important' as any,
+              opacity: '1 !important' as any,
+              pointerEvents: 'auto !important' as any,
+            },
           },
           paper: {
             zIndex: 99999,
@@ -92,6 +98,12 @@ export const createMuiTheme = () => {
             overflowY: 'auto',
             '& *': {
               pointerEvents: 'auto',
+            },
+            // aria-hidden 무시 - CSS 문자열로 처리
+            '&[aria-hidden="true"]': {
+              visibility: 'visible !important' as any,
+              opacity: '1 !important' as any,
+              pointerEvents: 'auto !important' as any,
             },
           },
           list: {
@@ -110,6 +122,12 @@ export const createMuiTheme = () => {
                 '&:hover': {
                   backgroundColor: 'rgba(25, 118, 210, 0.16)',
                 },
+              },
+              // aria-hidden 무시 - CSS 문자열로 처리
+              '&[aria-hidden="true"]': {
+                visibility: 'visible !important' as any,
+                opacity: '1 !important' as any,
+                pointerEvents: 'auto !important' as any,
               },
             },
           },
@@ -180,7 +198,7 @@ export const createMuiTheme = () => {
           },
         },
       },
-      // TablePagination 컴포넌트 설정 - 간단하고 확실한 방법
+      // TablePagination 컴포넌트 설정 - aria-hidden 문제 해결
       MuiTablePagination: {
         defaultProps: {
           // Select 컴포넌트의 기본 설정
@@ -192,7 +210,24 @@ export const createMuiTheme = () => {
               PaperProps: {
                 sx: {
                   zIndex: 1300,
+                  // aria-hidden 무시하고 상호작용 가능하도록 - CSS 문자열로 처리
+                  visibility: 'visible !important' as any,
+                  opacity: '1 !important' as any,
+                  pointerEvents: 'auto !important' as any,
                 },
+              },
+            },
+            // aria-hidden 속성 제거
+            'aria-hidden': false,
+            sx: {
+              // aria-hidden 무시하고 포커스 가능하도록 - CSS 문자열로 처리
+              visibility: 'visible !important' as any,
+              opacity: '1 !important' as any,
+              pointerEvents: 'auto !important' as any,
+              '&[aria-hidden="true"]': {
+                visibility: 'visible !important' as any,
+                opacity: '1 !important' as any,
+                pointerEvents: 'auto !important' as any,
               },
             },
           },
@@ -202,6 +237,20 @@ export const createMuiTheme = () => {
             // CSS 파일에서 처리하므로 최소한만 설정
             '& *': {
               pointerEvents: 'auto',
+            },
+            // aria-hidden 상태에서도 상호작용 가능하도록 - CSS 문자열로 처리
+            '&[aria-hidden="true"] *': {
+              visibility: 'visible !important' as any,
+              opacity: '1 !important' as any,
+              pointerEvents: 'auto !important' as any,
+            },
+          },
+          select: {
+            // aria-hidden 무시 - CSS 문자열로 처리
+            '&[aria-hidden="true"]': {
+              visibility: 'visible !important' as any,
+              opacity: '1 !important' as any,
+              pointerEvents: 'auto !important' as any,
             },
           },
         },

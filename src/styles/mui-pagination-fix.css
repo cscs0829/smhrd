@@ -1,5 +1,18 @@
 /* MUI TablePagination Select 데스크톱/모바일 통일 스타일 */
 
+/* aria-hidden 문제 해결 - 접근성 및 포커스 문제 수정 */
+[aria-hidden="true"] .MuiTablePagination-select,
+[aria-hidden="true"] .MuiSelect-select,
+[aria-hidden="true"] .MuiMenuItem-root {
+  /* aria-hidden 상태에서도 상호작용 가능하도록 강제 설정 */
+  pointer-events: auto !important;
+  cursor: pointer !important;
+  touch-action: manipulation !important;
+  /* 포커스 가능하도록 설정 */
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
 /* 모든 플랫폼에서 동일한 동작을 위한 기본 설정 */
 .MuiTablePagination-select.MuiInputBase-root {
   /* 클릭 가능하도록 강제 설정 */
@@ -17,6 +30,10 @@
   position: relative !important;
   z-index: 10 !important;
   isolation: isolate !important;
+  
+  /* aria-hidden 무시하고 포커스 가능하도록 */
+  visibility: visible !important;
+  opacity: 1 !important;
 }
 
 .MuiTablePagination-select .MuiSelect-select {
@@ -41,6 +58,21 @@
   /* z-index 설정 */
   position: relative !important;
   z-index: 11 !important;
+  
+  /* aria-hidden 무시하고 포커스 가능하도록 */
+  visibility: visible !important;
+  opacity: 1 !important;
+  
+  /* 포커스 상태에서 접근성 보장 */
+  outline: none !important;
+}
+
+/* 포커스된 Select 요소는 aria-hidden을 무시 */
+.MuiTablePagination-select .MuiSelect-select:focus,
+.MuiTablePagination-select .MuiSelect-select:focus-visible {
+  visibility: visible !important;
+  opacity: 1 !important;
+  pointer-events: auto !important;
 }
 
 .MuiTablePagination-select .MuiSelect-icon {
@@ -99,6 +131,19 @@
   /* 플렉스 레이아웃 */
   display: flex !important;
   align-items: center !important;
+  
+  /* aria-hidden 무시하고 클릭 가능하도록 */
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+/* 메뉴 아이템 호버 및 선택 상태 */
+.MuiMenuItem-root:hover,
+.MuiMenuItem-root:focus,
+.MuiMenuItem-root.Mui-selected {
+  visibility: visible !important;
+  opacity: 1 !important;
+  pointer-events: auto !important;
 }
 
 /* 페이지네이션 전체 영역 */
