@@ -12,6 +12,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { downloadFile, processFile } from '@/lib/api'
 import { getRecommendedModel } from '@/lib/ai-models'
+import { ApiKeyManager } from '@/components/features/ApiKeyManager'
 
 export default function Home() {
   const [file, setFile] = useState<File | null>(null)
@@ -112,7 +113,7 @@ export default function Home() {
               <CardTitle>설정</CardTitle>
             </CardHeader>
             <CardContent>
-              시스템 설정 항목 준비 중입니다.
+              <ApiKeyManager />
             </CardContent>
           </Card>
         </TabsContent>

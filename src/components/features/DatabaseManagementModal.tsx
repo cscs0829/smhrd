@@ -103,6 +103,7 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
   const [editingData, setEditingData] = useState<TableData>({ id: '' })
   const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 10 })
   const loadMoreRef = useRef<HTMLDivElement | null>(null)
+  const tableScrollRef = useRef<HTMLDivElement | null>(null)
   const { resolvedTheme } = useTheme()
   
   // 전역 필터 스토어 사용
@@ -482,7 +483,8 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
     enableHiding: true,
     state: {
       globalFilter,
-      columnFilters
+      columnFilters,
+      showProgressBars: loading,
     },
     onGlobalFilterChange: (value) => {
       setTableFilters(tableName, { globalFilter: value })
@@ -606,15 +608,9 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
         }
       }
     },
-    // 바디 행 스타일링
+    // 바디 행 스타일링 (zebra 제거로 리페인트 감소)
     muiTableBodyRowProps: () => ({
       sx: {
-        '&:nth-of-type(odd)': {
-          backgroundColor: resolvedTheme === 'dark' ? '#1f2937' : '#ffffff',
-        },
-        '&:nth-of-type(even)': {
-          backgroundColor: resolvedTheme === 'dark' ? '#111827' : '#f9fafb',
-        },
         '&:hover': {
           backgroundColor: resolvedTheme === 'dark' ? '#374151' : '#f1f5f9',
         }
@@ -748,7 +744,7 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
       if (hasMore && !loading) {
         setPagination(prev => ({ ...prev, pageIndex: prev.pageIndex + 1 }))
       }
-    }, { root: null, rootMargin: '200px', threshold: 0 })
+    }, { root: tableScrollRef.current, rootMargin: '200px', threshold: 0 })
 
     observer.observe(el)
     return () => {
@@ -922,7 +918,7 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
           </CollapsibleContent>
         </Collapsible>
 
-        <div className="flex-1 px-4 sm:px-6 pb-4 sm:pb-6 relative z-10">
+        <div ref={tableScrollRef} className="flex-1 px-4 sm:px-6 pb-4 sm:pb-6 relative z-10 max-h-[70vh] overflow-auto">
           <MaterialReactTable table={table} />
           {/* 무한 스크롤 센티넬 */}
           <div ref={loadMoreRef} className="h-10 w-full flex items-center justify-center text-sm text-gray-500">
