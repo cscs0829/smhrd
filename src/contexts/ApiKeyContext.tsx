@@ -236,7 +236,7 @@ export function ApiKeyProvider({ children }: ApiKeyProviderProps) {
     if (apiKeys.length > 0) {
       saveApiKeysToStorage(apiKeys)
     }
-  }, [apiKeys])
+  }, [apiKeys, saveApiKeysToStorage])
 
   // Context7 패턴: 페이지 새로고침 전에 현재 상태를 localStorage에 저장 (추가 보장)
   useEffect(() => {
@@ -265,7 +265,7 @@ export function ApiKeyProvider({ children }: ApiKeyProviderProps) {
       window.removeEventListener('beforeunload', handleBeforeUnload)
       document.removeEventListener('visibilitychange', handleVisibilityChange)
     }
-  }, [apiKeys])
+  }, [apiKeys, saveApiKeysToStorage])
 
   const value: ApiKeyContextType = {
     apiKeys,
