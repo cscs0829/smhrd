@@ -171,27 +171,44 @@ async function generateTravelTitles(
 SEO 키워드: ${category.seoKeywords.join(' ')}${excludeInstruction}
 
 요구사항:
-- 20-30자 내외의 길이로 작성 (SEO 최적화)
+- 15-25자 내외의 길이로 작성 (SEO 최적화)
 - 한국어로 작성
 - ${category.prompt} 느낌을 강조
-- 여행의 매력과 특별함을 표현
+- 핵심 키워드만 사용하여 간결하고 명확한 제목 작성
+- 불필요한 수식어나 부사 사용 금지 (넘치는, 가득한, 풍부한, 화려한 등)
+- 명사 중심의 간결한 문장 구성
 - 고급스럽고 품격 있는 문구 사용
 - 브랜드 가치를 높이는 프리미엄 이미지 강조
 - 이모지나 기호 사용 완전 금지 (쉼표, 콜론, 따옴표, 느낌표, 물음표 등 모든 기호 사용 금지)
-- 실질 형태소(명사, 동사, 형용사, 부사)만 사용하여 자연스러운 문장 구성
+- 실질 형태소(명사, 형용사)만 사용하여 자연스러운 문장 구성
 - 금지 단어: 특가, 땡처리, 반값, 무료, 횡재, 인하, 폭탄, 저가, 저렴한 등
 - 기존에 생성된 제목들과 중복되지 않도록 창의적이고 독창적인 제목을 작성하세요
-- 예시: "도쿄 프리미엄 패키지 여행" (기호 없이 자연스러운 문장)
+- 예시: "도쿄 프리미엄 패키지", "도쿄 스릴 모험 체험" (기호 없이 간결한 문장)
 
 제목만 반환하고 다른 설명은 포함하지 마세요.`
 
       const title = await aiService.generateTitle(seoPrompt)
       // 기호 제거 및 정리
-      const cleanedTitle = title
+      let cleanedTitle = title
         .trim()
         .replace(/[",:;.!?()[\]{}'"]/g, '') // 모든 기호 제거
         .replace(/\s+/g, ' ') // 연속된 공백을 하나로
         .trim()
+      
+      // 불필요한 수식어 제거
+      const unnecessaryWords = [
+        '넘치는', '가득한', '풍부한', '화려한', '넘치는', '가득한', '풍부한', '화려한',
+        '만끽하는', '즐기는', '경험하는', '체험하는', '감상하는', '즐기는',
+        '특별한', '독특한', '유니크한', '특별한', '독특한', '유니크한'
+      ]
+      
+      unnecessaryWords.forEach(word => {
+        const regex = new RegExp(`\\b${word}\\b`, 'g')
+        cleanedTitle = cleanedTitle.replace(regex, '')
+      })
+      
+      // 다시 공백 정리
+      cleanedTitle = cleanedTitle.replace(/\s+/g, ' ').trim()
       
       // 중복 검사: 이미 생성된 제목들과 제외할 제목들과 비교
       const isDuplicate = titles.some(t => t.title === cleanedTitle) || 
