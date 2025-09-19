@@ -222,7 +222,7 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
   }
 
   // 필터 조건 업데이트
-  const updateFilter = (index: number, field: keyof FilterCondition, value: any) => {
+  const updateFilter = (index: number, field: keyof FilterCondition, value: string | number) => {
     setAdvancedFilters(prev => prev.map((filter, i) => 
       i === index ? { ...filter, [field]: value } : filter
     ))
@@ -537,7 +537,7 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
       }
     },
     // 바디 행 스타일링
-    muiTableBodyRowProps: ({ row }) => ({
+    muiTableBodyRowProps: () => ({
       sx: {
         '&:nth-of-type(odd)': {
           backgroundColor: resolvedTheme === 'dark' ? '#1f2937' : '#ffffff',
