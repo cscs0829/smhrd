@@ -52,13 +52,19 @@ export async function POST(request: NextRequest) {
   }
 }
 
+interface GeneratedTitle {
+  title: string
+  category: string
+  keywords: string[]
+}
+
 async function generateTravelTitles(
   aiService: AIService, 
   location: string, 
   productType: string, 
   additionalKeywords: string
-): Promise<any[]> {
-  const titles = []
+): Promise<GeneratedTitle[]> {
+  const titles: GeneratedTitle[] = []
   
   // SEO 최적화된 카테고리별 제목 생성
   const categories = [

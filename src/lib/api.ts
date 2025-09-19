@@ -152,3 +152,30 @@ export function validateCsvFile(file: File): { valid: boolean; error?: string } 
 
   return { valid: true }
 }
+
+export interface ApiKey {
+  id: number
+  name: string
+  key: string
+  provider: 'openai' | 'gemini'
+  isActive: boolean
+  createdAt: string
+  updatedAt: string
+}
+
+export async function getApiKeyById(id: number): Promise<ApiKey | null> {
+  try {
+    const response = await fetch('/api/api-keys')
+    if (!response.ok) {
+      throw new Error('API 키를 가져올 수 없습니다.')
+    }
+    
+    const data = await response.json()
+    const apiKeys = data.apiKeys || []
+    
+    return apiKeys.find((key: ApiKey) => key.id === id) || null
+  } catch (error) {
+    console.error('API 키 조회 오류:', error)
+    return null
+  }
+}
