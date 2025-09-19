@@ -136,4 +136,82 @@
   .theme-transitioning * {
     transition: none !important;
   }
+  
+  /* Material React Table 클릭 이슈 해결 */
+  .MuiBox-root {
+    position: relative !important;
+    z-index: 2 !important;
+    pointer-events: auto !important;
+  }
+  
+  .MuiSelect-root {
+    position: relative !important;
+    z-index: 3 !important;
+    pointer-events: auto !important;
+  }
+  
+  .MuiSelect-select {
+    position: relative !important;
+    z-index: 4 !important;
+    pointer-events: auto !important;
+    cursor: pointer !important;
+  }
+  
+  .MuiInputBase-input {
+    position: relative !important;
+    z-index: 4 !important;
+    pointer-events: auto !important;
+    cursor: pointer !important;
+  }
+  
+  .MuiPagination-root {
+    position: relative !important;
+    z-index: 2 !important;
+    pointer-events: auto !important;
+  }
+  
+  .MuiPaginationItem-root {
+    position: relative !important;
+    z-index: 3 !important;
+    pointer-events: auto !important;
+    cursor: pointer !important;
+  }
+  
+  .MuiTablePagination-root {
+    position: relative !important;
+    z-index: 2 !important;
+    pointer-events: auto !important;
+  }
+  
+  .MuiTablePagination-select {
+    position: relative !important;
+    z-index: 3 !important;
+    pointer-events: auto !important;
+    cursor: pointer !important;
+  }
+  
+  .MuiTablePagination-selectLabel {
+    position: relative !important;
+    z-index: 2 !important;
+    pointer-events: auto !important;
+  }
+  
+  .MuiTablePagination-displayedRows {
+    position: relative !important;
+    z-index: 2 !important;
+    pointer-events: auto !important;
+  }
+  
+  .MuiTablePagination-actions {
+    position: relative !important;
+    z-index: 2 !important;
+    pointer-events: auto !important;
+  }
+  
+  .MuiTablePagination-actions .MuiIconButton-root {
+    position: relative !important;
+    z-index: 3 !important;
+    pointer-events: auto !important;
+    cursor: pointer !important;
+  }
 }

@@ -482,6 +482,8 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
       sx: { 
         maxHeight: '70vh',
         minHeight: '400px',
+        position: 'relative',
+        zIndex: 1,
         '&::-webkit-scrollbar': {
           width: '8px',
           height: '8px',
@@ -509,6 +511,33 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
         boxShadow: resolvedTheme === 'dark' 
           ? '0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.1)'
           : '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+        position: 'relative',
+        zIndex: 1,
+        '& .MuiBox-root': {
+          position: 'relative',
+          zIndex: 2,
+          pointerEvents: 'auto',
+        },
+        '& .MuiSelect-root': {
+          position: 'relative',
+          zIndex: 3,
+          pointerEvents: 'auto',
+        },
+        '& .MuiInputBase-root': {
+          position: 'relative',
+          zIndex: 3,
+          pointerEvents: 'auto',
+        },
+        '& .MuiPagination-root': {
+          position: 'relative',
+          zIndex: 2,
+          pointerEvents: 'auto',
+        },
+        '& .MuiPaginationItem-root': {
+          position: 'relative',
+          zIndex: 3,
+          pointerEvents: 'auto',
+        },
       }
     },
     // 헤더 셀 스타일링
@@ -553,8 +582,15 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
     // 페이지네이션 스타일링
     muiPaginationProps: {
       sx: {
+        position: 'relative',
+        zIndex: 2,
+        pointerEvents: 'auto',
         '& .MuiPaginationItem-root': {
           color: resolvedTheme === 'dark' ? '#f9fafb' : '#1f2937',
+          position: 'relative',
+          zIndex: 3,
+          pointerEvents: 'auto',
+          cursor: 'pointer',
           '&.Mui-selected': {
             backgroundColor: resolvedTheme === 'dark' ? '#3b82f6' : '#2563eb',
             color: '#ffffff',
@@ -568,6 +604,21 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
         },
         '& .MuiPaginationItem-ellipsis': {
           color: resolvedTheme === 'dark' ? '#9ca3af' : '#6b7280',
+          position: 'relative',
+          zIndex: 3,
+          pointerEvents: 'auto',
+        },
+        '& .MuiSelect-select': {
+          position: 'relative',
+          zIndex: 4,
+          pointerEvents: 'auto',
+          cursor: 'pointer',
+        },
+        '& .MuiInputBase-input': {
+          position: 'relative',
+          zIndex: 4,
+          pointerEvents: 'auto',
+          cursor: 'pointer',
         }
       }
     },
@@ -639,7 +690,7 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-[95vw] w-full max-h-[95vh] h-full overflow-hidden p-0">
+      <DialogContent className="max-w-[95vw] w-full max-h-[95vh] h-full overflow-hidden p-0 relative z-50">
         <DialogHeader className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
           <div className="flex items-center justify-between">
             <div>
@@ -771,7 +822,7 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
           </CollapsibleContent>
         </Collapsible>
 
-        <div className="flex-1 overflow-hidden px-6 pb-6">
+        <div className="flex-1 overflow-hidden px-6 pb-6 relative z-10">
           <MaterialReactTable table={table} />
         </div>
       </DialogContent>
