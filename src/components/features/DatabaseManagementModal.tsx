@@ -105,6 +105,7 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
   const loadMoreRef = useRef<HTMLDivElement | null>(null)
   const tableScrollRef = useRef<HTMLDivElement | null>(null)
   const { resolvedTheme } = useTheme()
+  const [isFetchingMore, setIsFetchingMore] = useState(false)
   
   // 전역 필터 스토어 사용
   const { 
@@ -129,7 +130,12 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
   // 데이터 로드
   const loadData = useCallback(async (append: boolean = false) => {
     try {
-      setLoading(true)
+      if (append) {
+        if (isFetchingMore || loading) return
+        setIsFetchingMore(true)
+      } else {
+        setLoading(true)
+      }
       const searchParam = encodeURIComponent(globalFilter || '')
       const response = await fetch(`/api/admin/table-data?table=${tableName}&page=${pagination.pageIndex}&limit=${pagination.pageSize}&search=${searchParam}`)
       const result = await response.json()
@@ -138,7 +144,6 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
         setTotalCount(result.pagination?.total ?? totalCount)
         if (append) {
           setData(prev => {
-            // 중복 방지: id 기준으로 병합
             const existingIds = new Set(prev.map((it) => it.id))
             const next = [...prev]
             for (const row of result.data as TableData[]) {
@@ -156,9 +161,10 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
       console.error('데이터 로드 오류:', error)
       toast.error('데이터를 불러올 수 없습니다')
     } finally {
-      setLoading(false)
+      if (append) setIsFetchingMore(false)
+      else setLoading(false)
     }
-  }, [tableName, pagination.pageIndex, pagination.pageSize, totalCount, globalFilter])
+  }, [tableName, pagination.pageIndex, pagination.pageSize, totalCount, globalFilter, isFetchingMore, loading])
 
   // 데이터 저장
   const saveData = useCallback(async (rowData: TableData) => {
@@ -484,7 +490,6 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
     state: {
       globalFilter,
       columnFilters,
-      showProgressBars: loading,
     },
     onGlobalFilterChange: (value) => {
       setTableFilters(tableName, { globalFilter: value })
@@ -741,16 +746,16 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
       if (!entry.isIntersecting) return
       const loaded = data.length
       const hasMore = loaded < totalCount
-      if (hasMore && !loading) {
+      if (hasMore && !isFetchingMore) {
         setPagination(prev => ({ ...prev, pageIndex: prev.pageIndex + 1 }))
       }
-    }, { root: tableScrollRef.current, rootMargin: '200px', threshold: 0 })
+    }, { root: tableScrollRef.current, rootMargin: '400px 0px', threshold: 0.1 })
 
     observer.observe(el)
     return () => {
       observer.disconnect()
     }
-  }, [isOpen, data.length, totalCount, loading])
+  }, [isOpen, data.length, totalCount, isFetchingMore])
 
   // 테이블 변경 시 필터 상태 복원
   useEffect(() => {
@@ -922,7 +927,7 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
           <MaterialReactTable table={table} />
           {/* 무한 스크롤 센티넬 */}
           <div ref={loadMoreRef} className="h-10 w-full flex items-center justify-center text-sm text-gray-500">
-            {loading ? '불러오는 중…' : (data.length < totalCount ? '아래로 스크롤하면 더 불러옵니다' : '모든 데이터를 불러왔습니다')}
+            {isFetchingMore ? '추가 로딩 중…' : loading && data.length === 0 ? '불러오는 중…' : (data.length < totalCount ? '아래로 스크롤하면 더 불러옵니다' : '모든 데이터를 불러왔습니다')}
           </div>
         </div>
       </DialogContent>
