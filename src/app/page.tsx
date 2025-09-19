@@ -104,12 +104,7 @@ export default function Home() {
               </TabsContent>
 
               <TabsContent value="keywords">
-                <KeywordTitleGenerator
-                  selectedModel={selectedModel}
-                  selectedApiKeyId={selectedApiKeyId}
-                  temperature={temperature}
-                  maxTokens={maxTokens}
-                />
+                <KeywordTitleGenerator />
               </TabsContent>
 
               <TabsContent value="settings">

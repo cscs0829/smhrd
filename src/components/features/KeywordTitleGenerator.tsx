@@ -9,6 +9,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge'
 import { Loader2, Copy, Download, RefreshCw } from 'lucide-react'
 import { toast } from 'sonner'
+import { AIModelSelector } from '@/components/features/AIModelSelector'
+import { getRecommendedModel } from '@/lib/ai-models'
 
 interface GeneratedTitle {
   id: string
@@ -18,19 +20,12 @@ interface GeneratedTitle {
   createdAt: Date
 }
 
-interface KeywordTitleGeneratorProps {
-  selectedModel: string
-  selectedApiKeyId: number
-  temperature: number
-  maxTokens: number
-}
-
-export function KeywordTitleGenerator({ 
-  selectedModel, 
-  selectedApiKeyId, 
-  temperature, 
-  maxTokens 
-}: KeywordTitleGeneratorProps) {
+export function KeywordTitleGenerator() {
+  // AI 모델 설정을 내부에서 관리
+  const [selectedModel, setSelectedModel] = useState<string>(getRecommendedModel().id)
+  const [selectedApiKeyId, setSelectedApiKeyId] = useState<number>(0)
+  const [temperature, setTemperature] = useState<number>(0.7)
+  const [maxTokens, setMaxTokens] = useState<number>(100)
   const [location, setLocation] = useState('')
   const [productType, setProductType] = useState('')
   const [additionalKeywords, setAdditionalKeywords] = useState('')
@@ -146,6 +141,25 @@ export function KeywordTitleGenerator({
 
   return (
     <div className="space-y-6">
+      {/* AI 모델 선택기 */}
+      <Card>
+        <CardHeader>
+          <CardTitle>AI 모델 설정</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <AIModelSelector
+            selectedModel={selectedModel}
+            onModelChange={setSelectedModel}
+            selectedApiKeyId={selectedApiKeyId}
+            onApiKeyChange={setSelectedApiKeyId}
+            temperature={temperature}
+            onTemperatureChange={setTemperature}
+            maxTokens={maxTokens}
+            onMaxTokensChange={setMaxTokens}
+          />
+        </CardContent>
+      </Card>
+
       {/* 입력 폼 */}
       <Card>
         <CardHeader>
