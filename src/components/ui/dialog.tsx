@@ -60,9 +60,9 @@ function DialogContent({
   size?: "default" | "large" | "full"
 }) {
   const sizeClasses = {
-    default: "sm:max-w-lg",
-    large: "sm:max-w-4xl max-h-[90vh] overflow-y-auto",
-    full: "sm:max-w-[95vw] max-h-[95vh] overflow-y-auto"
+    default: "sm:max-w-lg max-h-[90vh]",
+    large: "sm:max-w-4xl max-h-[90vh]",
+    full: "sm:max-w-[95vw] max-h-[95vh]"
   }
 
   return (
@@ -71,13 +71,17 @@ function DialogContent({
       <DialogPrimitive.Content
         data-slot="dialog-content"
         className={cn(
-          "bg-background fixed left-[50%] top-[50%] z-50 grid w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] gap-4 rounded-lg border p-6 shadow-2xl",
+          "bg-background fixed z-50 grid w-full max-w-[calc(100%-2rem)] gap-4 rounded-lg border p-6 shadow-2xl",
+          "left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2",
+          "data-[state=open]:animate-in data-[state=closed]:animate-out",
+          "data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
+          "data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95",
+          "data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%]",
+          "data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%]",
+          "duration-300 overflow-y-auto",
           sizeClasses[size],
           className
         )}
-        style={{
-          animation: 'modal-enter 0.3s ease-out forwards'
-        }}
         {...props}
       >
         {children}
