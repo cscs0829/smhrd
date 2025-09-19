@@ -29,18 +29,8 @@ export class AIService {
     }
   }
 
-  async generateTitle(city: string): Promise<string> {
-    const prompt = `다음 도시에 대한 매력적인 여행 상품 제목을 생성해주세요. 
-    도시: ${city}
-    
-    요구사항:
-    - 20-30자 내외의 길이
-    - 한국어로 작성
-    - 여행의 매력을 강조
-    - 특별함과 독특함을 표현
-    - 마케팅에 적합한 문구
-    
-    제목만 반환하고 다른 설명은 포함하지 마세요.`
+  async generateTitle(prompt: string): Promise<string> {
+    // 이제 prompt를 직접 받아서 처리
 
     try {
       if (this.openai && (this.config.modelId.startsWith('gpt-') || this.config.modelId.startsWith('o1-'))) {
@@ -53,7 +43,7 @@ export class AIService {
     } catch (error) {
       console.error('AI 제목 생성 오류:', error)
       // 폴백 제목 생성
-      return `${city} 특별 여행 상품`
+      return '특별한 여행 상품'
     }
   }
 
