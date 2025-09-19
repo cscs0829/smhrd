@@ -469,7 +469,6 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
       ungroupByColumn: '{column} 그룹화 해제',
       unpin: '고정 해제',
       unpinAll: '모든 고정 해제',
-      unsorted: '정렬되지 않음',
     },
     initialState: {
       showColumnFilters: showColumnFilters,
