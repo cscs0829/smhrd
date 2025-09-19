@@ -5,9 +5,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { Database, RefreshCw, CheckCircle, XCircle, AlertTriangle } from 'lucide-react'
+import { Database, RefreshCw, CheckCircle, XCircle, AlertTriangle, Settings } from 'lucide-react'
 import { toast } from 'sonner'
 import { useSpring, animated } from '@react-spring/web' // Context7 React Spring 패턴
+import { DatabaseManagementModal } from './DatabaseManagementModal'
 
 interface TableCounts {
   ep_data: number
@@ -52,6 +53,15 @@ interface DatabaseStatusProps {
 export function DatabaseStatus({ onRefresh }: DatabaseStatusProps) {
   const [dbStatus, setDbStatus] = useState<DbStatus | null>(null)
   const [loading, setLoading] = useState(false)
+  const [managementModal, setManagementModal] = useState<{
+    isOpen: boolean
+    tableName: string
+    tableCount: number
+  }>({
+    isOpen: false,
+    tableName: '',
+    tableCount: 0
+  })
 
   // Context7 React Spring 패턴: 새로고침 애니메이션
   const [refreshSprings, refreshApi] = useSpring(() => ({
@@ -137,6 +147,22 @@ export function DatabaseStatus({ onRefresh }: DatabaseStatusProps) {
     return new Date(dateString).toLocaleString('ko-KR')
   }
 
+  const openManagementModal = (tableName: string, tableCount: number) => {
+    setManagementModal({
+      isOpen: true,
+      tableName,
+      tableCount
+    })
+  }
+
+  const closeManagementModal = () => {
+    setManagementModal({
+      isOpen: false,
+      tableName: '',
+      tableCount: 0
+    })
+  }
+
   if (!dbStatus) {
     return (
       <div className="text-center py-8">
@@ -216,12 +242,29 @@ export function DatabaseStatus({ onRefresh }: DatabaseStatusProps) {
 
               {/* 테이블별 데이터 개수 */}
               <div>
-                <h3 className="font-medium mb-3">테이블별 데이터 개수</h3>
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="font-medium">테이블별 데이터 개수</h3>
+                  <Badge variant="outline" className="text-xs">
+                    관리 모달을 클릭하여 데이터를 편집하세요
+                  </Badge>
+                </div>
                 <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                   {Object.entries(dbStatus.tableCounts).map(([tableName, count]) => (
-                    <div key={tableName} className="text-center p-3 bg-gray-50 rounded-lg">
-                      <div className="text-2xl font-bold text-blue-600">{count.toLocaleString()}</div>
-                      <div className="text-sm text-gray-600 capitalize">{tableName.replace('_', ' ')}</div>
+                    <div 
+                      key={tableName} 
+                      className="text-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer transition-colors group"
+                      onClick={() => openManagementModal(tableName, count)}
+                    >
+                      <div className="text-2xl font-bold text-blue-600 group-hover:text-blue-700">
+                        {count.toLocaleString()}
+                      </div>
+                      <div className="text-sm text-gray-600 capitalize mb-2">
+                        {tableName.replace('_', ' ')}
+                      </div>
+                      <Button size="sm" variant="outline" className="h-6 text-xs">
+                        <Settings className="h-3 w-3 mr-1" />
+                        관리
+                      </Button>
                     </div>
                   ))}
                 </div>
@@ -340,6 +383,14 @@ export function DatabaseStatus({ onRefresh }: DatabaseStatusProps) {
           )}
         </CardContent>
       </Card>
+
+      {/* 데이터베이스 관리 모달 */}
+      <DatabaseManagementModal
+        isOpen={managementModal.isOpen}
+        onClose={closeManagementModal}
+        tableName={managementModal.tableName}
+        tableCount={managementModal.tableCount}
+      />
     </animated.div>
   )
 }
