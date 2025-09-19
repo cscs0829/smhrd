@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge'
 import { Loader2, Copy, Download, RefreshCw } from 'lucide-react'
 import { toast } from 'sonner'
 import { AIModelSelector } from '@/components/features/AIModelSelector'
+import { DuplicateChecker } from '@/components/features/DuplicateChecker'
 import { getRecommendedModel } from '@/lib/ai-models'
 import { useApiKeys } from '@/contexts/ApiKeyContext'
 
@@ -80,7 +81,7 @@ export function KeywordTitleGenerator() {
     { value: 'nature', label: '자연' }
   ]
 
-  const generateTitles = async () => {
+  const generateTitles = async (excludeTitles: string[] = []) => {
     if (!location.trim()) {
       toast.error('나라나 도시를 입력해주세요.')
       return
@@ -97,11 +98,12 @@ export function KeywordTitleGenerator() {
           location: location.trim(),
           productType: productType || '패키지 여행',
           additionalKeywords: additionalKeywords.trim(),
-          titleCount,
+          titleCount: excludeTitles.length > 0 ? excludeTitles.length : titleCount,
           modelId: selectedModel,
           apiKeyId: selectedApiKeyId,
           temperature,
-          maxTokens
+          maxTokens,
+          excludeTitles // 중복 제목 제외를 위한 매개변수 추가
         }),
       })
 
@@ -119,8 +121,17 @@ export function KeywordTitleGenerator() {
         createdAt: new Date()
       }))
 
-      setGeneratedTitles(prev => [...newTitles, ...prev])
-      toast.success(`${newTitles.length}개의 제목이 생성되었습니다.`)
+      if (excludeTitles.length > 0) {
+        // 중복 제목들을 기존 목록에서 제거하고 새 제목들로 교체
+        setGeneratedTitles(prev => {
+          const filtered = prev.filter(title => !excludeTitles.includes(title.title))
+          return [...newTitles, ...filtered]
+        })
+        toast.success(`${excludeTitles.length}개의 중복 제목이 ${newTitles.length}개의 새 제목으로 교체되었습니다.`)
+      } else {
+        setGeneratedTitles(prev => [...newTitles, ...prev])
+        toast.success(`${newTitles.length}개의 제목이 생성되었습니다.`)
+      }
     } catch (error) {
       console.error('제목 생성 오류:', error)
       toast.error(error instanceof Error ? error.message : '제목 생성 중 오류가 발생했습니다.')
@@ -242,7 +253,7 @@ export function KeywordTitleGenerator() {
           </div>
 
           <Button 
-            onClick={generateTitles} 
+            onClick={() => generateTitles()} 
             disabled={isGenerating || !location.trim()}
             className="w-full"
           >
@@ -324,6 +335,18 @@ export function KeywordTitleGenerator() {
             </div>
           </CardContent>
         </Card>
+      )}
+
+      {/* 중복 검사 */}
+      {generatedTitles.length > 0 && (
+        <DuplicateChecker
+          generatedTitles={generatedTitles.map(title => ({
+            title: title.title,
+            category: title.category,
+            keywords: title.keywords
+          }))}
+          onRegenerateTitles={generateTitles}
+        />
       )}
     </div>
   )

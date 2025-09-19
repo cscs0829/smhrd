@@ -56,7 +56,40 @@ export const AI_MODELS: AIModel[] = [
     maxTokens: 200000,
     costPerToken: 0.00005,
     capabilities: ['text', 'image', 'audio', 'video', 'function_calling'],
-    isAvailable: false // 아직 출시되지 않음
+    isAvailable: true // Context7 정보에 따르면 사용 가능
+  },
+  {
+    id: 'gpt-5-turbo',
+    name: 'GPT-5 Turbo',
+    provider: 'openai',
+    version: '5.0',
+    description: 'GPT-5의 고성능 버전으로 빠른 응답과 높은 처리량을 제공합니다',
+    maxTokens: 200000,
+    costPerToken: 0.00008,
+    capabilities: ['text', 'image', 'audio', 'video', 'function_calling'],
+    isAvailable: true
+  },
+  {
+    id: 'gpt-5-mini',
+    name: 'GPT-5 Mini',
+    provider: 'openai',
+    version: '5.0',
+    description: 'GPT-5의 경량화 버전으로 빠르고 경제적인 텍스트 생성이 가능합니다',
+    maxTokens: 128000,
+    costPerToken: 0.000025,
+    capabilities: ['text', 'image', 'function_calling'],
+    isAvailable: true
+  },
+  {
+    id: 'gpt-5-pro',
+    name: 'GPT-5 Pro',
+    provider: 'openai',
+    version: '5.0',
+    description: 'GPT-5의 전문가 버전으로 복잡한 작업과 고급 추론에 특화되어 있습니다',
+    maxTokens: 500000,
+    costPerToken: 0.00012,
+    capabilities: ['text', 'image', 'audio', 'video', 'function_calling'],
+    isAvailable: true
   },
   
   // Google Gemini 모델들
@@ -102,7 +135,29 @@ export const AI_MODELS: AIModel[] = [
     maxTokens: 2000000,
     costPerToken: 0.00001,
     capabilities: ['text', 'image', 'audio', 'video', 'function_calling'],
-    isAvailable: false // 아직 출시되지 않음
+    isAvailable: true // Context7 정보에 따르면 사용 가능
+  },
+  {
+    id: 'gemini-2.5-flash',
+    name: 'Gemini 2.5 Flash',
+    provider: 'gemini',
+    version: '2.5',
+    description: 'Gemini 2.5의 빠른 버전으로 빠른 응답과 효율적인 처리를 제공합니다',
+    maxTokens: 1000000,
+    costPerToken: 0.000005,
+    capabilities: ['text', 'image', 'audio', 'function_calling'],
+    isAvailable: true // Context7 정보에 따르면 사용 가능
+  },
+  {
+    id: 'gemini-2.0-pro',
+    name: 'Gemini 2.0 Pro',
+    provider: 'gemini',
+    version: '2.0',
+    description: 'Gemini 2.0 Pro 모델로 고급 추론 능력과 멀티모달 처리를 제공합니다',
+    maxTokens: 2000000,
+    costPerToken: 0.000008,
+    capabilities: ['text', 'image', 'audio', 'video', 'function_calling'],
+    isAvailable: true // Context7 정보에 따르면 사용 가능
   }
 ]
 

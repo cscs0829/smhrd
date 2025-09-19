@@ -24,7 +24,8 @@ export async function POST(request: NextRequest) {
       modelId, 
       apiKeyId, 
       temperature, 
-      maxTokens 
+      maxTokens,
+      excludeTitles = []
     } = body
 
     console.log('파싱된 데이터:', {
@@ -82,7 +83,7 @@ export async function POST(request: NextRequest) {
     })
 
     // 상품 제목 생성
-    const titles = await generateTravelTitles(aiService, location, productType, additionalKeywords, titleCount || 5)
+    const titles = await generateTravelTitles(aiService, location, productType, additionalKeywords, titleCount || 5, excludeTitles)
 
     return NextResponse.json({ titles })
   } catch (error) {
@@ -105,7 +106,8 @@ async function generateTravelTitles(
   location: string, 
   productType: string, 
   additionalKeywords: string,
-  titleCount: number = 5
+  titleCount: number = 5,
+  excludeTitles: string[] = []
 ): Promise<GeneratedTitle[]> {
   const titles: GeneratedTitle[] = []
   
@@ -148,18 +150,25 @@ async function generateTravelTitles(
     }
   ]
 
-  // titleCount에 맞게 제목 생성
-  for (let i = 0; i < titleCount; i++) {
-    const category = categories[i % categories.length] // 카테고리를 순환
+  // titleCount에 맞게 제목 생성 (중복 방지 로직 포함)
+  let attempts = 0
+  const maxAttempts = titleCount * 3 // 최대 시도 횟수
+  
+  while (titles.length < titleCount && attempts < maxAttempts) {
+    const category = categories[titles.length % categories.length] // 카테고리를 순환
     
     try {
-      // SEO 최적화된 프롬프트 생성
+      // SEO 최적화된 프롬프트 생성 (중복 방지를 위한 추가 지침 포함)
+      const excludeInstruction = excludeTitles.length > 0 
+        ? `\n- 다음 제목들과 유사하거나 중복되지 않도록 주의하세요: ${excludeTitles.join(', ')}`
+        : ''
+      
       const seoPrompt = `다음 정보를 바탕으로 SEO에 최적화된 ${category.prompt} 여행 상품 제목을 생성해주세요.
 
 나라/도시: ${location}
 상품 유형: ${productType || '패키지 여행'}
 추가 키워드: ${additionalKeywords || '없음'}
-SEO 키워드: ${category.seoKeywords.join(', ')}
+SEO 키워드: ${category.seoKeywords.join(', ')}${excludeInstruction}
 
 요구사항:
 - 20-30자 내외의 길이로 작성 (SEO 최적화)
@@ -170,29 +179,50 @@ SEO 키워드: ${category.seoKeywords.join(', ')}
 - 브랜드 가치를 높이는 프리미엄 이미지 강조
 - 이모지나 기호 사용 금지
 - 금지 단어: 특가, 땡처리, 반값, 무료, 횡재, 인하, 폭탄, 저가, 저렴한 등
+- 기존에 생성된 제목들과 중복되지 않도록 창의적이고 독창적인 제목을 작성하세요
 
 제목만 반환하고 다른 설명은 포함하지 마세요.`
 
       const title = await aiService.generateTitle(seoPrompt)
+      const trimmedTitle = title.trim()
       
-      // 키워드 추출 (SEO 최적화)
-      const keywords = await generateKeywords(aiService, location, productType, additionalKeywords, category.seoKeywords)
+      // 중복 검사: 이미 생성된 제목들과 제외할 제목들과 비교
+      const isDuplicate = titles.some(t => t.title === trimmedTitle) || 
+                         excludeTitles.includes(trimmedTitle)
       
-      titles.push({
-        title: title.trim(),
-        category: category.name,
-        keywords: keywords.slice(0, 5) // 최대 5개 키워드
-      })
+      if (!isDuplicate) {
+        // 키워드 추출 (SEO 최적화)
+        const keywords = await generateKeywords(aiService, location, productType, additionalKeywords, category.seoKeywords)
+        
+        titles.push({
+          title: trimmedTitle,
+          category: category.name,
+          keywords: keywords.slice(0, 5) // 최대 5개 키워드
+        })
+      } else {
+        console.log(`중복 제목 감지됨: ${trimmedTitle}`)
+      }
+      
     } catch (error) {
       console.error(`${category.name} 카테고리 제목 생성 오류:`, error)
-      // 폴백 제목 생성
-      titles.push({
-        title: `${location} ${category.prompt} ${productType || '여행'}`,
-        category: category.name,
-        keywords: [`${location} 여행`, `${location} 관광`, `${productType || '여행'}`]
-      })
+      // 폴백 제목 생성 (중복 검사 포함)
+      const fallbackTitle = `${location} ${category.prompt} ${productType || '여행'} ${Date.now()}`
+      const isDuplicate = titles.some(t => t.title === fallbackTitle) || 
+                         excludeTitles.includes(fallbackTitle)
+      
+      if (!isDuplicate) {
+        titles.push({
+          title: fallbackTitle,
+          category: category.name,
+          keywords: [`${location} 여행`, `${location} 관광`, `${productType || '여행'}`]
+        })
+      }
     }
+    
+    attempts++
   }
+  
+  console.log(`제목 생성 완료: ${titles.length}개 생성 (시도 횟수: ${attempts})`)
 
   return titles
 }
