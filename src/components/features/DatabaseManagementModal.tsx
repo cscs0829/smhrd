@@ -151,8 +151,6 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
 
       if (result.success) {
         toast.success('데이터가 수정되었습니다')
-        setEditingRow(null)
-        setEditingData({ id: '' })
         loadData()
       } else {
         toast.error(result.error || '저장에 실패했습니다')
@@ -180,7 +178,6 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
 
       if (result.success) {
         toast.success('새 데이터가 추가되었습니다')
-        setCreatingRow(null)
         loadData()
       } else {
         toast.error(result.error || '추가에 실패했습니다')
