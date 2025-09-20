@@ -369,6 +369,33 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
     editDisplayMode: 'modal',
     createDisplayMode: 'modal',
     positionCreatingRow: 'top',
+    
+    
+    
+    // 편집 텍스트 필드 스타일링
+    muiEditTextFieldProps: {
+      variant: 'outlined',
+      size: 'small',
+      fullWidth: true,
+      sx: {
+        '& .MuiOutlinedInput-root': {
+          fontSize: '0.875rem',
+          backgroundColor: resolvedTheme === 'dark' ? '#374151' : '#ffffff',
+          '&:hover .MuiOutlinedInput-notchedOutline': {
+            borderColor: resolvedTheme === 'dark' ? '#6b7280' : '#9ca3af',
+          },
+          '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+            borderColor: resolvedTheme === 'dark' ? '#3b82f6' : '#2563eb',
+          }
+        },
+        '& .MuiInputLabel-root': {
+          color: resolvedTheme === 'dark' ? '#d1d5db' : '#374151',
+          '&.Mui-focused': {
+            color: resolvedTheme === 'dark' ? '#3b82f6' : '#2563eb',
+          }
+        }
+      }
+    },
     // 포털 컨테이너 설정으로 z-index 문제 해결
     muiTableBodyProps: {
       sx: {
@@ -509,6 +536,117 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
     onCreatingRowCancel: ({ table }) => {
       table.setCreatingRow(null)
     },
+    
+    
+    // 편집 모달의 커스텀 렌더링 - 스크롤 가능한 그리드 레이아웃
+    renderEditRowDialogContent: ({ internalEditComponents, row, table }: { internalEditComponents: any; row: any; table: any }) => {
+      const editableColumns = tableSchema.columns.filter(col => col.editable)
+      
+      return (
+        <div className="space-y-4">
+          <div className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+            편집할 필드를 수정하고 저장 버튼을 클릭하세요.
+          </div>
+          
+          {/* 그리드 레이아웃으로 필드 배치 */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {editableColumns.map((col, index: number) => {
+              const fieldComponent = internalEditComponents[col.key]
+              if (!fieldComponent) return null
+              
+              return (
+                <div key={col.key} className="space-y-2">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                    {col.label}
+                    {col.key !== 'id' && !col.key.includes('_at') && (
+                      <span className="text-red-500 ml-1">*</span>
+                    )}
+                  </label>
+                  <div className="min-h-[40px]">
+                    {fieldComponent}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+          
+          {/* 추가 정보 표시 */}
+          <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+            <div className="flex items-start space-x-3">
+              <div className="flex-shrink-0">
+                <svg className="h-5 w-5 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <div className="text-sm text-blue-700 dark:text-blue-300">
+                <p className="font-medium">편집 팁</p>
+                <ul className="mt-1 space-y-1 text-xs">
+                  <li>• 필수 필드(*)는 반드시 입력해야 합니다</li>
+                  <li>• URL 필드는 유효한 링크 형식으로 입력하세요</li>
+                  <li>• 숫자 필드는 숫자만 입력 가능합니다</li>
+                  <li>• 변경사항은 저장 버튼을 눌러야 반영됩니다</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      )
+    },
+    
+    // 생성 모달의 커스텀 렌더링
+    renderCreateRowDialogContent: ({ internalEditComponents, row, table }: { internalEditComponents: any; row: any; table: any }) => {
+      const editableColumns = tableSchema.columns.filter(col => col.editable)
+      
+      return (
+        <div className="space-y-4">
+          <div className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+            새로운 {tableSchema.displayName} 데이터를 추가하세요.
+          </div>
+          
+          {/* 그리드 레이아웃으로 필드 배치 */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {editableColumns.map((col, index: number) => {
+              const fieldComponent = internalEditComponents[col.key]
+              if (!fieldComponent) return null
+              
+              return (
+                <div key={col.key} className="space-y-2">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                    {col.label}
+                    {col.key !== 'id' && !col.key.includes('_at') && (
+                      <span className="text-red-500 ml-1">*</span>
+                    )}
+                  </label>
+                  <div className="min-h-[40px]">
+                    {fieldComponent}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+          
+          {/* 추가 정보 표시 */}
+          <div className="mt-6 p-4 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
+            <div className="flex items-start space-x-3">
+              <div className="flex-shrink-0">
+                <svg className="h-5 w-5 text-green-400" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <div className="text-sm text-green-700 dark:text-green-300">
+                <p className="font-medium">생성 팁</p>
+                <ul className="mt-1 space-y-1 text-xs">
+                  <li>• 필수 필드(*)는 반드시 입력해야 합니다</li>
+                  <li>• ID와 생성/수정일은 자동으로 설정됩니다</li>
+                  <li>• URL 필드는 유효한 링크 형식으로 입력하세요</li>
+                  <li>• 데이터는 생성 버튼을 눌러야 저장됩니다</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      )
+    },
 
     renderRowActions: ({ row, table }) => (
       <div className="flex gap-1">
@@ -533,6 +671,7 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
         <Button 
           onClick={() => table.setCreatingRow(true)}
           disabled={loading}
+          className="bg-blue-600 hover:bg-blue-700 text-white"
         >
           <Plus className="h-4 w-4 mr-2" />
           새 데이터 추가
@@ -548,6 +687,7 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
         </Button>
       </div>
     ),
+    
     mrtTheme: {
       baseBackgroundColor: resolvedTheme === 'dark' ? '#1f2937' : '#ffffff',
       draggingBorderColor: resolvedTheme === 'dark' ? '#3b82f6' : '#2563eb',
@@ -877,6 +1017,141 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
       const style = document.createElement('style')
       style.id = 'mui-select-fix'
       style.textContent = `
+        /* 편집/생성 모달 스크롤 스타일 */
+        .MuiDialog-paper {
+          max-height: 90vh !important;
+          overflow: hidden !important;
+          display: flex !important;
+          flex-direction: column !important;
+          border-radius: 12px !important;
+          background-color: ${resolvedTheme === 'dark' ? '#1f2937' : '#ffffff'} !important;
+        }
+        
+        .MuiDialogContent-root {
+          overflow: auto !important;
+          padding: 20px !important;
+          max-height: calc(90vh - 120px) !important;
+          flex: 1 !important;
+        }
+        
+        .MuiDialogContent-root::-webkit-scrollbar {
+          width: 8px !important;
+        }
+        
+        .MuiDialogContent-root::-webkit-scrollbar-track {
+          background: ${resolvedTheme === 'dark' ? '#374151' : '#f1f5f9'} !important;
+          border-radius: 4px !important;
+        }
+        
+        .MuiDialogContent-root::-webkit-scrollbar-thumb {
+          background: ${resolvedTheme === 'dark' ? '#6b7280' : '#cbd5e1'} !important;
+          border-radius: 4px !important;
+        }
+        
+        .MuiDialogContent-root::-webkit-scrollbar-thumb:hover {
+          background: ${resolvedTheme === 'dark' ? '#9ca3af' : '#94a3b8'} !important;
+        }
+        
+        .MuiDialogActions-root {
+          padding: 16px 20px !important;
+          border-top: 1px solid ${resolvedTheme === 'dark' ? '#374151' : '#e5e7eb'} !important;
+          background-color: ${resolvedTheme === 'dark' ? '#1f2937' : '#ffffff'} !important;
+          flex-shrink: 0 !important;
+          gap: 8px !important;
+        }
+        
+        .MuiDialogTitle-root {
+          padding: 20px 20px 0 20px !important;
+          border-bottom: 1px solid ${resolvedTheme === 'dark' ? '#374151' : '#e5e7eb'} !important;
+          margin-bottom: 16px !important;
+          flex-shrink: 0 !important;
+        }
+        
+        /* 편집 모달 폼 필드 스타일링 */
+        .MuiDialogContent-root .MuiFormControl-root,
+        .MuiDialogContent-root .MuiTextField-root,
+        .MuiDialogContent-root .MuiSelect-root {
+          margin-bottom: 16px !important;
+        }
+        
+        .MuiDialogContent-root .MuiOutlinedInput-root {
+          background-color: ${resolvedTheme === 'dark' ? '#374151' : '#ffffff'} !important;
+        }
+        
+        .MuiDialogContent-root .MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline {
+          border-color: ${resolvedTheme === 'dark' ? '#6b7280' : '#9ca3af'} !important;
+        }
+        
+        .MuiDialogContent-root .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline {
+          border-color: ${resolvedTheme === 'dark' ? '#3b82f6' : '#2563eb'} !important;
+        }
+        
+        .MuiDialogContent-root .MuiInputLabel-root {
+          color: ${resolvedTheme === 'dark' ? '#d1d5db' : '#374151'} !important;
+        }
+        
+        .MuiDialogContent-root .MuiInputLabel-root.Mui-focused {
+          color: ${resolvedTheme === 'dark' ? '#3b82f6' : '#2563eb'} !important;
+        }
+        
+        /* 편집 모달 그리드 레이아웃 */
+        .MuiDialogContent-root .space-y-4 {
+          display: flex !important;
+          flex-direction: column !important;
+          gap: 16px !important;
+        }
+        
+        .MuiDialogContent-root .grid {
+          display: grid !important;
+          grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)) !important;
+          gap: 16px !important;
+        }
+        
+        @media (min-width: 768px) {
+          .MuiDialogContent-root .grid {
+            grid-template-columns: repeat(2, 1fr) !important;
+          }
+        }
+        
+        @media (min-width: 1024px) {
+          .MuiDialogContent-root .grid {
+            grid-template-columns: repeat(3, 1fr) !important;
+          }
+        }
+        
+        /* 필드 라벨 스타일링 */
+        .MuiDialogContent-root label {
+          display: block !important;
+          font-size: 0.875rem !important;
+          font-weight: 500 !important;
+          color: ${resolvedTheme === 'dark' ? '#d1d5db' : '#374151'} !important;
+          margin-bottom: 4px !important;
+        }
+        
+        /* 필수 필드 표시 */
+        .MuiDialogContent-root .text-red-500 {
+          color: #ef4444 !important;
+          margin-left: 4px !important;
+        }
+        
+        /* 정보 박스 스타일링 */
+        .MuiDialogContent-root .bg-blue-50 {
+          background-color: ${resolvedTheme === 'dark' ? 'rgba(59, 130, 246, 0.1)' : '#eff6ff'} !important;
+          border-color: ${resolvedTheme === 'dark' ? 'rgba(59, 130, 246, 0.3)' : '#dbeafe'} !important;
+        }
+        
+        .MuiDialogContent-root .bg-green-50 {
+          background-color: ${resolvedTheme === 'dark' ? 'rgba(34, 197, 94, 0.1)' : '#f0fdf4'} !important;
+          border-color: ${resolvedTheme === 'dark' ? 'rgba(34, 197, 94, 0.3)' : '#dcfce7'} !important;
+        }
+        
+        .MuiDialogContent-root .text-blue-700 {
+          color: ${resolvedTheme === 'dark' ? '#93c5fd' : '#1d4ed8'} !important;
+        }
+        
+        .MuiDialogContent-root .text-green-700 {
+          color: ${resolvedTheme === 'dark' ? '#86efac' : '#15803d'} !important;
+        }
         /* MUI Select 데스크톱 클릭 문제 해결 - 접근성 개선 */
         .MuiTablePagination-select.MuiInputBase-root {
           pointer-events: auto !important;
