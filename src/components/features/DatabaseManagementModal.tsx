@@ -539,35 +539,20 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
     
     
     // 편집 모달의 커스텀 렌더링 - 스크롤 가능한 그리드 레이아웃
-    renderEditRowDialogContent: ({ internalEditComponents, row, table }: { internalEditComponents: any; row: any; table: any }) => {
-      const editableColumns = tableSchema.columns.filter(col => col.editable)
-      
+    renderEditRowDialogContent: ({ internalEditComponents }: { internalEditComponents: React.ReactNode[]; row: unknown; table: unknown }) => {
       return (
         <div className="space-y-4">
           <div className="text-sm text-gray-600 dark:text-gray-400 mb-4">
             편집할 필드를 수정하고 저장 버튼을 클릭하세요.
           </div>
           
-          {/* 그리드 레이아웃으로 필드 배치 */}
+          {/* 기본 편집 컴포넌트들을 그리드 레이아웃으로 배치 */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {editableColumns.map((col, index: number) => {
-              const fieldComponent = internalEditComponents[col.key]
-              if (!fieldComponent) return null
-              
-              return (
-                <div key={col.key} className="space-y-2">
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    {col.label}
-                    {col.key !== 'id' && !col.key.includes('_at') && (
-                      <span className="text-red-500 ml-1">*</span>
-                    )}
-                  </label>
-                  <div className="min-h-[40px]">
-                    {fieldComponent}
-                  </div>
-                </div>
-              )
-            })}
+            {internalEditComponents.map((component, index) => (
+              <div key={index} className="min-h-[40px]">
+                {component}
+              </div>
+            ))}
           </div>
           
           {/* 추가 정보 표시 */}
@@ -594,35 +579,20 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
     },
     
     // 생성 모달의 커스텀 렌더링
-    renderCreateRowDialogContent: ({ internalEditComponents, row, table }: { internalEditComponents: any; row: any; table: any }) => {
-      const editableColumns = tableSchema.columns.filter(col => col.editable)
-      
+    renderCreateRowDialogContent: ({ internalEditComponents }: { internalEditComponents: React.ReactNode[]; row: unknown; table: unknown }) => {
       return (
         <div className="space-y-4">
           <div className="text-sm text-gray-600 dark:text-gray-400 mb-4">
             새로운 {tableSchema.displayName} 데이터를 추가하세요.
           </div>
           
-          {/* 그리드 레이아웃으로 필드 배치 */}
+          {/* 기본 편집 컴포넌트들을 그리드 레이아웃으로 배치 */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {editableColumns.map((col, index: number) => {
-              const fieldComponent = internalEditComponents[col.key]
-              if (!fieldComponent) return null
-              
-              return (
-                <div key={col.key} className="space-y-2">
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    {col.label}
-                    {col.key !== 'id' && !col.key.includes('_at') && (
-                      <span className="text-red-500 ml-1">*</span>
-                    )}
-                  </label>
-                  <div className="min-h-[40px]">
-                    {fieldComponent}
-                  </div>
-                </div>
-              )
-            })}
+            {internalEditComponents.map((component, index) => (
+              <div key={index} className="min-h-[40px]">
+                {component}
+              </div>
+            ))}
           </div>
           
           {/* 추가 정보 표시 */}
