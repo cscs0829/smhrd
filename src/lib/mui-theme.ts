@@ -5,7 +5,9 @@ import { createTheme } from '@mui/material/styles'
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 // MUI 컴포넌트의 포털 컨테이너 설정
-export const createMuiTheme = () => {
+export const createMuiTheme = (mode?: 'light' | 'dark') => {
+  const themeMode = mode || 'light'
+  
   // Next.js의 루트 엘리먼트 찾기
   const getRootElement = () => {
     if (typeof document !== 'undefined') {
@@ -15,6 +17,30 @@ export const createMuiTheme = () => {
   }
 
   return createTheme({
+    palette: {
+      mode: themeMode === 'dark' ? 'dark' : 'light',
+      primary: {
+        main: themeMode === 'dark' ? '#90caf9' : '#1976d2',
+        light: themeMode === 'dark' ? '#e3f2fd' : '#42a5f5',
+        dark: themeMode === 'dark' ? '#42a5f5' : '#1565c0',
+        contrastText: themeMode === 'dark' ? '#000' : '#fff',
+      },
+      secondary: {
+        main: themeMode === 'dark' ? '#f48fb1' : '#dc004e',
+        light: themeMode === 'dark' ? '#fce4ec' : '#ff5983',
+        dark: themeMode === 'dark' ? '#c2185b' : '#9a0036',
+        contrastText: themeMode === 'dark' ? '#000' : '#fff',
+      },
+      background: {
+        default: themeMode === 'dark' ? '#121212' : '#ffffff',
+        paper: themeMode === 'dark' ? '#1e1e1e' : '#ffffff',
+      },
+      text: {
+        primary: themeMode === 'dark' ? '#ffffff' : '#000000',
+        secondary: themeMode === 'dark' ? '#b0b0b0' : '#666666',
+      },
+      divider: themeMode === 'dark' ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.12)',
+    },
     components: {
       // Popover 컴포넌트 설정 (Select 드롭다운에서 사용) - 강화된 버전
       MuiPopover: {
@@ -117,12 +143,12 @@ export const createMuiTheme = () => {
               minHeight: '36px',
               padding: '8px 16px',
               '&:hover': {
-                backgroundColor: 'rgba(0, 0, 0, 0.04)',
+                backgroundColor: themeMode === 'dark' ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.04)',
               },
               '&.Mui-selected': {
-                backgroundColor: 'rgba(25, 118, 210, 0.12)',
+                backgroundColor: themeMode === 'dark' ? 'rgba(144, 202, 249, 0.12)' : 'rgba(25, 118, 210, 0.12)',
                 '&:hover': {
-                  backgroundColor: 'rgba(25, 118, 210, 0.16)',
+                  backgroundColor: themeMode === 'dark' ? 'rgba(144, 202, 249, 0.16)' : 'rgba(25, 118, 210, 0.16)',
                 },
               },
               // aria-hidden 무시 - CSS 문자열로 처리
@@ -189,12 +215,12 @@ export const createMuiTheme = () => {
             cursor: 'pointer',
             pointerEvents: 'auto',
             '&:hover': {
-              backgroundColor: 'rgba(0, 0, 0, 0.04)',
+              backgroundColor: themeMode === 'dark' ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.04)',
             },
             '&.Mui-selected': {
-              backgroundColor: 'rgba(25, 118, 210, 0.12)',
+              backgroundColor: themeMode === 'dark' ? 'rgba(144, 202, 249, 0.12)' : 'rgba(25, 118, 210, 0.12)',
               '&:hover': {
-                backgroundColor: 'rgba(25, 118, 210, 0.16)',
+                backgroundColor: themeMode === 'dark' ? 'rgba(144, 202, 249, 0.16)' : 'rgba(25, 118, 210, 0.16)',
               },
             },
           },

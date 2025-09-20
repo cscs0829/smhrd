@@ -30,8 +30,8 @@ export function AttachModal({ onFileSelect, isProcessing = false }: AttachModalP
       </DialogTrigger>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle>CSV 파일 첨부</DialogTitle>
-          <DialogDescription>
+          <DialogTitle className="text-foreground">CSV 파일 첨부</DialogTitle>
+          <DialogDescription className="text-muted-foreground">
             상품별 CSV 파일을 업로드하여 클릭수 0인 상품을 자동으로 처리합니다.
           </DialogDescription>
         </DialogHeader>

@@ -113,10 +113,10 @@ export function DuplicateChecker({ generatedTitles, onRegenerateTitles }: Duplic
   }, [onRegenerateTitles, filteredTitles])
 
   const getSimilarityColor = (similarity: number) => {
-    if (similarity >= 0.95) return 'text-red-600 bg-red-50'
-    if (similarity >= 0.85) return 'text-orange-600 bg-orange-50'
-    if (similarity >= 0.70) return 'text-yellow-600 bg-yellow-50'
-    return 'text-green-600 bg-green-50'
+    if (similarity >= 0.95) return 'text-red-600 bg-red-50 dark:text-red-400 dark:bg-red-950'
+    if (similarity >= 0.85) return 'text-orange-600 bg-orange-50 dark:text-orange-400 dark:bg-orange-950'
+    if (similarity >= 0.70) return 'text-yellow-600 bg-yellow-50 dark:text-yellow-400 dark:bg-yellow-950'
+    return 'text-green-600 bg-green-50 dark:text-green-400 dark:bg-green-950'
   }
 
   const getSimilarityIcon = (similarity: number) => {
@@ -178,7 +178,7 @@ export function DuplicateChecker({ generatedTitles, onRegenerateTitles }: Duplic
               id="threshold"
               value={threshold}
               onChange={(e) => setThreshold(parseFloat(e.target.value))}
-              className="px-2 py-1 border rounded text-sm"
+              className="px-2 py-1 border rounded text-sm bg-background text-foreground border-input"
               disabled={isChecking}
             >
               <option value={0.9}>90% (매우 엄격)</option>
@@ -234,25 +234,25 @@ export function DuplicateChecker({ generatedTitles, onRegenerateTitles }: Duplic
               <CardContent>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <div className="text-center">
-                    <div className="text-2xl font-bold text-red-600">
+                    <div className="text-2xl font-bold text-red-600 dark:text-red-400">
                       {checkResults.stats.breakdown.exact}
                     </div>
                     <div className="text-sm text-muted-foreground">완전 중복 (95%+)</div>
                   </div>
                   <div className="text-center">
-                    <div className="text-2xl font-bold text-orange-600">
+                    <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">
                       {checkResults.stats.breakdown.high}
                     </div>
                     <div className="text-sm text-muted-foreground">높은 유사도 (85-95%)</div>
                   </div>
                   <div className="text-center">
-                    <div className="text-2xl font-bold text-yellow-600">
+                    <div className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">
                       {checkResults.stats.breakdown.medium}
                     </div>
                     <div className="text-sm text-muted-foreground">중간 유사도 (70-85%)</div>
                   </div>
                   <div className="text-center">
-                    <div className="text-2xl font-bold text-green-600">
+                    <div className="text-2xl font-bold text-green-600 dark:text-green-400">
                       {checkResults.stats.breakdown.low}
                     </div>
                     <div className="text-sm text-muted-foreground">낮은 유사도 (70% 미만)</div>
@@ -322,17 +322,17 @@ export function DuplicateChecker({ generatedTitles, onRegenerateTitles }: Duplic
                     ) : (
                       <div className="text-sm text-muted-foreground">
                         {result.summary.exact > 0 && (
-                          <span className="text-red-600 font-medium">
+                          <span className="text-red-600 dark:text-red-400 font-medium">
                             완전 중복 {result.summary.exact}개,{' '}
                           </span>
                         )}
                         {result.summary.high > 0 && (
-                          <span className="text-orange-600 font-medium">
+                          <span className="text-orange-600 dark:text-orange-400 font-medium">
                             높은 유사도 {result.summary.high}개,{' '}
                           </span>
                         )}
                         {result.summary.medium > 0 && (
-                          <span className="text-yellow-600 font-medium">
+                          <span className="text-yellow-600 dark:text-yellow-400 font-medium">
                             중간 유사도 {result.summary.medium}개
                           </span>
                         )}

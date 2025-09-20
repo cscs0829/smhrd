@@ -372,6 +372,7 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
     
     
     
+    
     // 편집 텍스트 필드 스타일링
     muiEditTextFieldProps: {
       variant: 'outlined',
@@ -989,7 +990,10 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
       style.textContent = `
         /* 편집/생성 모달 스크롤 스타일 */
         .MuiDialog-paper {
-          max-height: 90vh !important;
+          width: 90vw !important;
+          max-width: 1200px !important;
+          height: 80vh !important;
+          max-height: 800px !important;
           overflow: hidden !important;
           display: flex !important;
           flex-direction: column !important;
@@ -997,10 +1001,26 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
           background-color: ${resolvedTheme === 'dark' ? '#1f2937' : '#ffffff'} !important;
         }
         
+        /* Material React Table 편집/생성 모달 크기 조정 */
+        .MuiDialog-root .MuiDialog-paper {
+          width: 90vw !important;
+          max-width: 1200px !important;
+          height: 80vh !important;
+          max-height: 800px !important;
+        }
+        
+        /* Material React Table 모달 컨테이너 */
+        .MuiDialog-root[role="dialog"] .MuiDialog-paper {
+          width: 90vw !important;
+          max-width: 1200px !important;
+          height: 80vh !important;
+          max-height: 800px !important;
+        }
+        
         .MuiDialogContent-root {
           overflow: auto !important;
           padding: 20px !important;
-          max-height: calc(90vh - 120px) !important;
+          max-height: calc(80vh - 120px) !important;
           flex: 1 !important;
         }
         
@@ -1320,7 +1340,7 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
     >
       <DialogContent
         size="full"
-        className="w-full p-0 relative z-50"
+        className="w-[95vw] h-[90vh] max-w-none max-h-none p-0 relative z-50"
         onInteractOutside={(e) => {
           // 페이지네이션 셀렉트 박스 및 MUI 컴포넌트 클릭 시 모달이 닫히지 않도록 방지
           const target = e.target as HTMLElement
@@ -1361,7 +1381,7 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
 
         {/* 테이블 컨테이너 */}
         <div
-          className="flex-1 px-4 sm:px-6 pb-4 sm:pb-6 relative z-10 max-h-[70vh] overflow-auto"
+          className="flex-1 px-4 sm:px-6 pb-4 sm:pb-6 relative z-10 max-h-[calc(90vh-120px)] overflow-auto"
           style={{
             isolation: 'isolate',
             pointerEvents: 'auto'

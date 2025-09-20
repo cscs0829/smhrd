@@ -163,7 +163,7 @@ export function KeywordTitleGenerator() {
       {/* AI 모델 선택기 */}
       <Card>
         <CardHeader>
-          <CardTitle>AI 모델 설정</CardTitle>
+          <CardTitle className="text-foreground">AI 모델 설정</CardTitle>
         </CardHeader>
         <CardContent>
           <AIModelSelector
@@ -182,7 +182,7 @@ export function KeywordTitleGenerator() {
       {/* 입력 폼 */}
       <Card>
         <CardHeader>
-          <CardTitle>키워드 기반 여행 상품 제목 생성</CardTitle>
+          <CardTitle className="text-foreground">키워드 기반 여행 상품 제목 생성</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -266,7 +266,7 @@ export function KeywordTitleGenerator() {
         <Card>
           <CardHeader>
             <div className="flex items-center justify-between">
-              <CardTitle>생성된 제목 ({filteredTitles.length}개)</CardTitle>
+              <CardTitle className="text-foreground">생성된 제목 ({filteredTitles.length}개)</CardTitle>
               <div className="flex gap-2">
                 <Button variant="outline" size="sm" onClick={downloadTitles}>
                   <Download className="h-4 w-4 mr-1" />
@@ -281,9 +281,9 @@ export function KeywordTitleGenerator() {
           <CardContent>
             <div className="space-y-3">
               {filteredTitles.map((title) => (
-                <div key={title.id} className="border rounded-lg p-4 space-y-2">
+                <div key={title.id} className="border rounded-lg p-4 space-y-2 bg-card text-card-foreground border-border">
                   <div className="flex items-start justify-between">
-                    <h3 className="font-medium text-lg leading-tight">{title.title}</h3>
+                    <h3 className="font-medium text-lg leading-tight text-foreground">{title.title}</h3>
                     <Button
                       variant="ghost"
                       size="sm"
