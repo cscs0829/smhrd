@@ -509,16 +509,7 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
     onCreatingRowCancel: ({ table }) => {
       table.setCreatingRow(null)
     },
-    // 편집 모달 커스터마이징
-    muiEditRowDialogProps: () => ({
-      maxWidth: 'md',
-      fullWidth: true,
-    }),
-    // 생성 모달 커스터마이징
-    muiCreateRowDialogProps: () => ({
-      maxWidth: 'md',
-      fullWidth: true,
-    }),
+
     renderRowActions: ({ row, table }) => (
       <div className="flex gap-1">
         <Button 
