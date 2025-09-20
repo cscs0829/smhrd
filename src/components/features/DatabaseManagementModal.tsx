@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useMemo, useCallback } from 'react'
-import { MaterialReactTable, useMaterialReactTable, type MRT_ColumnDef, type MRT_Cell, type MRT_Row } from 'material-react-table'
+import { MaterialReactTable, useMaterialReactTable, type MRT_ColumnDef, type MRT_Cell } from 'material-react-table'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 
@@ -164,9 +164,10 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
   }, [tableName, loadData])
 
   // 새 데이터 생성
-  const createData = useCallback(async (values: Record<string, any>) => {
+  const createData = useCallback(async (values: Record<string, unknown>) => {
     try {
       // ID 필드 제거 (자동 생성)
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { id, created_at, updated_at, ...newData } = values
 
       const response = await fetch(`/api/admin/table-data?table=${tableName}`, {
@@ -234,7 +235,7 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
       ] : col.type === 'select' && 'options' in col && col.options ?
         col.options.map(option => ({ text: option.toUpperCase(), value: option })) : undefined,
       // 편집 컴포넌트 커스터마이징
-      muiEditTextFieldProps: ({ cell, column, row }) => ({
+      muiEditTextFieldProps: () => ({
         type: col.type === 'number' ? 'number' : col.type === 'password' ? 'password' : 'text',
         required: col.key !== 'id' && !col.key.includes('_at'),
         variant: 'outlined' as const,
