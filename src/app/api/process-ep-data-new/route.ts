@@ -184,6 +184,10 @@ function compareEPData(
     if (!str) return null
     return str.normalize('NFC')
   }
+  const normalizeIdLoose = (s: unknown): string | null => {
+    const v = normalizeId(s)
+    return v ? v.toLowerCase() : null
+  }
   const normalizeTitle = (s: unknown): string | null => {
     if (s == null) return null
     const str = String(s)
@@ -196,19 +200,25 @@ function compareEPData(
 
   // 기존/새 데이터 인덱스 구성 (id 우선, 제목은 보조)
   const existingOriginalIdSet = new Set<string>()
+  const existingOriginalIdLooseSet = new Set<string>()
   const existingTitleSet = new Set<string>()
   for (const item of existingData) {
     const oid = normalizeId(item.original_id)
     if (oid) existingOriginalIdSet.add(oid)
+    const oidLoose = normalizeIdLoose(item.original_id)
+    if (oidLoose) existingOriginalIdLooseSet.add(oidLoose)
     const t = normalizeTitle(item.title)
     if (t) existingTitleSet.add(t)
   }
 
   const newOriginalIdSet = new Set<string>()
+  const newOriginalIdLooseSet = new Set<string>()
   const newTitleSet = new Set<string>()
   for (const item of newData) {
     const nid = normalizeId(item.id)
     if (nid) newOriginalIdSet.add(nid)
+    const nidLoose = normalizeIdLoose(item.id)
+    if (nidLoose) newOriginalIdLooseSet.add(nidLoose)
     const t = normalizeTitle(item.title)
     if (t) newTitleSet.add(t)
   }
@@ -221,8 +231,11 @@ function compareEPData(
     const t = normalizeTitle(item.title)
 
     if (nid) {
-      // id가 있으면 id로만 판단
-      return !existingOriginalIdSet.has(nid)
+      // id가 있으면 id 우선 판단 (loose도 보조로 허용)
+      const nidLoose = normalizeIdLoose(item.id)
+      const hasExact = existingOriginalIdSet.has(nid)
+      const hasLoose = nidLoose ? existingOriginalIdLooseSet.has(nidLoose) : false
+      return !(hasExact || hasLoose)
     }
     // id가 없으면 제목으로 보조 판단
     return t ? !existingTitleSet.has(t) : true
@@ -233,8 +246,11 @@ function compareEPData(
     const t = normalizeTitle(item.title)
 
     if (oid) {
-      // id가 있으면 id로만 판단
-      return !newOriginalIdSet.has(oid)
+      // id가 있으면 id 우선 판단 (loose도 보조로 허용)
+      const oidLoose = normalizeIdLoose(item.original_id)
+      const presentExact = newOriginalIdSet.has(oid)
+      const presentLoose = oidLoose ? newOriginalIdLooseSet.has(oidLoose) : false
+      return !(presentExact || presentLoose)
     }
     // id가 없으면 제목으로 보조 판단
     return t ? !newTitleSet.has(t) : true
@@ -245,7 +261,8 @@ function compareEPData(
     const t = normalizeTitle(item.title)
 
     if (nid) {
-      return existingOriginalIdSet.has(nid)
+      const nidLoose = normalizeIdLoose(item.id)
+      return existingOriginalIdSet.has(nid) || (nidLoose ? existingOriginalIdLooseSet.has(nidLoose) : false)
     }
     return t ? existingTitleSet.has(t) : false
   })
