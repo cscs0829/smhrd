@@ -60,8 +60,20 @@ export async function POST(request: NextRequest) {
 
     // 최종 보정: DB 존재 여부로 ID만으로 unchanged 강제 허용 (정확 일치)
     // - 세트 불일치나 정규화 오탐이 남는 경우를 방지하기 위한 안전장치
+    // 보정은 엑셀 원본에서 직접 수집: jsonData의 id를 정규화하여 사용할 것
+    const normalizeIdForGuard = (s: unknown): string | null => {
+      if (s == null) return null
+      const str = String(s)
+        .replace(/[\u200B-\u200D\uFEFF]/g, '')
+        .replace(/_+/g, '_')
+        .trim()
+      if (!str) return null
+      return str.normalize('NFC')
+    }
     const excelIdCandidates: string[] = Array.from(new Set(
-      (comparisonResult.debug_new_id_exact || []).filter((v: string) => !!v)
+      (jsonData || [])
+        .map((row) => normalizeIdForGuard((row as any).id))
+        .filter((v): v is string => Boolean(v))
     ))
     const presentInDb = new Set<string>()
     if (excelIdCandidates.length > 0) {
