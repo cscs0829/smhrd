@@ -127,8 +127,12 @@ export async function POST(request: NextRequest) {
 
     // 현재 시간 추가
     const now = new Date().toISOString()
+    
+    // ID 필드 제거 (UUID로 자동 생성됨)
+    const { id, ...bodyWithoutId } = body
+    
     const dataToInsert = {
-      ...body,
+      ...bodyWithoutId,
       created_at: now,
       updated_at: now
     }

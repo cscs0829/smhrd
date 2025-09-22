@@ -1,6 +1,6 @@
 -- 1) ep_data: product master
 create table public.ep_data (
-  id               text primary key,
+  id               uuid primary key default gen_random_uuid(),
   title            text not null,
   price_pc         numeric null,
   benefit_price    numeric null,
@@ -37,8 +37,9 @@ create index city_images_city_idx on public.city_images (lower(city));
 
 -- 3) titles: generated titles for duplication checks
 create table public.titles (
-  id         text not null,
+  id         uuid primary key default gen_random_uuid(),
   title      text not null,
+  city       text null,
   created_at timestamptz not null default now()
 );
 create index titles_title_lower_idx on public.titles (lower(title));
@@ -46,7 +47,7 @@ create index titles_title_lower_idx on public.titles (lower(title));
 -- 4) deleted_items: backup of removed items
 create table public.deleted_items (
   id            bigserial primary key,
-  original_id   text not null,
+  original_id   uuid not null,
   original_data jsonb not null,
   reason        text null,
   created_at    timestamptz not null default now()

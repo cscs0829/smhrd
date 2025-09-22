@@ -11,13 +11,11 @@ import { ClickDataProcessor } from '@/components/features/ClickDataProcessor'
 import { EPDataProcessorNew } from '@/components/features/EPDataProcessorNew'
 
 export default function Home() {
-  const [file, setFile] = useState<File | null>(null)
-  const [isProcessing, setIsProcessing] = useState(false)
   const [activeTab, setActiveTab] = useState<string>('process')
   const [dbRefreshTrigger, setDbRefreshTrigger] = useState<number>(0)
 
-  const handleFileSelect = (f: File) => {
-    setFile(f)
+  const handleFileSelect = (_f: File) => {
+    // 파일 선택 처리 (현재는 사용하지 않음)
   }
 
   const handleTabChange = (value: string) => {

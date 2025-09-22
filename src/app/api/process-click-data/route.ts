@@ -21,11 +21,17 @@ export async function POST(request: NextRequest) {
     
     // 클릭수가 0인 상품들의 상품명 추출
     const zeroClickProducts = csvData
-      .filter((row: Record<string, unknown>) => Number(row['클릭수']) === 0)
-      .map((row: Record<string, unknown>) => ({
-        id: String(row['상품ID']),
-        title: String(row['상품명'])
-      }))
+      .filter((row: unknown) => {
+        const record = row as Record<string, unknown>
+        return Number(record['클릭수']) === 0
+      })
+      .map((row: unknown) => {
+        const record = row as Record<string, unknown>
+        return {
+          id: String(record['상품ID']),
+          title: String(record['상품명'])
+        }
+      })
 
     if (zeroClickProducts.length === 0) {
       return NextResponse.json({ 

@@ -43,6 +43,11 @@ export default function NewDataModal({
     if (isOpen && schema.length > 0) {
       const initialData: Record<string, unknown> = {}
       schema.forEach(column => {
+        // ID 필드와 타임스탬프 필드는 제외
+        if (column.column_name === 'id' || column.column_name.includes('_at')) {
+          return
+        }
+        
         if (column.column_default !== null) {
           initialData[column.column_name] = column.column_default
         } else if (column.data_type === 'boolean') {
@@ -91,6 +96,12 @@ export default function NewDataModal({
   // 입력 필드 렌더링
   const renderInputField = (column: { column_name: string; data_type: string; is_nullable: string }) => {
     const { column_name, data_type, is_nullable } = column
+    
+    // ID 필드와 타임스탬프 필드는 렌더링하지 않음
+    if (column_name === 'id' || column_name.includes('_at')) {
+      return null
+    }
+    
     const value = formData[column_name] || ''
     const isRequired = is_nullable === 'NO'
 

@@ -168,7 +168,7 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
   // 새 데이터 생성
   const createData = useCallback(async (values: Record<string, unknown>) => {
     try {
-      // ID 필드 제거 (자동 생성)
+      // ID 필드와 타임스탬프 필드 제거 (자동 생성)
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { id, created_at, updated_at, ...newData } = values
 
