@@ -223,48 +223,57 @@ function compareEPData(
     if (t) newTitleSet.add(t)
   }
 
-  // 규칙
-  // 1) 양쪽 모두 id가 있는 경우: id로만 판단
-  // 2) 한쪽이라도 id가 없는 경우에만 title 보조 판단
+  // 규칙 (요청 반영: 제목 우선, ID 보조)
+  // 1) 제목이 있으면 제목으로 먼저 판단
+  // 2) 제목으로 판단되지 않을 때만 ID(정확/loose)로 보조 판단
   const itemsToAdd = newData.filter((item) => {
     const nid = normalizeId(item.id)
     const t = normalizeTitle(item.title)
 
+    // 제목 기준 우선 판단
+    if (t) {
+      if (existingTitleSet.has(t)) return false
+    }
+    // 제목으로 매칭이 안 될 때만 ID 보조 판단
     if (nid) {
-      // id가 있으면 id 우선 판단 (loose도 보조로 허용)
       const nidLoose = normalizeIdLoose(item.id)
       const hasExact = existingOriginalIdSet.has(nid)
       const hasLoose = nidLoose ? existingOriginalIdLooseSet.has(nidLoose) : false
-      return !(hasExact || hasLoose)
+      if (hasExact || hasLoose) return false
     }
-    // id가 없으면 제목으로 보조 판단
-    return t ? !existingTitleSet.has(t) : true
+    // 제목도 없고 ID도 없으면 추가 대상으로 간주
+    return true
   })
 
   const itemsToRemove = existingData.filter((item) => {
     const oid = normalizeId(item.original_id)
     const t = normalizeTitle(item.title)
 
+    // 제목 기준 우선 판단 (제목이 새 데이터에 있으면 제거 아님)
+    if (t && newTitleSet.has(t)) return false
+    // 제목으로도 매칭되지 않을 때만 ID 보조 판단
     if (oid) {
-      // id가 있으면 id 우선 판단 (loose도 보조로 허용)
       const oidLoose = normalizeIdLoose(item.original_id)
       const presentExact = newOriginalIdSet.has(oid)
       const presentLoose = oidLoose ? newOriginalIdLooseSet.has(oidLoose) : false
-      return !(presentExact || presentLoose)
+      if (presentExact || presentLoose) return false
     }
-    // id가 없으면 제목으로 보조 판단
-    return t ? !newTitleSet.has(t) : true
+    // 제목도 없고 ID도 없거나 모두 불일치면 제거 대상으로 간주
+    return true
   })
 
   const unchangedItems = newData.filter((item) => {
     const nid = normalizeId(item.id)
     const t = normalizeTitle(item.title)
 
+    // 제목으로 먼저 동일 여부 판단
+    if (t && existingTitleSet.has(t)) return true
+    // 제목으로 판단되지 않을 때만 ID로 동일 여부 판단
     if (nid) {
       const nidLoose = normalizeIdLoose(item.id)
-      return existingOriginalIdSet.has(nid) || (nidLoose ? existingOriginalIdLooseSet.has(nidLoose) : false)
+      if (existingOriginalIdSet.has(nid) || (nidLoose ? existingOriginalIdLooseSet.has(nidLoose) : false)) return true
     }
-    return t ? existingTitleSet.has(t) : false
+    return false
   })
 
   return {
