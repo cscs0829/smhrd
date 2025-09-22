@@ -13,6 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { downloadFile, processFile } from '@/lib/api'
 import { getRecommendedModel } from '@/lib/ai-models'
 import { ApiKeyManager } from '@/components/features/ApiKeyManager'
+import { EPDataProcessor } from '@/components/features/EPDataProcessor'
 
 export default function Home() {
   const [file, setFile] = useState<File | null>(null)
@@ -62,8 +63,9 @@ export default function Home() {
   return (
     <div className="container mx-auto px-4 py-8 space-y-6">
       <Tabs defaultValue="process" value={activeTab} onValueChange={handleTabChange} className="w-full">
-        <TabsList className="grid grid-cols-5 w-full sm:w-auto">
-          <TabsTrigger value="process">처리</TabsTrigger>
+        <TabsList className="grid grid-cols-6 w-full sm:w-auto">
+          <TabsTrigger value="process">클릭수 데이터 처리</TabsTrigger>
+          <TabsTrigger value="ep-data">EP데이터 처리</TabsTrigger>
           <TabsTrigger value="duplicate">중복 검색기</TabsTrigger>
           <TabsTrigger value="keywords">키워드 제목</TabsTrigger>
           <TabsTrigger value="settings">설정</TabsTrigger>
@@ -97,6 +99,13 @@ export default function Home() {
               />
             </div>
           </div>
+              </TabsContent>
+
+              <TabsContent value="ep-data" className="space-y-4">
+                <EPDataProcessor 
+                  onFileSelect={handleFileSelect}
+                  isProcessing={isProcessing}
+                />
               </TabsContent>
 
               <TabsContent value="duplicate">

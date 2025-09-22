@@ -25,11 +25,11 @@ export async function POST(request: NextRequest) {
       console.error('EP 데이터 검색 오류:', epError)
     }
 
-    // 삭제된 항목에서 검색
+    // 삭제된 항목에서 검색 (original_data JSONB에서 검색)
     const { data: deletedData, error: deletedError } = await supabase
       .from('deleted_items')
-      .select('id, title, city, created_at')
-      .or(`title.ilike.%${searchTerm}%,title.ilike.${searchTerm}%`)
+      .select('id, original_id, original_data, created_at')
+      .or(`original_data->>title.ilike.%${searchTerm}%,original_data->>title.ilike.${searchTerm}%`)
       .limit(50)
 
     if (deletedError) {
@@ -66,13 +66,17 @@ export async function POST(request: NextRequest) {
     // 삭제된 항목 결과 처리
     if (deletedData) {
       deletedData.forEach(item => {
-        const isExactMatch = item.title.toLowerCase() === searchTerm.toLowerCase()
-        const isPartialMatch = item.title.toLowerCase().includes(searchTerm.toLowerCase())
+        const originalData = item.original_data as any
+        const title = originalData?.title || ''
+        const city = originalData?.city || '알 수 없음'
+        
+        const isExactMatch = title.toLowerCase() === searchTerm.toLowerCase()
+        const isPartialMatch = title.toLowerCase().includes(searchTerm.toLowerCase())
         
         results.push({
-          id: item.id,
-          title: item.title,
-          city: item.city || '알 수 없음',
+          id: item.original_id, // original_id 사용
+          title: title,
+          city: city,
           type: 'deleted_items',
           created_at: item.created_at,
           match_type: isExactMatch ? 'exact' : (isPartialMatch ? 'partial' : 'partial')
