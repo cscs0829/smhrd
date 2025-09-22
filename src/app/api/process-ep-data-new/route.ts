@@ -104,19 +104,79 @@ export async function POST(request: NextRequest) {
           }
         }
       }
+
+      // 추가: itemsToAdd의 제목도 존재 확인. 제목이 DB에 하나라도 존재하면 unchanged로 이동
+      const rawTitleList = Array.from(new Set(
+        (comparisonResult.itemsToAdd || [])
+          .map((it) => (it.title != null ? String(it.title) : null))
+          .filter((v): v is string => Boolean(v))
+      ))
+      for (let i = 0; i < rawTitleList.length; i += chunkSize) {
+        const chunk = rawTitleList.slice(i, i + chunkSize)
+        const { data: hitTitle, error: hitTitleErr } = await supabase
+          .from('ep_data')
+          .select('title')
+          .in('title', chunk)
+        if (hitTitleErr) {
+          console.error('DB 제목 존재 확인 오류:', hitTitleErr)
+          continue
+        }
+        if (hitTitle) {
+          for (const r of hitTitle as Array<{ title: string | null }>) {
+            const t = r.title
+            if (!t) continue
+            // 제목 존재 표시를 위해 정규화된 제목 세트를 구성
+            const tNorm = ((): string | null => {
+              const sval = String(t)
+                .replace(/[\u200B-\u200D\uFEFF]/g, '')
+                .normalize('NFKC')
+                .replace(/[\p{P}\p{S}]+/gu, ' ')
+                .replace(/\s+/g, ' ')
+                .trim()
+              return sval ? sval.normalize('NFC').toLowerCase() : null
+            })()
+            if (tNorm) existingTitle.add(tNorm)
+          }
+        }
+      }
     }
     if (presentInDb.size > 0) {
       const itemsToAddFinal = comparisonResult.itemsToAdd.filter((item) => {
         const id = item.id ? String(item.id) : null
         if (!id) return true
         const idNorm = normalizeIdForGuard(id)
-        return !(presentInDb.has(id) || (idNorm ? presentInDbNormalized.has(idNorm) : false))
+        const tNorm = ((): string | null => {
+          if (item.title == null) return null
+          const sval = String(item.title)
+            .replace(/[\u200B-\u200D\uFEFF]/g, '')
+            .normalize('NFKC')
+            .replace(/[\p{P}\p{S}]+/gu, ' ')
+            .replace(/\s+/g, ' ')
+            .trim()
+          return sval ? sval.normalize('NFC').toLowerCase() : null
+        })()
+        const existsById = presentInDb.has(id) || (idNorm ? presentInDbNormalized.has(idNorm) : false)
+        const existsByTitle = tNorm ? existingTitle.has(tNorm) : false
+        return !(existsById || existsByTitle)
       })
       const movedToUnchanged = comparisonResult.itemsToAdd.filter((item) => {
         const id = item.id ? String(item.id) : null
-        if (!id) return false
+        // 제목 또는 ID 어느 한쪽만 매칭되어도 unchanged로 이동
+        const tNorm = ((): string | null => {
+          if (item.title == null) return null
+          const sval = String(item.title)
+            .replace(/[\u200B-\u200D\uFEFF]/g, '')
+            .normalize('NFKC')
+            .replace(/[\p{P}\p{S}]+/gu, ' ')
+            .replace(/\s+/g, ' ')
+            .trim()
+          return sval ? sval.normalize('NFC').toLowerCase() : null
+        })()
+        if (!id && !tNorm) return false
         const idNorm = normalizeIdForGuard(id)
-        return presentInDb.has(id) || (idNorm ? presentInDbNormalized.has(idNorm) : false)
+        const existsById = id ? (presentInDb.has(id) || (idNorm ? presentInDbNormalized.has(idNorm) : false)) : false
+        const existsByTitle = tNorm ? existingTitle.has(tNorm) : false
+        return existsById || existsByTitle
       })
       const unchangedFinal = [...comparisonResult.unchangedItems, ...movedToUnchanged]
       comparisonResult = {
