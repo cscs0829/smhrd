@@ -14,6 +14,8 @@ import { downloadFile, processFile } from '@/lib/api'
 import { getRecommendedModel } from '@/lib/ai-models'
 import { ApiKeyManager } from '@/components/features/ApiKeyManager'
 import { EPDataProcessor } from '@/components/features/EPDataProcessor'
+import { ClickDataProcessor } from '@/components/features/ClickDataProcessor'
+import { EPDataProcessorNew } from '@/components/features/EPDataProcessorNew'
 
 export default function Home() {
   const [file, setFile] = useState<File | null>(null)
@@ -73,36 +75,14 @@ export default function Home() {
         </TabsList>
 
         <TabsContent value="process" className="space-y-4">
-          <div className="flex flex-col md:flex-row gap-4">
-            <div className="flex-1 space-y-4">
-              <AttachModal onFileSelect={handleFileSelect} isProcessing={isProcessing} />
-              <FileUpload onFileSelect={handleFileSelect} isProcessing={isProcessing} />
-              <ProcessButton 
-                onProcess={handleProcess}
-                onDownload={handleDownload}
-                isProcessing={isProcessing}
-                hasFile={!!file}
-                result={result}
-              />
-            </div>
-
-            <div className="w-full md:w-[380px]">
-              <AIModelSelector
-                selectedModel={selectedModel}
-                onModelChange={setSelectedModel}
-                selectedApiKeyId={selectedApiKeyId}
-                onApiKeyChange={setSelectedApiKeyId}
-                temperature={temperature}
-                onTemperatureChange={setTemperature}
-                maxTokens={maxTokens}
-                onMaxTokensChange={setMaxTokens}
-              />
-            </div>
-          </div>
+          <ClickDataProcessor 
+            onFileSelect={handleFileSelect}
+            isProcessing={isProcessing}
+          />
               </TabsContent>
 
               <TabsContent value="ep-data" className="space-y-4">
-                <EPDataProcessor 
+                <EPDataProcessorNew 
                   onFileSelect={handleFileSelect}
                   isProcessing={isProcessing}
                 />
