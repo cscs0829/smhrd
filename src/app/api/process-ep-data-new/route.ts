@@ -71,12 +71,12 @@ export async function POST(request: NextRequest) {
     }
     const collectedExistingIdSet = new Set<string>()
     for (const row of existingData) {
-      const oid = normalizeStr((row as any).original_id)
+      const oid = normalizeStr(row.original_id)
       if (oid) collectedExistingIdSet.add(oid)
     }
     const excelIdList: string[] = []
     for (const row of jsonData) {
-      const nid = normalizeStr((row as any).id)
+      const nid = normalizeStr(row.id)
       if (nid) excelIdList.push(nid)
     }
     const missingIds: string[] = []
