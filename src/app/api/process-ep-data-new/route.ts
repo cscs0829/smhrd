@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
+
+export const dynamic = 'force-dynamic'
 import * as XLSX from 'xlsx'
 import { getSupabaseAdmin } from '@/lib/supabase'
 
@@ -49,7 +51,7 @@ export async function POST(request: NextRequest) {
       console.log('[process-ep-data-new] sample itemsToAdd ids:', comparisonResult.itemsToAdd.slice(0, 5).map(i => i.id))
     }
     
-    return NextResponse.json({
+    const body = {
       ...comparisonResult,
       // 최상위에 디버그 정보 노출 (일부 뷰어에서 _prefix 숨김 방지)
       excel_count: jsonData.length,
@@ -58,6 +60,15 @@ export async function POST(request: NextRequest) {
       to_remove: comparisonResult.itemsToRemove.length,
       unchanged_count: comparisonResult.unchangedItems.length,
       sample_to_add: comparisonResult.itemsToAdd.slice(0, 5).map(i => ({ id: i.id, title: i.title }))
+    }
+    return new NextResponse(JSON.stringify(body), {
+      status: 200,
+      headers: {
+        'Content-Type': 'application/json',
+        'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0'
+      }
     })
   } catch (error) {
     console.error('EP 데이터 처리 오류:', error)
