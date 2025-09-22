@@ -47,7 +47,7 @@ async function getExistingEPData() {
   const [activeData, deletedData] = await Promise.all([
     supabase
       .from('ep_data')
-      .select('id, original_id, title, created_at')
+      .select('id, title, created_at')
       .order('created_at', { ascending: false }),
     supabase
       .from('deleted_items')
@@ -63,10 +63,9 @@ async function getExistingEPData() {
     console.error('삭제된 데이터 조회 오류:', deletedData.error)
   }
   
-  // 삭제된 데이터에서 original_id와 title 추출
+  // 삭제된 데이터에서 title 추출
   const deletedItemsWithTitle = (deletedData.data || []).map((item: { original_id: string; original_data: { title?: string; id?: string }; created_at: string }) => ({
     id: item.original_data?.id || '', // UUID
-    original_id: item.original_id,
     title: item.original_data?.title || '',
     created_at: item.created_at,
     deleted_at: item.created_at // 삭제된 시점
@@ -84,7 +83,7 @@ async function getExistingEPData() {
   }
 }
 
-function compareEPData(newData: Array<{ id: string; title?: string; [key: string]: unknown }>, existingData: Array<{ id: string; original_id?: string; title?: string; [key: string]: unknown }>) {
+function compareEPData(newData: Array<{ id: string; title?: string; [key: string]: unknown }>, existingData: Array<{ id: string; title?: string; [key: string]: unknown }>) {
   // 제목 기반으로만 비교 (단순화)
   const existingTitleMap = new Map()
   existingData.forEach(item => {

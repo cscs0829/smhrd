@@ -20,11 +20,11 @@ export async function POST(request: NextRequest) {
     const worksheet = workbook.Sheets[sheetName]
     const jsonData = XLSX.utils.sheet_to_json(worksheet)
     
-    // 데이터베이스에서 기존 데이터 가져오기 (original_id 포함)
+    // 데이터베이스에서 기존 데이터 가져오기
     const supabase = getSupabaseClient()
     const { data: existingData, error: epError } = await supabase
       .from('ep_data')
-      .select('id, original_id, title, created_at')
+      .select('id, title, created_at')
       .order('created_at', { ascending: false })
 
     if (epError) {
@@ -45,7 +45,7 @@ export async function POST(request: NextRequest) {
   }
 }
 
-function compareEPData(newData: Array<{ id: string; title?: string; [key: string]: unknown }>, existingData: Array<{ id: string; original_id?: string; title?: string; [key: string]: unknown }>) {
+function compareEPData(newData: Array<{ id: string; title?: string; [key: string]: unknown }>, existingData: Array<{ id: string; title?: string; [key: string]: unknown }>) {
   // 제목 기반으로만 비교 (단순화)
   const existingTitleMap = new Map()
   existingData.forEach(item => {
