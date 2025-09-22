@@ -72,6 +72,17 @@ export async function POST(request: NextRequest) {
       const v = normalizeId(s)
       return v ? v.toLowerCase() : null
     }
+    const normalizeIdUltraLoose = (s: unknown): string | null => {
+      if (s == null) return null
+      const str = String(s)
+        .replace(/[\u200B-\u200D\uFEFF]/g, '')
+        .normalize('NFKC')
+        .replace(/[^0-9A-Za-z]+/g, '_')
+        .replace(/_+/g, '_')
+        .trim()
+      if (!str) return null
+      return str.normalize('NFC').toLowerCase()
+    }
     const normalizeTitle = (s: unknown): string | null => {
       if (s == null) return null
       const str = String(s)
@@ -117,6 +128,7 @@ export async function POST(request: NextRequest) {
     const whyToAdd = (comparisonResult.itemsToAdd || []).map((item) => {
       const nid = normalizeId(item.id)
       const nidLoose = normalizeIdLoose(item.id)
+      const nidUltra = normalizeIdUltraLoose(item.id)
       const t = normalizeTitle(item.title)
       const titleMatch = t ? existingTitle.has(t) : false
       const idExactMatch = nid ? existingIdExact.has(nid) : false
@@ -126,7 +138,9 @@ export async function POST(request: NextRequest) {
         title: item.title ?? null,
         title_match: titleMatch,
         id_exact_match: idExactMatch,
-        id_loose_match: idLooseMatch
+        id_loose_match: idLooseMatch,
+        id_ultra_match: nidUltra ? (existingIdExact.has(nidUltra) || existingIdLoose.has(nidUltra)) : false,
+        excel_id_normalized_ultra: nidUltra
       }
     })
 
@@ -187,8 +201,9 @@ function normalizeExcelRows(rows: Array<Record<string, unknown>>): Array<{ id?: 
   const headerMap: Record<string, string> = {
     // id 계열
     'id': 'id', 'ID': 'id', '상품id': 'id', '상품ID': 'id', '상품Id': 'id', '상품 id': 'id',
+    '상품코드': 'id', '상품 코드': 'id', 'excel id': 'id', 'Excel ID': 'id', 'original id': 'id', 'Original ID': 'id', '원본ID': 'id',
     // title 계열
-    'title': 'title', 'TITLE': 'title', '제목': 'title', '상품명': 'title', '상품 명': 'title'
+    'title': 'title', 'TITLE': 'title', '제목': 'title', '상품명': 'title', '상품 명': 'title', '상품명(제목)': 'title'
   }
 
   const normalizeKey = (key: string): string => {
@@ -211,6 +226,13 @@ function normalizeExcelRows(rows: Array<Record<string, unknown>>): Array<{ id?: 
       const nv = normalizeValue(v)
       normalized[nk] = nv
     })
+    // 빈 문자열은 null 처리하여 비교 시 잡음 제거
+    if (typeof normalized['id'] === 'string' && (normalized['id'] as string).trim() === '') {
+      delete normalized['id']
+    }
+    if (typeof normalized['title'] === 'string' && (normalized['title'] as string).trim() === '') {
+      delete normalized['title']
+    }
     return normalized as { id?: string; title?: string; [key: string]: unknown }
   })
 }
