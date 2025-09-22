@@ -99,6 +99,15 @@ export async function POST(request: NextRequest) {
     const existingIdExact = new Set<string>(comparisonResult.debug_existing_id_exact || [])
     const existingIdLoose = new Set<string>(comparisonResult.debug_existing_id_loose || [])
     const existingTitle = new Set<string>(comparisonResult.debug_existing_title || [])
+    // 기존 데이터의 (ultra 정규화된 original_id) -> (정규화된 title) 맵 구성
+    const dbUltraIdToNormTitle = new Map<string, string>()
+    for (const row of existingData) {
+      const oidUltra = normalizeIdUltraLoose(row.original_id)
+      const tNorm = normalizeTitle(row.title)
+      if (oidUltra && tNorm) {
+        if (!dbUltraIdToNormTitle.has(oidUltra)) dbUltraIdToNormTitle.set(oidUltra, tNorm)
+      }
+    }
 
     const excelIdExactList: string[] = comparisonResult.debug_new_id_exact || []
     const excelIdLooseList: string[] = comparisonResult.debug_new_id_loose || []
@@ -118,6 +127,8 @@ export async function POST(request: NextRequest) {
       const titleMatch = t ? existingTitle.has(t) : false
       const idExactMatch = nid ? existingIdExact.has(nid) : false
       const idLooseMatch = nidLoose ? existingIdLoose.has(nidLoose) : false
+      const dbTitleForId = nidUltra ? (dbUltraIdToNormTitle.get(nidUltra) || null) : null
+      const titleEqual = t && dbTitleForId ? t === dbTitleForId : null
       return {
         id: item.id ?? null,
         title: item.title ?? null,
@@ -125,7 +136,10 @@ export async function POST(request: NextRequest) {
         id_exact_match: idExactMatch,
         id_loose_match: idLooseMatch,
         id_ultra_match: nidUltra ? (existingIdExact.has(nidUltra) || existingIdLoose.has(nidUltra)) : false,
-        excel_id_normalized_ultra: nidUltra
+        excel_id_normalized_ultra: nidUltra,
+        excel_title_normalized: t ?? null,
+        db_title_normalized_for_id: dbTitleForId,
+        title_equal: titleEqual
       }
     })
 
@@ -302,19 +316,16 @@ function compareEPData(
     const t = normalizeTitle(item.title)
 
     // 제목 기준 우선 판단
-    if (t) {
-      if (existingTitleSet.has(t)) return false
-    }
-    // 제목으로 매칭이 안 될 때만 ID 보조 판단
+    if (t && existingTitleSet.has(t)) return false
+    // ID로만 동일 판단을 허용 (요청 옵션) - exact/loose/ultra 중 하나라도 매칭되면 추가 아님
     if (nid) {
       const nidLoose = normalizeIdLoose(item.id)
       const nidUltra = normalizeIdUltraLoose(item.id)
-      const hasExact = existingOriginalIdSet.has(nid)
-      const hasLoose = nidLoose ? existingOriginalIdLooseSet.has(nidLoose) : false
-      const hasUltra = nidUltra ? existingOriginalIdUltraLooseSet.has(nidUltra) : false
-      if (hasExact || hasLoose || hasUltra) return false
+      if (existingOriginalIdSet.has(nid)) return false
+      if (nidLoose && existingOriginalIdLooseSet.has(nidLoose)) return false
+      if (nidUltra && existingOriginalIdUltraLooseSet.has(nidUltra)) return false
     }
-    // 제목도 없고 ID도 없으면 추가 대상으로 간주
+    // 제목/ID 모두 불일치 → 추가 대상
     return true
   })
 
@@ -341,13 +352,15 @@ function compareEPData(
     const nid = normalizeId(item.id)
     const t = normalizeTitle(item.title)
 
-    // 제목으로 먼저 동일 여부 판단
+    // 제목으로 동일
     if (t && existingTitleSet.has(t)) return true
-    // 제목으로 판단되지 않을 때만 ID로 동일 여부 판단
+    // ID로 동일 (요청 옵션: ID만으로 unchanged 허용)
     if (nid) {
       const nidLoose = normalizeIdLoose(item.id)
       const nidUltra = normalizeIdUltraLoose(item.id)
-      if (existingOriginalIdSet.has(nid) || (nidLoose ? existingOriginalIdLooseSet.has(nidLoose) : false) || (nidUltra ? existingOriginalIdUltraLooseSet.has(nidUltra) : false)) return true
+      if (existingOriginalIdSet.has(nid)) return true
+      if (nidLoose && existingOriginalIdLooseSet.has(nidLoose)) return true
+      if (nidUltra && existingOriginalIdUltraLooseSet.has(nidUltra)) return true
     }
     return false
   })
