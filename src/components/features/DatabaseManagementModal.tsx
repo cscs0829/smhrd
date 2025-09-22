@@ -866,7 +866,7 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
       }
     },
 
-    // 테이블 페이퍼에 포털 컨테이너 설정 - 개선된 버전
+    // 테이블 페이퍼에 포털 컨테이너 설정 - z-index 문제 해결
     muiTablePaperProps: {
       elevation: 0,
       sx: {
@@ -1019,6 +1019,15 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
       const style = document.createElement('style')
       style.id = 'mui-select-fix'
       style.textContent = `
+        /* 모달 z-index 최우선 설정 - 모든 모달이 최상위에 오도록 */
+        .MuiDialog-root {
+          z-index: 999999 !important;
+        }
+        
+        .MuiBackdrop-root {
+          z-index: 999998 !important;
+        }
+        
         /* 편집/생성 모달 스크롤 스타일 - 개선된 반응형 */
         .MuiDialog-paper {
           width: 95vw !important;
@@ -1030,6 +1039,8 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
           flex-direction: column !important;
           border-radius: 12px !important;
           background-color: ${resolvedTheme === 'dark' ? '#1f2937' : '#ffffff'} !important;
+          z-index: 999999 !important;
+          position: relative !important;
         }
         
         /* Material React Table 편집/생성 모달 크기 조정 - 반응형 */
@@ -1038,6 +1049,7 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
           max-width: 1400px !important;
           height: 85vh !important;
           max-height: 900px !important;
+          z-index: 999999 !important;
         }
         
         /* Material React Table 모달 컨테이너 - 반응형 */
@@ -1046,6 +1058,7 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
           max-width: 1400px !important;
           height: 85vh !important;
           max-height: 900px !important;
+          z-index: 999999 !important;
         }
         
         /* 모바일 대응 */
@@ -1061,20 +1074,43 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
           }
         }
         
+        /* 큰 화면에서 모달 크기 증가 */
+        @media (min-width: 1920px) {
+          .MuiDialog-paper,
+          .MuiDialog-root .MuiDialog-paper,
+          .MuiDialog-root[role="dialog"] .MuiDialog-paper {
+            width: 90vw !important;
+            max-width: 1600px !important;
+            height: 80vh !important;
+            max-height: 1000px !important;
+          }
+        }
+        
         .MuiDialogContent-root {
           overflow: auto !important;
           padding: 24px !important;
-          max-height: calc(85vh - 140px) !important;
+          max-height: calc(85vh - 160px) !important;
           flex: 1 !important;
           /* 부드러운 스크롤 */
           scroll-behavior: smooth !important;
+          /* 스크롤바 스타일링 */
+          scrollbar-width: thin !important;
+          scrollbar-color: ${resolvedTheme === 'dark' ? '#6b7280 #374151' : '#cbd5e1 #f1f5f9'} !important;
         }
         
         /* 모바일에서 컨텐츠 영역 조정 */
         @media (max-width: 768px) {
           .MuiDialogContent-root {
             padding: 16px !important;
-            max-height: calc(90vh - 120px) !important;
+            max-height: calc(90vh - 140px) !important;
+          }
+        }
+        
+        /* 큰 화면에서 컨텐츠 영역 조정 */
+        @media (min-width: 1920px) {
+          .MuiDialogContent-root {
+            max-height: calc(80vh - 180px) !important;
+            padding: 32px !important;
           }
         }
         
@@ -1275,6 +1311,34 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
           z-index: 10 !important;
         }
         
+        /* 입력 필드 포커스 및 상호작용 보장 */
+        .MuiTextField-root, .MuiInputBase-root, .MuiOutlinedInput-root,
+        .MuiSelect-root, .MuiFormControl-root {
+          pointer-events: auto !important;
+          z-index: 1000 !important;
+          position: relative !important;
+        }
+        
+        .MuiTextField-root input, .MuiInputBase-input, .MuiOutlinedInput-input {
+          pointer-events: auto !important;
+          z-index: 1001 !important;
+          position: relative !important;
+        }
+        
+        /* Select 드롭다운 z-index */
+        .MuiSelect-select {
+          pointer-events: auto !important;
+          z-index: 1001 !important;
+        }
+        
+        .MuiMenu-root, .MuiPopover-root {
+          z-index: 999999 !important;
+        }
+        
+        .MuiMenu-paper, .MuiPopover-paper {
+          z-index: 999999 !important;
+        }
+        
         /* 테이블 페이지네이션 전체 영역 */
         .MuiTablePagination-root {
           position: relative !important;
@@ -1415,7 +1479,7 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
         size="full"
         className="w-[95vw] h-[90vh] max-w-none max-h-none p-0 relative z-50"
         onInteractOutside={(e) => {
-          // 페이지네이션 셀렉트 박스 및 MUI 컴포넌트 클릭 시 모달이 닫히지 않도록 방지
+          // 모든 MUI 컴포넌트 클릭 시 모달이 닫히지 않도록 방지
           const target = e.target as HTMLElement
           if (target.closest('.MuiSelect-root') ||
             target.closest('.MuiMenu-root') ||
@@ -1423,9 +1487,15 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
             target.closest('.MuiMenuItem-root') ||
             target.closest('.MuiTablePagination-select') ||
             target.closest('.MuiInputBase-root') ||
+            target.closest('.MuiTextField-root') ||
+            target.closest('.MuiFormControl-root') ||
             target.closest('.MuiIconButton-root') ||
+            target.closest('.MuiButton-root') ||
             target.closest('.MuiTablePagination-toolbar') ||
             target.closest('.MuiTablePagination-actions') ||
+            target.closest('.MuiDialog-root') ||
+            target.closest('.MuiDialog-paper') ||
+            target.closest('.MuiDialogContent-root') ||
             target.closest('[role="listbox"]') ||
             target.closest('[role="option"]') ||
             target.closest('[role="presentation"]') ||
