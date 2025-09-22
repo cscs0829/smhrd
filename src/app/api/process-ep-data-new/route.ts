@@ -144,9 +144,12 @@ function compareEPData(
 ) {
   const normalizeStr = (s: unknown): string | null => {
     if (!s) return null
-    const str = String(s).trim()
+    const str = String(s)
+      .replace(/[\u200B-\u200D\uFEFF]/g, '') // zero-width 제거
+      .replace(/\s+/g, ' ') // 다중 공백 축약
+      .trim()
     if (!str) return null
-    return str.toLowerCase()
+    return str.normalize('NFC').toLowerCase()
   }
 
   // 기존 데이터 인덱스 구성
