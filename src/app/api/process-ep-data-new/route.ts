@@ -38,8 +38,27 @@ export async function POST(request: NextRequest) {
     
     // 데이터 비교 로직
     const comparisonResult = compareEPData(jsonData, existingData || [])
+
+    // 디버그: 세트/카운트 로깅 및 진단 정보 동봉
+    console.log('[process-ep-data-new] excel_count:', jsonData.length, 'db_count:', existingData?.length || 0,
+      'toAdd:', comparisonResult.itemsToAdd.length,
+      'toRemove:', comparisonResult.itemsToRemove.length,
+      'unchanged:', comparisonResult.unchangedItems.length)
+    if (comparisonResult.itemsToAdd.length > 0) {
+      console.log('[process-ep-data-new] sample itemsToAdd ids:', comparisonResult.itemsToAdd.slice(0, 5).map(i => i.id))
+    }
     
-    return NextResponse.json(comparisonResult)
+    return NextResponse.json({
+      ...comparisonResult,
+      _debug: {
+        excel_count: jsonData.length,
+        db_count: existingData?.length || 0,
+        to_add: comparisonResult.itemsToAdd.length,
+        to_remove: comparisonResult.itemsToRemove.length,
+        unchanged: comparisonResult.unchangedItems.length,
+        sample_to_add: comparisonResult.itemsToAdd.slice(0, 5).map(i => ({ id: i.id, title: i.title }))
+      }
+    })
   } catch (error) {
     console.error('EP 데이터 처리 오류:', error)
     return NextResponse.json(
