@@ -28,67 +28,67 @@ const TABLE_SCHEMAS = {
   ep_data: {
     displayName: 'EP 데이터',
     columns: [
-      { key: 'id', label: 'ID', type: 'text', editable: false },
-      { key: 'title', label: '제목', type: 'text', editable: true },
-      { key: 'price_pc', label: 'PC 가격', type: 'number', editable: true },
-      { key: 'benefit_price', label: '혜택 가격', type: 'number', editable: true },
-      { key: 'normal_price', label: '정가', type: 'number', editable: true },
-      { key: 'link', label: '링크', type: 'url', editable: true },
-      { key: 'mobile_link', label: '모바일 링크', type: 'url', editable: true },
-      { key: 'image_link', label: '이미지 링크', type: 'url', editable: true },
-      { key: 'add_image_link', label: '추가 이미지 링크', type: 'url', editable: true },
-      { key: 'video_url', label: '비디오 URL', type: 'url', editable: true },
-      { key: 'category_name1', label: '카테고리1', type: 'text', editable: true },
-      { key: 'category_name2', label: '카테고리2', type: 'text', editable: true },
-      { key: 'category_name3', label: '카테고리3', type: 'text', editable: true },
-      { key: 'category_name4', label: '카테고리4', type: 'text', editable: true },
-      { key: 'brand', label: '브랜드', type: 'text', editable: true },
-      { key: 'maker', label: '제조사', type: 'text', editable: true },
-      { key: 'origin', label: '원산지', type: 'text', editable: true },
-      { key: 'age_group', label: '연령대', type: 'text', editable: true },
-      { key: 'gender', label: '성별', type: 'text', editable: true },
-      { key: 'city', label: '도시', type: 'text', editable: true },
-      { key: 'created_at', label: '생성일', type: 'datetime', editable: false },
-      { key: 'updated_at', label: '수정일', type: 'datetime', editable: false }
+      { key: 'id', label: 'ID', type: 'text', editable: false, required: false },
+      { key: 'title', label: '제목', type: 'text', editable: true, required: true },
+      { key: 'price_pc', label: 'PC 가격', type: 'number', editable: true, required: false },
+      { key: 'benefit_price', label: '혜택 가격', type: 'number', editable: true, required: false },
+      { key: 'normal_price', label: '정가', type: 'number', editable: true, required: false },
+      { key: 'link', label: '링크', type: 'url', editable: true, required: false },
+      { key: 'mobile_link', label: '모바일 링크', type: 'url', editable: true, required: false },
+      { key: 'image_link', label: '이미지 링크', type: 'url', editable: true, required: false },
+      { key: 'add_image_link', label: '추가 이미지 링크', type: 'url', editable: true, required: false },
+      { key: 'video_url', label: '비디오 URL', type: 'url', editable: true, required: false },
+      { key: 'category_name1', label: '카테고리1', type: 'text', editable: true, required: false },
+      { key: 'category_name2', label: '카테고리2', type: 'text', editable: true, required: false },
+      { key: 'category_name3', label: '카테고리3', type: 'text', editable: true, required: false },
+      { key: 'category_name4', label: '카테고리4', type: 'text', editable: true, required: false },
+      { key: 'brand', label: '브랜드', type: 'text', editable: true, required: false },
+      { key: 'maker', label: '제조사', type: 'text', editable: true, required: false },
+      { key: 'origin', label: '원산지', type: 'text', editable: true, required: false },
+      { key: 'age_group', label: '연령대', type: 'text', editable: true, required: false },
+      { key: 'gender', label: '성별', type: 'text', editable: true, required: false },
+      { key: 'city', label: '도시', type: 'text', editable: true, required: false },
+      { key: 'created_at', label: '생성일', type: 'datetime', editable: false, required: false },
+      { key: 'updated_at', label: '수정일', type: 'datetime', editable: false, required: false }
     ]
   },
   city_images: {
     displayName: '도시 이미지',
     columns: [
-      { key: 'id', label: 'ID', type: 'number', editable: false },
-      { key: 'city', label: '도시', type: 'text', editable: true },
-      { key: 'image_link', label: '이미지 링크', type: 'url', editable: true },
-      { key: 'is_main_image', label: '메인 이미지', type: 'boolean', editable: true },
-      { key: 'video_url', label: '비디오 URL', type: 'url', editable: true },
-      { key: 'created_at', label: '생성일', type: 'datetime', editable: false }
+      { key: 'id', label: 'ID', type: 'number', editable: false, required: false },
+      { key: 'city', label: '도시', type: 'text', editable: true, required: true },
+      { key: 'image_link', label: '이미지 링크', type: 'url', editable: true, required: true },
+      { key: 'is_main_image', label: '메인 이미지', type: 'boolean', editable: true, required: false },
+      { key: 'video_url', label: '비디오 URL', type: 'url', editable: true, required: false },
+      { key: 'created_at', label: '생성일', type: 'datetime', editable: false, required: false }
     ]
   },
   titles: {
     displayName: '제목',
     columns: [
-      { key: 'id', label: 'ID', type: 'number', editable: false },
-      { key: 'title', label: '제목', type: 'text', editable: true },
-      { key: 'city', label: '도시', type: 'text', editable: true },
-      { key: 'created_at', label: '생성일', type: 'datetime', editable: false }
+      { key: 'id', label: 'ID', type: 'number', editable: false, required: false },
+      { key: 'title', label: '제목', type: 'text', editable: true, required: true },
+      { key: 'city', label: '도시', type: 'text', editable: true, required: true },
+      { key: 'created_at', label: '생성일', type: 'datetime', editable: false, required: false }
     ]
   },
   api_keys: {
     displayName: 'API 키',
     columns: [
-      { key: 'id', label: 'ID', type: 'number', editable: false },
-      { key: 'provider', label: '제공업체', type: 'select', editable: true, options: ['openai', 'anthropic', 'google'] },
-      { key: 'name', label: '이름', type: 'text', editable: true },
-      { key: 'is_active', label: '활성 상태', type: 'boolean', editable: true },
-      { key: 'created_at', label: '생성일', type: 'datetime', editable: false }
+      { key: 'id', label: 'ID', type: 'number', editable: false, required: false },
+      { key: 'provider', label: '제공업체', type: 'select', editable: true, required: true, options: ['openai', 'anthropic', 'google'] },
+      { key: 'name', label: '이름', type: 'text', editable: true, required: true },
+      { key: 'is_active', label: '활성 상태', type: 'boolean', editable: true, required: false },
+      { key: 'created_at', label: '생성일', type: 'datetime', editable: false, required: false }
     ]
   },
   deleted_items: {
     displayName: '삭제된 항목',
     columns: [
-      { key: 'id', label: 'ID', type: 'text', editable: false },
-      { key: 'original_data', label: '원본 데이터', type: 'json', editable: false },
-      { key: 'deleted_at', label: '삭제일', type: 'datetime', editable: false },
-      { key: 'reason', label: '삭제 사유', type: 'text', editable: true }
+      { key: 'id', label: 'ID', type: 'text', editable: false, required: false },
+      { key: 'original_data', label: '원본 데이터', type: 'json', editable: false, required: false },
+      { key: 'deleted_at', label: '삭제일', type: 'datetime', editable: false, required: false },
+      { key: 'reason', label: '삭제 사유', type: 'text', editable: true, required: false }
     ]
   }
 }
@@ -168,6 +168,23 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { id, created_at, updated_at, ...newData } = values
 
+      // 필수 필드 검증
+      const requiredFields = tableSchema?.columns
+        .filter(col => col.required && col.editable && col.key !== 'id' && !col.key.includes('_at'))
+        .filter(col => {
+          const value = newData[col.key]
+          return value === undefined || value === null || value === ''
+        })
+
+      if (requiredFields && requiredFields.length > 0) {
+        const missingFields = requiredFields.map(field => field.label).join(', ')
+        toast.error(`다음 필수 필드를 입력해주세요: ${missingFields}`)
+        return
+      }
+
+      // 로딩 상태 표시
+      toast.loading('새 데이터를 저장하는 중...', { id: 'create-data' })
+
       const response = await fetch(`/api/admin/table-data?table=${tableName}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -177,16 +194,16 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
       const result = await response.json()
 
       if (result.success) {
-        toast.success('새 데이터가 추가되었습니다')
+        toast.success(`${tableSchema?.displayName || '데이터'}가 성공적으로 추가되었습니다`, { id: 'create-data' })
         loadData()
       } else {
-        toast.error(result.error || '추가에 실패했습니다')
+        toast.error(result.error || '데이터 추가에 실패했습니다', { id: 'create-data' })
       }
     } catch (error) {
       console.error('데이터 생성 오류:', error)
-      toast.error('추가 중 오류가 발생했습니다')
+      toast.error('데이터 추가 중 오류가 발생했습니다', { id: 'create-data' })
     }
-  }, [tableName, loadData])
+  }, [tableName, loadData, tableSchema])
 
   // 데이터 삭제
   const deleteData = useCallback(async (id: string | number) => {
@@ -234,9 +251,10 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
       // 편집 컴포넌트 커스터마이징
       muiEditTextFieldProps: () => ({
         type: col.type === 'number' ? 'number' : col.type === 'password' ? 'password' : 'text',
-        required: col.key !== 'id' && !col.key.includes('_at'),
+        required: col.required || false,
         variant: 'outlined' as const,
         size: 'small' as const,
+        label: col.required ? `${col.label} *` : col.label,
       }),
       // boolean과 select 타입을 위한 커스텀 편집 컴포넌트
       Edit: col.type === 'boolean' ? ({ cell, column, row, table }) => (
@@ -260,28 +278,33 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
           </SelectContent>
         </Select>
       ) : col.type === 'select' && 'options' in col && col.options ? ({ cell, column, row, table }) => (
-        <Select
-          value={String(cell.getValue() || '')}
-          onValueChange={(value) => {
-            row._valuesCache[column.id] = value
-            if (table.getState().creatingRow) {
-              table.setCreatingRow(row)
-            } else if (table.getState().editingRow) {
-              table.setEditingRow(row)
-            }
-          }}
-        >
-          <SelectTrigger className="w-full">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {col.options.map((option: string) => (
-              <SelectItem key={option} value={option}>
-                {option.toUpperCase()}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <div className="space-y-2">
+          <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+            {col.required ? `${col.label} *` : col.label}
+          </label>
+          <Select
+            value={String(cell.getValue() || '')}
+            onValueChange={(value) => {
+              row._valuesCache[column.id] = value
+              if (table.getState().creatingRow) {
+                table.setCreatingRow(row)
+              } else if (table.getState().editingRow) {
+                table.setEditingRow(row)
+              }
+            }}
+          >
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder={col.required ? `${col.label}를 선택하세요 *` : `${col.label}를 선택하세요`} />
+            </SelectTrigger>
+            <SelectContent>
+              {col.options.map((option: string) => (
+                <SelectItem key={option} value={option}>
+                  {option.toUpperCase()}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       ) : undefined,
       // 필터 텍스트 필드 커스터마이징
       muiFilterTextFieldProps: {
@@ -610,7 +633,8 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
                   <li>• 필수 필드(*)는 반드시 입력해야 합니다</li>
                   <li>• ID와 생성/수정일은 자동으로 설정됩니다</li>
                   <li>• URL 필드는 유효한 링크 형식으로 입력하세요</li>
-                  <li>• 데이터는 생성 버튼을 눌러야 저장됩니다</li>
+                  <li>• 숫자 필드는 숫자만 입력 가능합니다</li>
+                  <li>• 데이터는 생성 버튼을 눌러야 실제 DB에 저장됩니다</li>
                 </ul>
               </div>
             </div>

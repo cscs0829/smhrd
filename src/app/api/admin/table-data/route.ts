@@ -112,6 +112,15 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
+    
+    // 기본 데이터 검증
+    if (!body || typeof body !== 'object') {
+      return NextResponse.json({ 
+        success: false, 
+        error: '유효하지 않은 데이터입니다.' 
+      }, { status: 400 })
+    }
+
     const supabase = table === 'api_keys' || table === 'deleted_items' 
       ? getSupabaseAdmin() 
       : getSupabaseClient()
@@ -124,6 +133,43 @@ export async function POST(request: NextRequest) {
       updated_at: now
     }
 
+    // 테이블별 특별 검증
+    if (table === 'api_keys') {
+      if (!dataToInsert.provider || !dataToInsert.name) {
+        return NextResponse.json({ 
+          success: false, 
+          error: '제공업체와 이름은 필수 입력 항목입니다.' 
+        }, { status: 400 })
+      }
+    }
+
+    if (table === 'ep_data') {
+      if (!dataToInsert.title) {
+        return NextResponse.json({ 
+          success: false, 
+          error: '제목은 필수 입력 항목입니다.' 
+        }, { status: 400 })
+      }
+    }
+
+    if (table === 'city_images') {
+      if (!dataToInsert.city || !dataToInsert.image_link) {
+        return NextResponse.json({ 
+          success: false, 
+          error: '도시와 이미지 링크는 필수 입력 항목입니다.' 
+        }, { status: 400 })
+      }
+    }
+
+    if (table === 'titles') {
+      if (!dataToInsert.title || !dataToInsert.city) {
+        return NextResponse.json({ 
+          success: false, 
+          error: '제목과 도시는 필수 입력 항목입니다.' 
+        }, { status: 400 })
+      }
+    }
+
     const { data, error } = await supabase
       .from(table)
       .insert(dataToInsert)
@@ -132,16 +178,30 @@ export async function POST(request: NextRequest) {
 
     if (error) {
       console.error(`테이블 ${table} 데이터 생성 오류:`, error)
+      
+      // 구체적인 오류 메시지 제공
+      let errorMessage = '데이터 생성에 실패했습니다.'
+      
+      if (error.code === '23505') {
+        errorMessage = '중복된 데이터가 있습니다. 다른 값을 입력해주세요.'
+      } else if (error.code === '23503') {
+        errorMessage = '참조하는 데이터가 존재하지 않습니다.'
+      } else if (error.code === '23514') {
+        errorMessage = '데이터 형식이 올바르지 않습니다.'
+      } else if (error.message) {
+        errorMessage = error.message
+      }
+      
       return NextResponse.json({ 
         success: false, 
-        error: '데이터 생성에 실패했습니다.' 
+        error: errorMessage 
       }, { status: 500 })
     }
 
     return NextResponse.json({
       success: true,
       data,
-      message: '데이터가 성공적으로 생성되었습니다.'
+      message: `${table} 테이블에 데이터가 성공적으로 생성되었습니다.`
     })
 
   } catch (error: unknown) {
