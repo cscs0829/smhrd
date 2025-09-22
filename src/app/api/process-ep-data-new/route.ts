@@ -46,41 +46,34 @@ export async function POST(request: NextRequest) {
 }
 
 function compareEPData(newData: Array<{ id: string; title?: string; [key: string]: unknown }>, existingData: Array<{ id: string; title?: string; [key: string]: unknown }>) {
-  // ID와 title을 모두 고려한 비교를 위해 Map 사용
-  const existingDataMap = new Map()
+  // 제목 기반으로만 비교 (ID는 UUID로 변경되어 Excel ID와 매칭 불가)
+  const existingTitlesMap = new Map()
   existingData.forEach(item => {
-    existingDataMap.set(item.id, item)
-    // title도 키로 사용하여 중복 검사
     if (item.title) {
-      existingDataMap.set(`title_${item.title.toLowerCase().trim()}`, item)
+      existingTitlesMap.set(item.title.toLowerCase().trim(), item)
     }
   })
   
-  const newDataMap = new Map()
+  const newTitlesMap = new Map()
   newData.forEach(item => {
-    newDataMap.set(item.id, item)
     if (item.title) {
-      newDataMap.set(`title_${item.title.toLowerCase().trim()}`, item)
+      newTitlesMap.set(item.title.toLowerCase().trim(), item)
     }
   })
   
-  // 새로운 데이터 중에서 ID나 title이 기존에 없는 것들
+  // 새로운 데이터 중에서 제목이 기존에 없는 것들
   const newItems = newData.filter(item => {
-    const hasId = existingDataMap.has(item.id)
-    const hasTitle = item.title && existingDataMap.has(`title_${item.title.toLowerCase().trim()}`)
-    return !hasId && !hasTitle
+    return item.title && !existingTitlesMap.has(item.title.toLowerCase().trim())
   })
   
-  // 기존 데이터 중에서 ID가 새로운 데이터에 없는 것들 (삭제된 항목)
+  // 기존 데이터 중에서 제목이 새로운 데이터에 없는 것들 (삭제된 항목)
   const removedItems = existingData.filter(item => {
-    return !newDataMap.has(item.id)
+    return item.title && !newTitlesMap.has(item.title.toLowerCase().trim())
   })
   
-  // 기존 데이터 중에서 ID나 title이 새로운 데이터에 있는 것들
+  // 기존 데이터 중에서 제목이 새로운 데이터에 있는 것들
   const existingItems = newData.filter(item => {
-    const hasId = existingDataMap.has(item.id)
-    const hasTitle = item.title && existingDataMap.has(`title_${item.title.toLowerCase().trim()}`)
-    return hasId || hasTitle
+    return item.title && existingTitlesMap.has(item.title.toLowerCase().trim())
   })
   
   return {
