@@ -21,8 +21,8 @@ export async function POST(request: NextRequest) {
     
     // 클릭수가 0인 상품들의 상품명 추출
     const zeroClickProducts = csvData
-      .filter((row: any) => Number(row['클릭수']) === 0)
-      .map((row: any) => ({
+      .filter((row: Record<string, unknown>) => Number(row['클릭수']) === 0)
+      .map((row: Record<string, unknown>) => ({
         id: String(row['상품ID']),
         title: String(row['상품명'])
       }))

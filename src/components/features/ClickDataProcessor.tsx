@@ -10,15 +10,6 @@ import { Upload, FileSpreadsheet, CheckCircle, Trash2, Plus, AlertCircle, Downlo
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 
-interface ClickDataItem {
-  상품ID: string
-  상품명: string
-  노출수: number
-  클릭수: number
-  클릭율: number
-  CPC적용수수료: number
-  CPC클릭당수수료: number
-}
 
 interface ProcessedData {
   deletedItems: Array<{
@@ -27,7 +18,7 @@ interface ProcessedData {
     image_link: string
     add_image_link: string
     video_url: string
-    [key: string]: any
+    [key: string]: unknown
   }>
   createdItems: Array<{
     id: string
@@ -35,7 +26,7 @@ interface ProcessedData {
     image_link: string
     add_image_link: string
     video_url: string
-    [key: string]: any
+    [key: string]: unknown
   }>
   unmatchedProducts: Array<{
     id: string
@@ -56,14 +47,6 @@ export function ClickDataProcessor({ onFileSelect }: ClickDataProcessorProps) {
   const [confirmAction, setConfirmAction] = useState<'save_deleted' | 'save_created' | null>(null)
   const [isProcessingFile, setIsProcessingFile] = useState(false)
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedFile = e.target.files?.[0]
-    if (selectedFile) {
-      setFile(selectedFile)
-      onFileSelect(selectedFile)
-      processFile(selectedFile)
-    }
-  }
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     const selectedFile = acceptedFiles[0]

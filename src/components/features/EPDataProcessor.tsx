@@ -35,14 +35,6 @@ export function EPDataProcessor({ onFileSelect }: EPDataProcessorProps) {
   const [confirmAction, setConfirmAction] = useState<'save' | 'delete' | null>(null)
   const [isProcessingFile, setIsProcessingFile] = useState(false)
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedFile = e.target.files?.[0]
-    if (selectedFile) {
-      setFile(selectedFile)
-      onFileSelect(selectedFile)
-      processFile(selectedFile)
-    }
-  }
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     const selectedFile = acceptedFiles[0]

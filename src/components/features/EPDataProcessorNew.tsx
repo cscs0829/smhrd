@@ -13,7 +13,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 interface EPDataItem {
   id: string
   title: string
-  [key: string]: any
+  [key: string]: unknown
 }
 
 interface ComparisonResult {
@@ -34,14 +34,6 @@ export function EPDataProcessorNew({ onFileSelect }: EPDataProcessorNewProps) {
   const [confirmAction, setConfirmAction] = useState<'save_new' | 'delete_removed' | null>(null)
   const [isProcessingFile, setIsProcessingFile] = useState(false)
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedFile = e.target.files?.[0]
-    if (selectedFile) {
-      setFile(selectedFile)
-      onFileSelect(selectedFile)
-      processFile(selectedFile)
-    }
-  }
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     const selectedFile = acceptedFiles[0]

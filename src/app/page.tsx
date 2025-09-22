@@ -1,57 +1,23 @@
 "use client"
 
 import React, { useState } from 'react'
-import { FileUpload } from '@/components/features/FileUpload'
-import { ProcessButton } from '@/components/features/ProcessButton'
-import { AIModelSelector } from '@/components/features/AIModelSelector'
-import { AttachModal } from '@/components/features/AttachModal'
 import { DatabaseStatus } from '@/components/features/DatabaseStatus'
 import { DuplicateSearch } from '@/components/features/DuplicateSearch'
 import { KeywordTitleGenerator } from '@/components/features/KeywordTitleGenerator'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { downloadFile, processFile } from '@/lib/api'
-import { getRecommendedModel } from '@/lib/ai-models'
 import { ApiKeyManager } from '@/components/features/ApiKeyManager'
-import { EPDataProcessor } from '@/components/features/EPDataProcessor'
 import { ClickDataProcessor } from '@/components/features/ClickDataProcessor'
 import { EPDataProcessorNew } from '@/components/features/EPDataProcessorNew'
 
 export default function Home() {
   const [file, setFile] = useState<File | null>(null)
   const [isProcessing, setIsProcessing] = useState(false)
-  const [result, setResult] = useState<{ success: boolean; message: string; downloadUrl?: string } | null>(null)
-  const [selectedModel, setSelectedModel] = useState<string>(getRecommendedModel().id)
-  const [selectedApiKeyId, setSelectedApiKeyId] = useState<number>(0)
-  const [temperature, setTemperature] = useState<number>(0.7)
-  const [maxTokens, setMaxTokens] = useState<number>(100)
   const [activeTab, setActiveTab] = useState<string>('process')
   const [dbRefreshTrigger, setDbRefreshTrigger] = useState<number>(0)
 
   const handleFileSelect = (f: File) => {
     setFile(f)
-    setResult(null)
-  }
-
-  const handleProcess = async () => {
-    if (!file) return
-    try {
-      setIsProcessing(true)
-      setResult(null)
-      const res = await processFile(file)
-      setResult(res)
-    } catch (e: unknown) {
-      const message = e instanceof Error ? e.message : '처리 중 오류가 발생했습니다'
-      setResult({ success: false, message })
-    } finally {
-      setIsProcessing(false)
-    }
-  }
-
-  const handleDownload = () => {
-    if (result?.downloadUrl) {
-      downloadFile(result.downloadUrl, '처리결과.xlsx')
-    }
   }
 
   const handleTabChange = (value: string) => {
