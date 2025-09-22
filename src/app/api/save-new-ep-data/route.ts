@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getSupabaseClient } from '@/lib/supabase'
+import { getSupabaseAdmin } from '@/lib/supabase'
 
 export async function POST(request: NextRequest) {
   try {
@@ -9,7 +9,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: '유효하지 않은 데이터입니다' }, { status: 400 })
     }
 
-    const supabase = getSupabaseClient()
+    // RLS 무시를 위해 관리자 클라이언트 사용
+    const supabase = getSupabaseAdmin()
     
     // Excel 데이터를 ep_data 테이블 구조에 맞게 변환
     const transformedItems = items.map(item => {
@@ -31,12 +32,12 @@ export async function POST(request: NextRequest) {
     // 새로운 데이터를 데이터베이스에 저장
     const { data, error } = await supabase
       .from('ep_data')
-      .insert(transformedItems)
+      .upsert(transformedItems, { onConflict: 'original_id', ignoreDuplicates: true })
       .select()
 
     if (error) {
       console.error('데이터 저장 오류:', error)
-      return NextResponse.json({ error: '데이터 저장 중 오류가 발생했습니다' }, { status: 500 })
+      return NextResponse.json({ error: '데이터 저장 중 오류가 발생했습니다', detail: (error as any).message || String(error) }, { status: 500 })
     }
 
     return NextResponse.json({ 
@@ -46,8 +47,9 @@ export async function POST(request: NextRequest) {
     })
   } catch (error) {
     console.error('새로운 EP 데이터 저장 오류:', error)
+    const detail = error instanceof Error ? error.message : String(error)
     return NextResponse.json(
-      { error: '데이터 저장 중 오류가 발생했습니다' },
+      { error: '데이터 저장 중 오류가 발생했습니다', detail },
       { status: 500 }
     )
   }
