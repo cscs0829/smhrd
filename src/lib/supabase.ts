@@ -26,6 +26,7 @@ export function getSupabaseAdmin(): SupabaseClient {
 // Database types
 export interface EpData {
   id: string
+  original_id?: string | null
   title: string
   price_pc: number
   benefit_price: number

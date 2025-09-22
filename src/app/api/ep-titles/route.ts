@@ -20,10 +20,10 @@ export async function GET(request: NextRequest) {
     
     const supabase = getSupabase()
     
-    // EP 데이터에서 제목들을 가져오기
+    // EP 데이터에서 제목들을 가져오기 (original_id 포함)
     const { data: epTitles, error: epError } = await supabase
       .from('ep_data')
-      .select('title, id, created_at')
+      .select('title, id, original_id, created_at')
       .not('title', 'is', null)
       .not('title', 'eq', '')
       .range(parseInt(offset), parseInt(offset) + parseInt(limit) - 1)
@@ -64,6 +64,7 @@ export async function GET(request: NextRequest) {
       ...(epTitles || []).map(item => ({
         title: item.title,
         id: item.id,
+        original_id: item.original_id,
         type: 'active' as const,
         date: item.created_at
       })),

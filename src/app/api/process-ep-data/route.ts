@@ -20,10 +20,10 @@ export async function POST(request: NextRequest) {
     const worksheet = workbook.Sheets[sheetName]
     const jsonData = XLSX.utils.sheet_to_json(worksheet)
     
-    // 데이터베이스에서 기존 데이터 가져오기 (실제 구현에서는 Supabase 사용)
+    // 데이터베이스에서 기존 데이터 가져오기 (original_id 포함)
     const { allData, deletedItems } = await getExistingEPData()
     
-    // 데이터 비교 로직
+    // 데이터 비교 로직 (기존 단순 로직 유지)
     const comparisonResult = compareEPData(jsonData as Array<{ id: string; title?: string; [key: string]: unknown }>, allData)
     
     // 삭제된 데이터도 함께 반환
@@ -47,7 +47,7 @@ async function getExistingEPData() {
   const [activeData, deletedData] = await Promise.all([
     supabase
       .from('ep_data')
-      .select('id, title, created_at')
+      .select('id, original_id, title, created_at')
       .order('created_at', { ascending: false }),
     supabase
       .from('deleted_items')

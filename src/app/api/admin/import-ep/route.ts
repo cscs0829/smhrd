@@ -92,8 +92,9 @@ export async function POST(request: NextRequest) {
         out[nk] = v
       }
       
-      // id 컬럼은 삭제 (UUID가 자동 생성됨)
+      // Excel의 id를 original_id로 이동
       if (out['id']) {
+        out['original_id'] = out['id']
         delete out['id']
       }
       
