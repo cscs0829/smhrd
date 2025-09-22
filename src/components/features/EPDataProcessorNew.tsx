@@ -12,6 +12,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 
 interface EPDataItem {
   id: string
+  original_id?: string
   title: string
   [key: string]: unknown
 }
@@ -361,7 +362,7 @@ export function EPDataProcessorNew({ onFileSelect }: EPDataProcessorNewProps) {
                       <TableBody>
                         {comparisonResult.itemsToRemove.slice(0, 20).map((item, index) => (
                           <TableRow key={index}>
-                            <TableCell className="font-medium">{item.original_id || item.id}</TableCell>
+                            <TableCell className="font-medium">{item.original_id || item.id || 'N/A'}</TableCell>
                             <TableCell>{item.title}</TableCell>
                             <TableCell className="max-w-xs truncate">
                               {Object.keys(item).filter(key => !['id', 'original_id', 'title'].includes(key)).slice(0, 3).join(', ')}
