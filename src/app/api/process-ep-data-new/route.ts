@@ -60,7 +60,6 @@ export async function POST(request: NextRequest) {
 
     // 최종 보정: DB 존재 여부로 ID만으로 unchanged 강제 허용 (정확 일치)
     // - 세트 불일치나 정규화 오탐이 남는 경우를 방지하기 위한 안전장치
-    const discoveredTitleSet = new Set<string>()
     // 보정은 엑셀 원본에서 직접 수집: jsonData의 id를 정규화하여 사용할 것
     const normalizeIdForGuard = (s: unknown): string | null => {
       if (s == null) return null
@@ -105,79 +104,19 @@ export async function POST(request: NextRequest) {
           }
         }
       }
-
-      // 추가: itemsToAdd의 제목도 존재 확인. 제목이 DB에 하나라도 존재하면 unchanged로 이동
-      const rawTitleList = Array.from(new Set(
-        (comparisonResult.itemsToAdd || [])
-          .map((it) => (it.title != null ? String(it.title) : null))
-          .filter((v): v is string => Boolean(v))
-      ))
-      for (let i = 0; i < rawTitleList.length; i += chunkSize) {
-        const chunk = rawTitleList.slice(i, i + chunkSize)
-        const { data: hitTitle, error: hitTitleErr } = await supabase
-          .from('ep_data')
-          .select('title')
-          .in('title', chunk)
-        if (hitTitleErr) {
-          console.error('DB 제목 존재 확인 오류:', hitTitleErr)
-          continue
-        }
-        if (hitTitle) {
-          for (const r of hitTitle as Array<{ title: string | null }>) {
-            const t = r.title
-            if (!t) continue
-            // 제목 존재 표시를 위해 정규화된 제목 세트를 구성
-            const tNorm = ((): string | null => {
-              const sval = String(t)
-                .replace(/[\u200B-\u200D\uFEFF]/g, '')
-                .normalize('NFKC')
-                .replace(/[\p{P}\p{S}]+/gu, ' ')
-                .replace(/\s+/g, ' ')
-                .trim()
-              return sval ? sval.normalize('NFC').toLowerCase() : null
-            })()
-            if (tNorm) discoveredTitleSet.add(tNorm)
-          }
-        }
-      }
     }
     if (presentInDb.size > 0) {
       const itemsToAddFinal = comparisonResult.itemsToAdd.filter((item) => {
         const id = item.id ? String(item.id) : null
         if (!id) return true
         const idNorm = normalizeIdForGuard(id)
-        const tNorm = ((): string | null => {
-          if (item.title == null) return null
-          const sval = String(item.title)
-            .replace(/[\u200B-\u200D\uFEFF]/g, '')
-            .normalize('NFKC')
-            .replace(/[\p{P}\p{S}]+/gu, ' ')
-            .replace(/\s+/g, ' ')
-            .trim()
-          return sval ? sval.normalize('NFC').toLowerCase() : null
-        })()
-        const existsById = presentInDb.has(id) || (idNorm ? presentInDbNormalized.has(idNorm) : false)
-        const existsByTitle = tNorm ? existingTitle.has(tNorm) : false
-        return !(existsById || existsByTitle)
+        return !(presentInDb.has(id) || (idNorm ? presentInDbNormalized.has(idNorm) : false))
       })
       const movedToUnchanged = comparisonResult.itemsToAdd.filter((item) => {
         const id = item.id ? String(item.id) : null
-        // 제목 또는 ID 어느 한쪽만 매칭되어도 unchanged로 이동
-        const tNorm = ((): string | null => {
-          if (item.title == null) return null
-          const sval = String(item.title)
-            .replace(/[\u200B-\u200D\uFEFF]/g, '')
-            .normalize('NFKC')
-            .replace(/[\p{P}\p{S}]+/gu, ' ')
-            .replace(/\s+/g, ' ')
-            .trim()
-          return sval ? sval.normalize('NFC').toLowerCase() : null
-        })()
-        if (!id && !tNorm) return false
+        if (!id) return false
         const idNorm = normalizeIdForGuard(id)
-        const existsById = id ? (presentInDb.has(id) || (idNorm ? presentInDbNormalized.has(idNorm) : false)) : false
-        const existsByTitle = tNorm ? existingTitle.has(tNorm) : false
-        return existsById || existsByTitle
+        return presentInDb.has(id) || (idNorm ? presentInDbNormalized.has(idNorm) : false)
       })
       const unchangedFinal = [...comparisonResult.unchangedItems, ...movedToUnchanged]
       comparisonResult = {
@@ -257,10 +196,6 @@ export async function POST(request: NextRequest) {
       const idLooseMatch = nidLoose ? existingIdLoose.has(nidLoose) : false
       const dbTitleForId = nidUltra ? (dbUltraIdToNormTitle.get(nidUltra) || null) : null
       const titleEqual = t && dbTitleForId ? t === dbTitleForId : null
-      const rawId = item.id ? String(item.id) : null
-      const rawExists = rawId ? presentInDb.has(rawId) : false
-      const normIdForGuard = rawId ? normalizeIdForGuard(rawId) : null
-      const normExists = normIdForGuard ? presentInDbNormalized.has(normIdForGuard) : false
       return {
         id: item.id ?? null,
         title: item.title ?? null,
@@ -271,11 +206,7 @@ export async function POST(request: NextRequest) {
         excel_id_normalized_ultra: nidUltra,
         excel_title_normalized: t ?? null,
         db_title_normalized_for_id: dbTitleForId,
-        title_equal: titleEqual,
-        db_exists_raw: rawExists,
-        db_exists_norm: normExists,
-        parsed_id_raw: rawId,
-        parsed_title_raw: item.title ?? null
+        title_equal: titleEqual
       }
     })
 
