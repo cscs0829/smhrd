@@ -324,8 +324,9 @@ export async function POST(request: NextRequest) {
     })
   } catch (error) {
     console.error('EP 데이터 처리 오류:', error)
+    const errMsg = error instanceof Error ? error.message : String(error)
     return NextResponse.json(
-      { error: '파일 처리 중 오류가 발생했습니다' },
+      { error: '파일 처리 중 오류가 발생했습니다', detail: errMsg },
       { status: 500 }
     )
   }
