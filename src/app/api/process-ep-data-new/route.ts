@@ -46,50 +46,34 @@ export async function POST(request: NextRequest) {
 }
 
 function compareEPData(newData: Array<{ id: string; title?: string; [key: string]: unknown }>, existingData: Array<{ id: string; original_id?: string; title?: string; [key: string]: unknown }>) {
-  // original_id 기반으로 비교 (Excel ID와 DB original_id 매칭)
-  const existingOriginalIdMap = new Map()
+  // 제목 기반으로만 비교 (단순화)
   const existingTitleMap = new Map()
-  
   existingData.forEach(item => {
-    if (item.original_id) {
-      existingOriginalIdMap.set(item.original_id, item)
-    }
     if (item.title) {
       existingTitleMap.set(item.title.toLowerCase().trim(), item)
     }
   })
   
-  const newOriginalIdMap = new Map()
   const newTitleMap = new Map()
-  
   newData.forEach(item => {
-    if (item.id) {
-      newOriginalIdMap.set(item.id, item)
-    }
     if (item.title) {
       newTitleMap.set(item.title.toLowerCase().trim(), item)
     }
   })
   
-  // 새로운 데이터 중에서 original_id나 title이 기존에 없는 것들
+  // 새로운 데이터 중에서 제목이 기존에 없는 것들
   const newItems = newData.filter(item => {
-    const hasOriginalId = item.id && existingOriginalIdMap.has(item.id)
-    const hasTitle = item.title && existingTitleMap.has(item.title.toLowerCase().trim())
-    return !hasOriginalId && !hasTitle
+    return item.title && !existingTitleMap.has(item.title.toLowerCase().trim())
   })
   
-  // 기존 데이터 중에서 original_id나 title이 새로운 데이터에 없는 것들 (삭제된 항목)
+  // 기존 데이터 중에서 제목이 새로운 데이터에 없는 것들 (삭제된 항목)
   const removedItems = existingData.filter(item => {
-    const hasOriginalId = item.original_id && newOriginalIdMap.has(item.original_id)
-    const hasTitle = item.title && newTitleMap.has(item.title.toLowerCase().trim())
-    return !hasOriginalId && !hasTitle
+    return item.title && !newTitleMap.has(item.title.toLowerCase().trim())
   })
   
-  // 기존 데이터 중에서 original_id나 title이 새로운 데이터에 있는 것들
+  // 기존 데이터 중에서 제목이 새로운 데이터에 있는 것들
   const existingItems = newData.filter(item => {
-    const hasOriginalId = item.id && existingOriginalIdMap.has(item.id)
-    const hasTitle = item.title && existingTitleMap.has(item.title.toLowerCase().trim())
-    return hasOriginalId || hasTitle
+    return item.title && existingTitleMap.has(item.title.toLowerCase().trim())
   })
   
   return {
