@@ -37,7 +37,6 @@ interface ProcessedData {
 
 interface ClickDataProcessorProps {
   onFileSelect: (file: File) => void
-  isProcessing: boolean
 }
 
 export function ClickDataProcessor({ onFileSelect }: ClickDataProcessorProps) {

@@ -14,7 +14,7 @@ export default function Home() {
   const [activeTab, setActiveTab] = useState<string>('process')
   const [dbRefreshTrigger, setDbRefreshTrigger] = useState<number>(0)
 
-  const handleFileSelect = (_f: File) => {
+  const handleFileSelect = () => {
     // 파일 선택 처리 (현재는 사용하지 않음)
   }
 
@@ -41,14 +41,12 @@ export default function Home() {
         <TabsContent value="process" className="space-y-4">
           <ClickDataProcessor 
             onFileSelect={handleFileSelect}
-            isProcessing={isProcessing}
           />
               </TabsContent>
 
               <TabsContent value="ep-data" className="space-y-4">
                 <EPDataProcessorNew 
                   onFileSelect={handleFileSelect}
-                  isProcessing={isProcessing}
                 />
               </TabsContent>
 

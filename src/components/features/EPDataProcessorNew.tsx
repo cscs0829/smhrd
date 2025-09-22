@@ -24,7 +24,6 @@ interface ComparisonResult {
 
 interface EPDataProcessorNewProps {
   onFileSelect: (file: File) => void
-  isProcessing: boolean
 }
 
 export function EPDataProcessorNew({ onFileSelect }: EPDataProcessorNewProps) {

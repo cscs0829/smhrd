@@ -129,6 +129,7 @@ export async function POST(request: NextRequest) {
     const now = new Date().toISOString()
     
     // ID 필드 제거 (UUID로 자동 생성됨)
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { id, ...bodyWithoutId } = body
     
     const dataToInsert = {
