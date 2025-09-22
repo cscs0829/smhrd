@@ -431,6 +431,7 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
         },
       },
     },
+    // 모달 다이얼로그 props 설정은 CSS로 처리
     // 한국어 로컬라이제이션
     localization: {
       language: 'ko',
@@ -764,6 +765,8 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
           autoFocus: false,
           // 접근성 개선
           keepMounted: false,
+          // 무한 재귀 방지
+          disableScrollLock: true,
           // 메뉴 스타일 설정
           PaperProps: {
             // aria-hidden 제거하여 접근성 개선
@@ -1002,9 +1005,11 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
     loadData()
   }, [isOpen, tableName, pagination.pageIndex, pagination.pageSize, globalFilter, loadData])
 
-  // 모달 외부 클릭 시 닫히지 않도록 하는 핸들러
-  const handleInteractOutside = useCallback((e: Event & { preventDefault: () => void }) => {
-    // 무한 재귀 방지를 위한 간단한 체크
+  // 모달 외부 클릭 시 닫히지 않도록 하는 핸들러 - 무한 재귀 방지
+  const handleInteractOutside = useCallback((e: Event) => {
+    // 이벤트 전파 중단
+    e.stopPropagation()
+    
     const target = e.target as HTMLElement
     
     // MUI 관련 요소들이나 모달 내부 요소 클릭 시 모달이 닫히지 않도록 방지
@@ -1012,16 +1017,24 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
     
     if (shouldPreventClose) {
       e.preventDefault()
+      e.stopPropagation()
     }
   }, [])
 
   // 모달 열림/닫힘 시 MUI Select 클릭 문제 해결 - 무한 루프 방지
   useEffect(() => {
-    if (isOpen) {
-      // aria-hidden 문제 해결을 위한 전역 스타일 추가
-      const style = document.createElement('style')
-      style.id = 'mui-select-fix'
-      style.textContent = `
+    if (!isOpen) return
+
+    // 기존 스타일이 있으면 제거
+    const existingStyle = document.getElementById('mui-select-fix')
+    if (existingStyle) {
+      existingStyle.remove()
+    }
+
+    // aria-hidden 문제 해결을 위한 전역 스타일 추가
+    const style = document.createElement('style')
+    style.id = 'mui-select-fix'
+    style.textContent = `
         /* 관리 모달창 z-index 설정 (기본 모달) */
         .MuiDialog-root[data-testid="database-management-modal"] {
           z-index: 1300 !important;
@@ -1290,12 +1303,16 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
           z-index: 99999 !important;
           position: fixed !important;
           isolation: isolate !important;
+          /* aria-hidden 문제 해결 */
+          aria-hidden: false !important;
         }
         
         .MuiMenu-paper, .MuiPopover-paper {
           z-index: 99999 !important;
           position: relative !important;
           isolation: isolate !important;
+          /* aria-hidden 문제 해결 */
+          aria-hidden: false !important;
         }
         
         .MuiMenuItem-root {
@@ -1429,19 +1446,12 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
         }
       `
 
-      // 기존 스타일이 있으면 제거
-      const existingStyle = document.getElementById('mui-select-fix')
-      if (existingStyle) {
-        existingStyle.remove()
-      }
+    document.head.appendChild(style)
 
-      document.head.appendChild(style)
-
-      return () => {
-        const styleElement = document.getElementById('mui-select-fix')
-        if (styleElement) {
-          styleElement.remove()
-        }
+    return () => {
+      const styleElement = document.getElementById('mui-select-fix')
+      if (styleElement) {
+        styleElement.remove()
       }
     }
   }, [isOpen, resolvedTheme])
@@ -1463,15 +1473,25 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
     )
   }
 
+  // 모달 닫기 핸들러 - 포커스 관리 개선
+  const handleClose = useCallback((open: boolean) => {
+    if (!open) {
+      // 포커스를 모달을 열었던 버튼으로 돌려보내기
+      const triggerButton = document.querySelector('[data-testid="database-management-modal-trigger"]') as HTMLElement
+      if (triggerButton) {
+        triggerButton.focus()
+      }
+      onClose()
+    }
+  }, [onClose])
+
   return (
     <Dialog
       open={isOpen}
-      onOpenChange={(open) => {
-        if (!open) {
-          onClose()
-        }
-      }}
+      onOpenChange={handleClose}
       data-testid="database-management-modal"
+      // 접근성 개선: aria-hidden 제거
+      aria-hidden={false}
     >
       <DialogContent
         size="full"

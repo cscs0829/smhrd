@@ -261,7 +261,12 @@ export function DatabaseStatus({ onRefresh }: DatabaseStatusProps) {
                       <div className="text-sm text-gray-600 dark:text-gray-300 capitalize mb-2">
                         {tableName.replace('_', ' ')}
                       </div>
-                      <Button size="sm" variant="outline" className="h-6 text-xs">
+                      <Button 
+                        size="sm" 
+                        variant="outline" 
+                        className="h-6 text-xs"
+                        data-testid="database-management-modal-trigger"
+                      >
                         <Settings className="h-3 w-3 mr-1" />
                         관리
                       </Button>
