@@ -32,11 +32,11 @@ export async function POST(request: NextRequest) {
     // 중복 방지: 이미 존재하는 original_id 선제 제거 후 insert
     const idsToInsert = Array.from(new Set(
       transformedItems
-        .map((it: any) => (it?.original_id ? String(it.original_id) : null))
+        .map((it: { original_id?: unknown }) => (it?.original_id != null ? String(it.original_id) : null))
         .filter((v: string | null): v is string => Boolean(v))
     ))
 
-    let existing = new Set<string>()
+    const existing = new Set<string>()
     if (idsToInsert.length > 0) {
       const chunkSize = 1000
       for (let i = 0; i < idsToInsert.length; i += chunkSize) {
@@ -57,7 +57,10 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const toInsert = transformedItems.filter((it: any) => !existing.has(String(it.original_id)))
+    const toInsert = transformedItems.filter((it: { original_id?: unknown }) => {
+      const raw = it?.original_id != null ? String(it.original_id) : null
+      return raw ? !existing.has(raw) : true
+    })
 
     if (toInsert.length === 0) {
       return NextResponse.json({ success: true, message: '추가할 새로운 항목이 없습니다', data: [] })
