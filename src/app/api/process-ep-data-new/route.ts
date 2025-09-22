@@ -173,12 +173,13 @@ function compareEPData(
   existingData: Array<{ id: string; original_id?: string | null; title?: string | null; [key: string]: unknown }>
 ) {
   // ID와 제목은 서로 다른 정규화 규칙을 적용한다.
-  // - ID: 대소문자와 밑줄을 보존(정확 일치), zero-width 제거 및 trim만 수행
+  // - ID: 대소문자는 보존, 연속 밑줄은 1개로 축약(표기 차이 허용), zero-width 제거 및 trim
   // - Title: 공백 축약 및 소문자화로 유사 문자열 흡수
   const normalizeId = (s: unknown): string | null => {
     if (s == null) return null
     const str = String(s)
       .replace(/[\u200B-\u200D\uFEFF]/g, '')
+      .replace(/_+/g, '_')
       .trim()
     if (!str) return null
     return str.normalize('NFC')
