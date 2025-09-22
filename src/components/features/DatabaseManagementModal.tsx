@@ -126,7 +126,7 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
 
       if (result.success) {
         setData(result.data)
-        setTotalCount(result.pagination?.total ?? totalCount)
+        setTotalCount(result.pagination?.total ?? 0)
       } else {
         toast.error('데이터를 불러오는데 실패했습니다')
       }
@@ -136,7 +136,7 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
     } finally {
       setLoading(false)
     }
-  }, [tableName, pagination.pageIndex, pagination.pageSize, totalCount, globalFilter])
+  }, [tableName, pagination.pageIndex, pagination.pageSize, globalFilter]) // totalCount 의존성 제거하여 무한 루프 방지
 
   // 데이터 저장 (편집)
   const saveData = useCallback(async (rowData: TableData) => {
@@ -766,7 +766,7 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
           keepMounted: false,
           // 메뉴 스타일 설정
           PaperProps: {
-            'aria-hidden': false,
+            // aria-hidden 제거하여 접근성 개선
             sx: {
               backgroundColor: resolvedTheme === 'dark' ? '#374151' : '#ffffff',
               border: `1px solid ${resolvedTheme === 'dark' ? '#4b5563' : '#d1d5db'}`,
@@ -806,7 +806,6 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
             borderRadius: '6px',
             minHeight: '32px',
             cursor: 'pointer',
-            pointerEvents: 'auto',
             '&:hover': {
               backgroundColor: resolvedTheme === 'dark' ? '#4b5563' : '#f9fafb',
               borderColor: resolvedTheme === 'dark' ? '#6b7280' : '#9ca3af',
@@ -828,7 +827,6 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
             display: 'flex',
             alignItems: 'center',
             cursor: 'pointer',
-            pointerEvents: 'auto',
             '&:focus': {
               backgroundColor: 'transparent',
             },
@@ -837,7 +835,6 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
             right: '8px',
             color: resolvedTheme === 'dark' ? '#9ca3af' : '#6b7280',
             cursor: 'pointer',
-            pointerEvents: 'auto',
           },
         },
       },
@@ -851,7 +848,6 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
         '& .MuiTablePagination-actions button': {
           color: resolvedTheme === 'dark' ? '#f9fafb' : '#1f2937',
           cursor: 'pointer',
-          pointerEvents: 'auto',
           '&:hover': {
             backgroundColor: resolvedTheme === 'dark' ? '#374151' : '#f3f4f6',
           },
@@ -876,8 +872,8 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
         position: 'relative',
         zIndex: 1,
         isolation: 'isolate',
-        // 모든 상호작용 요소들이 클릭 가능하도록 설정
-        '& *': {
+        // 필요한 상호작용 요소들만 클릭 가능하도록 설정
+        '& button, & input, & select, & [role="button"], & [role="menuitem"]': {
           pointerEvents: 'auto !important',
         },
         // 페이지네이션 영역 특별 처리
@@ -891,10 +887,8 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
             zIndex: 10,
             isolation: 'isolate',
             cursor: 'pointer',
-            pointerEvents: 'auto',
             '&.MuiInputBase-root': {
               cursor: 'pointer',
-              pointerEvents: 'auto',
           // 데스크톱에서 더 명확한 스타일 - 버튼 크기에 맞춤
           '@media (min-width: 768px)': {
             border: `1px solid ${resolvedTheme === 'dark' ? '#4b5563' : '#d1d5db'}`,
@@ -918,7 +912,6 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
             },
             '& .MuiSelect-select': {
               cursor: 'pointer',
-              pointerEvents: 'auto',
               userSelect: 'none',
               position: 'relative',
               zIndex: 11,
@@ -932,7 +925,6 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
             },
             '& .MuiSelect-icon': {
               cursor: 'pointer',
-              pointerEvents: 'auto',
               position: 'relative',
               zIndex: 11,
               // 데스크톱에서 아이콘 위치 조정
@@ -947,14 +939,12 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
         // 툴바 버튼들
         '& .MuiIconButton-root, & .MuiButton-root, & .MuiButtonBase-root': {
           cursor: 'pointer !important',
-          pointerEvents: 'auto !important',
           position: 'relative',
           zIndex: 10,
         },
         // 테이블 헤더 액션 버튼들
         '& .MuiTableHead-root .MuiIconButton-root': {
           cursor: 'pointer !important',
-          pointerEvents: 'auto !important',
           position: 'relative',
           zIndex: 10,
         },
@@ -1010,7 +1000,7 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
   useEffect(() => {
     if (!isOpen || !tableName) return
     loadData()
-  }, [isOpen, tableName, pagination.pageIndex, pagination.pageSize, globalFilter, loadData])
+  }, [isOpen, tableName, pagination.pageIndex, pagination.pageSize, globalFilter]) // loadData 의존성 제거하여 무한 루프 방지
 
   // 모달 열림/닫힘 시 MUI Select 클릭 문제 해결 - 무한 루프 방지
   useEffect(() => {
@@ -1260,7 +1250,6 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
         }
         /* MUI Select 데스크톱 클릭 문제 해결 - 접근성 개선 */
         .MuiTablePagination-select.MuiInputBase-root {
-          pointer-events: auto !important;
           cursor: pointer !important;
           position: relative !important;
           z-index: 10 !important;
@@ -1268,7 +1257,6 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
         }
         
         .MuiTablePagination-select .MuiSelect-select {
-          pointer-events: auto !important;
           cursor: pointer !important;
           user-select: none !important;
           position: relative !important;
@@ -1279,7 +1267,6 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
         }
         
         .MuiTablePagination-select .MuiSelect-icon {
-          pointer-events: auto !important;
           cursor: pointer !important;
           position: relative !important;
           z-index: 11 !important;
@@ -1295,12 +1282,10 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
         .MuiMenu-paper, .MuiPopover-paper {
           z-index: 99999 !important;
           position: relative !important;
-          pointer-events: auto !important;
           isolation: isolate !important;
         }
         
         .MuiMenuItem-root {
-          pointer-events: auto !important;
           cursor: pointer !important;
           user-select: none !important;
           min-height: 28px !important;
@@ -1310,9 +1295,8 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
           padding: 4px 8px !important;
         }
         
-        /* 모든 MUI 버튼 요소들 클릭 가능하게 */
+        /* 필요한 MUI 버튼 요소들만 클릭 가능하게 */
         .MuiIconButton-root, .MuiButton-root, .MuiButtonBase-root {
-          pointer-events: auto !important;
           cursor: pointer !important;
           position: relative !important;
           z-index: 10 !important;
@@ -1321,20 +1305,17 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
         /* 입력 필드 포커스 및 상호작용 보장 */
         .MuiTextField-root, .MuiInputBase-root, .MuiOutlinedInput-root,
         .MuiSelect-root, .MuiFormControl-root {
-          pointer-events: auto !important;
           z-index: 1500 !important;
           position: relative !important;
         }
         
         .MuiTextField-root input, .MuiInputBase-input, .MuiOutlinedInput-input {
-          pointer-events: auto !important;
           z-index: 1501 !important;
           position: relative !important;
         }
         
         /* Select 드롭다운 z-index */
         .MuiSelect-select {
-          pointer-events: auto !important;
           z-index: 1501 !important;
         }
         
@@ -1356,10 +1337,6 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
         .MuiTablePagination-toolbar {
           position: relative !important;
           z-index: 5 !important;
-        }
-        
-        .MuiTablePagination-toolbar * {
-          pointer-events: auto !important;
         }
         
         /* 데스크톱 특화 스타일 - 버튼 크기에 맞춤 */
@@ -1486,36 +1463,20 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
       <DialogContent
         size="full"
         className="w-[95vw] h-[90vh] max-w-none max-h-none p-0 relative z-50"
-        onInteractOutside={(e) => {
-          // 모든 MUI 컴포넌트 클릭 시 모달이 닫히지 않도록 방지
+        onInteractOutside={useCallback((e: Event & { preventDefault: () => void }) => {
+          // 무한 재귀 방지를 위한 간단한 체크
           const target = e.target as HTMLElement
-          if (target.closest('.MuiSelect-root') ||
-            target.closest('.MuiMenu-root') ||
-            target.closest('.MuiPopover-root') ||
-            target.closest('.MuiMenuItem-root') ||
-            target.closest('.MuiTablePagination-select') ||
-            target.closest('.MuiInputBase-root') ||
-            target.closest('.MuiTextField-root') ||
-            target.closest('.MuiFormControl-root') ||
-            target.closest('.MuiIconButton-root') ||
-            target.closest('.MuiButton-root') ||
-            target.closest('.MuiTablePagination-toolbar') ||
-            target.closest('.MuiTablePagination-actions') ||
-            target.closest('.MuiDialog-root') ||
-            target.closest('.MuiDialog-paper') ||
-            target.closest('.MuiDialogContent-root') ||
-            target.closest('[role="listbox"]') ||
-            target.closest('[role="option"]') ||
-            target.closest('[role="presentation"]') ||
-            target.closest('[role="menu"]') ||
-            target.closest('[role="menuitem"]') ||
-            target.closest('[data-testid="select-option"]') ||
-            target.closest('[data-mui-internal-clone-element]') ||
-            target.closest('[data-radix-popper-content-wrapper]')) {
+          
+          // MUI 관련 요소들이나 모달 내부 요소 클릭 시 모달이 닫히지 않도록 방지
+          const shouldPreventClose = target.closest('.MuiMenu-root, .MuiPopover-root, .MuiDialog-root, [data-testid="database-management-modal"]')
+          
+          if (shouldPreventClose) {
             e.preventDefault()
           }
-        }}
+        }, [])}
         aria-describedby={undefined}
+        // 접근성 개선: aria-hidden 제거하여 스크린 리더가 모달 내용에 접근할 수 있도록 함
+        aria-hidden={false}
       >
         <DialogHeader className="px-4 sm:px-6 py-4 border-b border-gray-200 dark:border-gray-700">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
