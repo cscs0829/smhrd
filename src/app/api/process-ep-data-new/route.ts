@@ -79,13 +79,30 @@ export async function POST(request: NextRequest) {
     const presentInDb = new Set<string>()
     const presentInDbNormalized = new Set<string>()
     if (excelIdCandidates.length > 0) {
-      // 추가 DB 질의 없이, 이미 로드한 existingData를 기반으로 존재 여부 판단
-      for (const r of existingData) {
-        const raw = r && r.original_id != null ? String(r.original_id) : null
-        if (!raw) continue
-        presentInDb.add(raw)
-        const norm = normalizeIdForGuard(raw)
-        if (norm) presentInDbNormalized.add(norm)
+      // itemsToAdd의 ID만 대상으로 DB 존재 여부를 직접 확인 (raw + normalized 둘 다)
+      const rawIdList = excelIdCandidates
+      const normIdList = Array.from(new Set(rawIdList.map((v) => normalizeIdForGuard(v)).filter((v): v is string => Boolean(v))))
+      const combined = Array.from(new Set([...rawIdList, ...normIdList]))
+      const chunkSize = 1000
+      for (let i = 0; i < combined.length; i += chunkSize) {
+        const chunk = combined.slice(i, i + chunkSize)
+        const { data: hit, error: hitErr } = await supabase
+          .from('ep_data')
+          .select('original_id')
+          .in('original_id', chunk)
+        if (hitErr) {
+          console.error('DB 존재 확인 오류:', hitErr)
+          continue
+        }
+        if (hit) {
+          for (const r of hit as Array<{ original_id: string | null }>) {
+            const raw = r.original_id
+            if (!raw) continue
+            presentInDb.add(raw)
+            const norm = normalizeIdForGuard(raw)
+            if (norm) presentInDbNormalized.add(norm)
+          }
+        }
       }
     }
     if (presentInDb.size > 0) {
