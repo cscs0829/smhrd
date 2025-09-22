@@ -147,6 +147,7 @@ function compareEPData(
     const str = String(s)
       .replace(/[\u200B-\u200D\uFEFF]/g, '') // zero-width 제거
       .replace(/\s+/g, ' ') // 다중 공백 축약
+      .replace(/_+/g, '_') // 연속 밑줄 축약
       .trim()
     if (!str) return null
     return str.normalize('NFC').toLowerCase()
