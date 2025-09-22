@@ -66,21 +66,29 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: true, message: '추가할 새로운 항목이 없습니다', data: [] })
     }
 
-    const { data, error } = await supabase
-      .from('ep_data')
-      .insert(toInsert)
-      .select()
-
-    if (error) {
-      console.error('데이터 저장 오류:', error)
-      const detailMsg = (error as { message?: string } | null)?.message || String(error)
-      return NextResponse.json({ error: '데이터 저장 중 오류가 발생했습니다', detail: detailMsg }, { status: 500 })
+    // 500행 기준 배치 분할 삽입
+    const batchSize = 500
+    const insertedAll: unknown[] = []
+    for (let i = 0; i < toInsert.length; i += batchSize) {
+      const batch = toInsert.slice(i, i + batchSize)
+      const { data: batchData, error: batchErr } = await supabase
+        .from('ep_data')
+        .insert(batch)
+        .select()
+      if (batchErr) {
+        console.error('배치 삽입 오류:', batchErr)
+        const detailMsg = (batchErr as { message?: string } | null)?.message || String(batchErr)
+        return NextResponse.json({ error: '데이터 저장 중 오류가 발생했습니다', detail: detailMsg }, { status: 500 })
+      }
+      if (batchData && Array.isArray(batchData)) {
+        insertedAll.push(...batchData)
+      }
     }
 
-    return NextResponse.json({ 
-      success: true, 
-      message: `${toInsert.length}개의 새로운 데이터가 저장되었습니다`,
-      data 
+    return NextResponse.json({
+      success: true,
+      message: `${toInsert.length}개의 새로운 데이터가 저장되었습니다 (배치 ${batchSize}행).`,
+      data: insertedAll
     })
   } catch (error) {
     console.error('새로운 EP 데이터 저장 오류:', error)
