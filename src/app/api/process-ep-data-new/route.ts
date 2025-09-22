@@ -170,12 +170,22 @@ function compareEPData(
   newData: Array<{ id?: string; title?: string; [key: string]: unknown }>,
   existingData: Array<{ id: string; original_id?: string | null; title?: string | null; [key: string]: unknown }>
 ) {
-  const normalizeStr = (s: unknown): string | null => {
-    if (!s) return null
+  // ID와 제목은 서로 다른 정규화 규칙을 적용한다.
+  // - ID: 대소문자와 밑줄을 보존(정확 일치), zero-width 제거 및 trim만 수행
+  // - Title: 공백 축약 및 소문자화로 유사 문자열 흡수
+  const normalizeId = (s: unknown): string | null => {
+    if (s == null) return null
     const str = String(s)
-      .replace(/[\u200B-\u200D\uFEFF]/g, '') // zero-width 제거
-      .replace(/\s+/g, ' ') // 다중 공백 축약
-      .replace(/_+/g, '_') // 연속 밑줄 축약
+      .replace(/[\u200B-\u200D\uFEFF]/g, '')
+      .trim()
+    if (!str) return null
+    return str.normalize('NFC')
+  }
+  const normalizeTitle = (s: unknown): string | null => {
+    if (s == null) return null
+    const str = String(s)
+      .replace(/[\u200B-\u200D\uFEFF]/g, '')
+      .replace(/\s+/g, ' ')
       .trim()
     if (!str) return null
     return str.normalize('NFC').toLowerCase()
@@ -185,18 +195,18 @@ function compareEPData(
   const existingOriginalIdSet = new Set<string>()
   const existingTitleSet = new Set<string>()
   for (const item of existingData) {
-    const oid = normalizeStr(item.original_id)
+    const oid = normalizeId(item.original_id)
     if (oid) existingOriginalIdSet.add(oid)
-    const t = normalizeStr(item.title)
+    const t = normalizeTitle(item.title)
     if (t) existingTitleSet.add(t)
   }
 
   const newOriginalIdSet = new Set<string>()
   const newTitleSet = new Set<string>()
   for (const item of newData) {
-    const nid = normalizeStr(item.id)
+    const nid = normalizeId(item.id)
     if (nid) newOriginalIdSet.add(nid)
-    const t = normalizeStr(item.title)
+    const t = normalizeTitle(item.title)
     if (t) newTitleSet.add(t)
   }
 
@@ -204,8 +214,8 @@ function compareEPData(
   // 1) 양쪽 모두 id가 있는 경우: id로만 판단
   // 2) 한쪽이라도 id가 없는 경우에만 title 보조 판단
   const itemsToAdd = newData.filter((item) => {
-    const nid = normalizeStr(item.id)
-    const t = normalizeStr(item.title)
+    const nid = normalizeId(item.id)
+    const t = normalizeTitle(item.title)
 
     if (nid) {
       // id가 있으면 id로만 판단
@@ -216,8 +226,8 @@ function compareEPData(
   })
 
   const itemsToRemove = existingData.filter((item) => {
-    const oid = normalizeStr(item.original_id)
-    const t = normalizeStr(item.title)
+    const oid = normalizeId(item.original_id)
+    const t = normalizeTitle(item.title)
 
     if (oid) {
       // id가 있으면 id로만 판단
@@ -228,8 +238,8 @@ function compareEPData(
   })
 
   const unchangedItems = newData.filter((item) => {
-    const nid = normalizeStr(item.id)
-    const t = normalizeStr(item.title)
+    const nid = normalizeId(item.id)
+    const t = normalizeTitle(item.title)
 
     if (nid) {
       return existingOriginalIdSet.has(nid)
