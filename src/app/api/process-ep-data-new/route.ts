@@ -190,8 +190,10 @@ function compareEPData(
   }
   const normalizeTitle = (s: unknown): string | null => {
     if (s == null) return null
-    const str = String(s)
+    let str = String(s)
       .replace(/[\u200B-\u200D\uFEFF]/g, '')
+      .normalize('NFKC')
+      .replace(/[\p{P}\p{S}]+/gu, ' ') // 구두점/기호 제거→공백 치환
       .replace(/\s+/g, ' ')
       .trim()
     if (!str) return null
