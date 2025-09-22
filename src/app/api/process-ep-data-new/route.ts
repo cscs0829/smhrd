@@ -30,6 +30,7 @@ export async function POST(request: NextRequest) {
       .from('ep_data')
       .select('id, original_id, title, created_at')
       .order('created_at', { ascending: false })
+      .limit(20000)
 
     if (epError) {
       console.error('EP 데이터 조회 오류:', epError)
