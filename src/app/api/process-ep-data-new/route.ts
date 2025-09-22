@@ -56,7 +56,46 @@ export async function POST(request: NextRequest) {
     
     // 데이터 비교 로직
     const existingData = aggregated
-    const comparisonResult = compareEPData(jsonData, existingData || [])
+    let comparisonResult = compareEPData(jsonData, existingData || [])
+
+    // 최종 보정: DB 존재 여부로 ID만으로 unchanged 강제 허용 (정확 일치)
+    // - 세트 불일치나 정규화 오탐이 남는 경우를 방지하기 위한 안전장치
+    const excelIdCandidates: string[] = Array.from(new Set(
+      (comparisonResult.debug_new_id_exact || []).filter((v: string) => !!v)
+    ))
+    const presentInDb = new Set<string>()
+    if (excelIdCandidates.length > 0) {
+      const chunkSize = 1000
+      for (let i = 0; i < excelIdCandidates.length; i += chunkSize) {
+        const chunk = excelIdCandidates.slice(i, i + chunkSize)
+        const { data: hit } = await supabase
+          .from('ep_data')
+          .select('original_id')
+          .in('original_id', chunk)
+        if (hit) {
+          for (const r of hit) {
+            if (r && r.original_id) presentInDb.add(String(r.original_id))
+          }
+        }
+      }
+    }
+    if (presentInDb.size > 0) {
+      const itemsToAddFinal = comparisonResult.itemsToAdd.filter((item) => {
+        const id = item.id ? String(item.id) : null
+        if (!id) return true
+        return !presentInDb.has(id)
+      })
+      const movedToUnchanged = comparisonResult.itemsToAdd.filter((item) => {
+        const id = item.id ? String(item.id) : null
+        return !!(id && presentInDb.has(id))
+      })
+      const unchangedFinal = [...comparisonResult.unchangedItems, ...movedToUnchanged]
+      comparisonResult = {
+        ...comparisonResult,
+        itemsToAdd: itemsToAddFinal,
+        unchangedItems: unchangedFinal
+      }
+    }
 
     // 디버그 및 원인 진단: 비교와 동일한 정규화 규칙 사용
     const normalizeId = (s: unknown): string | null => {
