@@ -196,6 +196,10 @@ export async function POST(request: NextRequest) {
       const idLooseMatch = nidLoose ? existingIdLoose.has(nidLoose) : false
       const dbTitleForId = nidUltra ? (dbUltraIdToNormTitle.get(nidUltra) || null) : null
       const titleEqual = t && dbTitleForId ? t === dbTitleForId : null
+      const rawId = item.id ? String(item.id) : null
+      const rawExists = rawId ? presentInDb.has(rawId) : false
+      const normIdForGuard = rawId ? normalizeIdForGuard(rawId) : null
+      const normExists = normIdForGuard ? presentInDbNormalized.has(normIdForGuard) : false
       return {
         id: item.id ?? null,
         title: item.title ?? null,
@@ -206,7 +210,11 @@ export async function POST(request: NextRequest) {
         excel_id_normalized_ultra: nidUltra,
         excel_title_normalized: t ?? null,
         db_title_normalized_for_id: dbTitleForId,
-        title_equal: titleEqual
+        title_equal: titleEqual,
+        db_exists_raw: rawExists,
+        db_exists_norm: normExists,
+        parsed_id_raw: rawId,
+        parsed_title_raw: item.title ?? null
       }
     })
 
