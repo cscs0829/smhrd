@@ -1,11 +1,12 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useCallback } from 'react'
+import { useDropzone } from 'react-dropzone'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Upload, FileSpreadsheet, CheckCircle, Trash2, Plus } from 'lucide-react'
+import { Upload, FileSpreadsheet, CheckCircle, Trash2, Plus, AlertCircle } from 'lucide-react'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 
 interface EPDataItem {
@@ -42,6 +43,25 @@ export function EPDataProcessor({ onFileSelect }: EPDataProcessorProps) {
       processFile(selectedFile)
     }
   }
+
+  const onDrop = useCallback((acceptedFiles: File[]) => {
+    const selectedFile = acceptedFiles[0]
+    if (selectedFile) {
+      setFile(selectedFile)
+      onFileSelect(selectedFile)
+      processFile(selectedFile)
+    }
+  }, [onFileSelect])
+
+  const { getRootProps, getInputProps, isDragActive, isDragAccept, isDragReject, fileRejections } = useDropzone({
+    onDrop,
+    accept: {
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': ['.xlsx'],
+      'application/vnd.ms-excel': ['.xls']
+    },
+    multiple: false,
+    disabled: isProcessingFile
+  })
 
   const processFile = async (file: File) => {
     setIsProcessingFile(true)
@@ -123,23 +143,67 @@ export function EPDataProcessor({ onFileSelect }: EPDataProcessorProps) {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-gray-400 transition-colors">
+            <div
+              {...getRootProps()}
+              className={`border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-all duration-200 ${
+                isDragActive
+                  ? isDragAccept
+                    ? 'border-green-400 bg-green-50 dark:bg-green-950'
+                    : isDragReject
+                    ? 'border-red-400 bg-red-50 dark:bg-red-950'
+                    : 'border-blue-400 bg-blue-50 dark:bg-blue-950'
+                  : 'border-gray-300 hover:border-gray-400 dark:border-gray-600 dark:hover:border-gray-500'
+              } ${isProcessingFile ? 'opacity-50 cursor-not-allowed' : ''}`}
+            >
+              <input {...getInputProps()} />
               <Upload className="h-12 w-12 mx-auto text-gray-400 mb-4" />
-              <p className="text-gray-600 mb-4">ep데이터.xlsx 파일을 업로드하세요</p>
-              <input
-                type="file"
-                accept=".xlsx,.xls"
-                onChange={handleFileChange}
-                disabled={isProcessingFile}
-                className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 disabled:opacity-50"
-              />
+              {isDragActive ? (
+                isDragAccept ? (
+                  <p className="text-green-600 dark:text-green-400 font-medium">
+                    Excel 파일을 여기에 놓으세요...
+                  </p>
+                ) : isDragReject ? (
+                  <p className="text-red-600 dark:text-red-400 font-medium">
+                    Excel 파일만 업로드 가능합니다
+                  </p>
+                ) : (
+                  <p className="text-blue-600 dark:text-blue-400 font-medium">
+                    파일을 여기에 놓으세요...
+                  </p>
+                )
+              ) : (
+                <div>
+                  <p className="text-gray-600 dark:text-gray-300 mb-2 font-medium">
+                    Excel 파일을 드래그하거나 클릭하여 업로드하세요
+                  </p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                    .xlsx 또는 .xls 형식
+                  </p>
+                </div>
+              )}
             </div>
             
+            {/* 파일 거부 오류 */}
+            {fileRejections.length > 0 && (
+              <Alert variant="destructive">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>
+                  Excel 파일만 업로드 가능합니다. 다른 형식의 파일은 지원되지 않습니다.
+                </AlertDescription>
+              </Alert>
+            )}
+
             {file && (
               <Alert>
                 <CheckCircle className="h-4 w-4" />
-                <AlertDescription>
-                  파일이 선택되었습니다: <strong>{file.name}</strong>
+                <AlertDescription className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <FileSpreadsheet className="h-4 w-4 text-green-600" />
+                    <span className="font-medium">{file.name}</span>
+                    <Badge variant="secondary">
+                      {(file.size / 1024).toFixed(1)} KB
+                    </Badge>
+                  </div>
                 </AlertDescription>
               </Alert>
             )}
@@ -151,6 +215,13 @@ export function EPDataProcessor({ onFileSelect }: EPDataProcessorProps) {
                 </AlertDescription>
               </Alert>
             )}
+
+            {/* 도움말 */}
+            <div className="text-sm text-gray-500 dark:text-gray-400 space-y-1">
+              <p>• 지원 형식: Excel 파일 (.xlsx, .xls)</p>
+              <p>• 파일 크기: 최대 10MB</p>
+              <p>• 필수 컬럼: ID, 제목</p>
+            </div>
           </div>
         </CardContent>
       </Card>
