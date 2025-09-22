@@ -60,6 +60,7 @@ export async function POST(request: NextRequest) {
 
     // 최종 보정: DB 존재 여부로 ID만으로 unchanged 강제 허용 (정확 일치)
     // - 세트 불일치나 정규화 오탐이 남는 경우를 방지하기 위한 안전장치
+    const discoveredTitleSet = new Set<string>()
     // 보정은 엑셀 원본에서 직접 수집: jsonData의 id를 정규화하여 사용할 것
     const normalizeIdForGuard = (s: unknown): string | null => {
       if (s == null) return null
@@ -135,7 +136,7 @@ export async function POST(request: NextRequest) {
                 .trim()
               return sval ? sval.normalize('NFC').toLowerCase() : null
             })()
-            if (tNorm) existingTitle.add(tNorm)
+            if (tNorm) discoveredTitleSet.add(tNorm)
           }
         }
       }
@@ -156,7 +157,7 @@ export async function POST(request: NextRequest) {
           return sval ? sval.normalize('NFC').toLowerCase() : null
         })()
         const existsById = presentInDb.has(id) || (idNorm ? presentInDbNormalized.has(idNorm) : false)
-        const existsByTitle = tNorm ? existingTitle.has(tNorm) : false
+        const existsByTitle = tNorm ? (existingTitle.has(tNorm) || discoveredTitleSet.has(tNorm)) : false
         return !(existsById || existsByTitle)
       })
       const movedToUnchanged = comparisonResult.itemsToAdd.filter((item) => {
@@ -175,7 +176,7 @@ export async function POST(request: NextRequest) {
         if (!id && !tNorm) return false
         const idNorm = normalizeIdForGuard(id)
         const existsById = id ? (presentInDb.has(id) || (idNorm ? presentInDbNormalized.has(idNorm) : false)) : false
-        const existsByTitle = tNorm ? existingTitle.has(tNorm) : false
+        const existsByTitle = tNorm ? (existingTitle.has(tNorm) || discoveredTitleSet.has(tNorm)) : false
         return existsById || existsByTitle
       })
       const unchangedFinal = [...comparisonResult.unchangedItems, ...movedToUnchanged]
