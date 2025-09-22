@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import * as XLSX from 'xlsx'
 import iconv from 'iconv-lite'
-import { getSupabaseClient } from '@/lib/supabase'
+import { getSupabaseAdmin } from '@/lib/supabase'
 
 export async function POST(request: NextRequest) {
   try {
@@ -42,10 +42,11 @@ export async function POST(request: NextRequest) {
     }
 
     // 데이터베이스에서 모든 EP 데이터 가져오기 (original_id 포함)
-    const supabase = getSupabaseClient()
+    // RLS 영향을 받지 않도록 관리자 클라이언트 사용
+    const supabase = getSupabaseAdmin()
     const { data: allEpData, error: epError } = await supabase
       .from('ep_data')
-      .select('*')
+      .select('id, original_id, title, created_at')
 
     if (epError) {
       console.error('EP 데이터 조회 오류:', epError)
