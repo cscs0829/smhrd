@@ -235,46 +235,61 @@ function compareEPData(
     const v = normalizeId(s)
     return v ? v.toLowerCase() : null
   }
+  const normalizeIdUltraLoose = (s: unknown): string | null => {
+    if (s == null) return null
+    const str = String(s)
+      .replace(/[\u200B-\u200D\uFEFF]/g, '')
+      .normalize('NFKC')
+      .replace(/[^0-9A-Za-z]+/g, '_')
+      .replace(/_+/g, '_')
+      .trim()
+    if (!str) return null
+    return str.normalize('NFC').toLowerCase()
+  }
   const normalizeTitle = (s: unknown): string | null => {
     if (s == null) return null
     const str = String(s)
       .replace(/[\u200B-\u200D\uFEFF]/g, '')
       .normalize('NFKC')
-      .replace(/[\p{P}\p{S}]+/gu, ' ') // 구두점/기호 제거→공백 치환
+      .replace(/[\p{P}\p{S}]+/gu, ' ')
       .replace(/\s+/g, ' ')
       .trim()
     if (!str) return null
     return str.normalize('NFC').toLowerCase()
   }
 
-  // 기존/새 데이터 인덱스 구성 (id 우선, 제목은 보조)
+  // 기존/새 데이터 인덱스 구성 (제목 우선, ID 보조)
   const existingOriginalIdSet = new Set<string>()
   const existingOriginalIdLooseSet = new Set<string>()
+  const existingOriginalIdUltraLooseSet = new Set<string>()
   const existingTitleSet = new Set<string>()
   for (const item of existingData) {
     const oid = normalizeId(item.original_id)
     if (oid) existingOriginalIdSet.add(oid)
     const oidLoose = normalizeIdLoose(item.original_id)
     if (oidLoose) existingOriginalIdLooseSet.add(oidLoose)
+    const oidUltra = normalizeIdUltraLoose(item.original_id)
+    if (oidUltra) existingOriginalIdUltraLooseSet.add(oidUltra)
     const t = normalizeTitle(item.title)
     if (t) existingTitleSet.add(t)
   }
 
   const newOriginalIdSet = new Set<string>()
   const newOriginalIdLooseSet = new Set<string>()
+  const newOriginalIdUltraLooseSet = new Set<string>()
   const newTitleSet = new Set<string>()
   for (const item of newData) {
     const nid = normalizeId(item.id)
     if (nid) newOriginalIdSet.add(nid)
     const nidLoose = normalizeIdLoose(item.id)
     if (nidLoose) newOriginalIdLooseSet.add(nidLoose)
+    const nidUltra = normalizeIdUltraLoose(item.id)
+    if (nidUltra) newOriginalIdUltraLooseSet.add(nidUltra)
     const t = normalizeTitle(item.title)
     if (t) newTitleSet.add(t)
   }
 
   // 규칙 (요청 반영: 제목 우선, ID 보조)
-  // 1) 제목이 있으면 제목으로 먼저 판단
-  // 2) 제목으로 판단되지 않을 때만 ID(정확/loose)로 보조 판단
   const itemsToAdd = newData.filter((item) => {
     const nid = normalizeId(item.id)
     const t = normalizeTitle(item.title)
@@ -286,9 +301,11 @@ function compareEPData(
     // 제목으로 매칭이 안 될 때만 ID 보조 판단
     if (nid) {
       const nidLoose = normalizeIdLoose(item.id)
+      const nidUltra = normalizeIdUltraLoose(item.id)
       const hasExact = existingOriginalIdSet.has(nid)
       const hasLoose = nidLoose ? existingOriginalIdLooseSet.has(nidLoose) : false
-      if (hasExact || hasLoose) return false
+      const hasUltra = nidUltra ? existingOriginalIdUltraLooseSet.has(nidUltra) : false
+      if (hasExact || hasLoose || hasUltra) return false
     }
     // 제목도 없고 ID도 없으면 추가 대상으로 간주
     return true
@@ -303,9 +320,11 @@ function compareEPData(
     // 제목으로도 매칭되지 않을 때만 ID 보조 판단
     if (oid) {
       const oidLoose = normalizeIdLoose(item.original_id)
+      const oidUltra = normalizeIdUltraLoose(item.original_id)
       const presentExact = newOriginalIdSet.has(oid)
       const presentLoose = oidLoose ? newOriginalIdLooseSet.has(oidLoose) : false
-      if (presentExact || presentLoose) return false
+      const presentUltra = oidUltra ? newOriginalIdUltraLooseSet.has(oidUltra) : false
+      if (presentExact || presentLoose || presentUltra) return false
     }
     // 제목도 없고 ID도 없거나 모두 불일치면 제거 대상으로 간주
     return true
@@ -320,7 +339,8 @@ function compareEPData(
     // 제목으로 판단되지 않을 때만 ID로 동일 여부 판단
     if (nid) {
       const nidLoose = normalizeIdLoose(item.id)
-      if (existingOriginalIdSet.has(nid) || (nidLoose ? existingOriginalIdLooseSet.has(nidLoose) : false)) return true
+      const nidUltra = normalizeIdUltraLoose(item.id)
+      if (existingOriginalIdSet.has(nid) || (nidLoose ? existingOriginalIdLooseSet.has(nidLoose) : false) || (nidUltra ? existingOriginalIdUltraLooseSet.has(nidUltra) : false)) return true
     }
     return false
   })
