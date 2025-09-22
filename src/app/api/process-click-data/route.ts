@@ -41,7 +41,7 @@ export async function POST(request: NextRequest) {
       })
     }
 
-    // 데이터베이스에서 모든 EP 데이터 가져오기
+    // 데이터베이스에서 모든 EP 데이터 가져오기 (original_id 포함)
     const supabase = getSupabaseClient()
     const { data: allEpData, error: epError } = await supabase
       .from('ep_data')
@@ -52,14 +52,22 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: '데이터 조회 중 오류가 발생했습니다' }, { status: 500 })
     }
 
-    // 상품명을 기준으로 매칭되는 데이터 찾기
+    // 상품명과 original_id를 기준으로 매칭되는 데이터 찾기
     const matchedItems = []
     const unmatchedProducts = []
 
     for (const product of zeroClickProducts) {
-      const matchedItem = allEpData?.find(epItem => 
-        epItem.title && epItem.title.trim() === product.title.trim()
+      // 먼저 original_id로 매칭 시도
+      let matchedItem = allEpData?.find(epItem => 
+        epItem.original_id && epItem.original_id === product.id
       )
+      
+      // original_id 매칭 실패 시 상품명으로 매칭 시도
+      if (!matchedItem) {
+        matchedItem = allEpData?.find(epItem => 
+          epItem.title && epItem.title.trim() === product.title.trim()
+        )
+      }
       
       if (matchedItem) {
         matchedItems.push(matchedItem)
@@ -74,23 +82,29 @@ export async function POST(request: NextRequest) {
     // 새로 생성될 데이터 (ID, title, image_link, add_image_link, video_url만 변경)
     const createdItems = deletedItems.map(item => {
       const currentDate = new Date().toISOString().slice(0, 10).replace(/-/g, '')
-      const originalIdParts = item.id.split('_')
+      // original_id에서 정보 추출 (original_id가 없는 경우 기존 id 사용)
+      const sourceId = item.original_id || item.id
+      const originalIdParts = sourceId.split('_')
       const code = originalIdParts[1] || '000'
       const cityCodeOrName = originalIdParts[2] || 'seoul'
       const city = cityCodeOrName.toLowerCase()
       
-      // 새로운 ID 생성
-      const newId = `${currentDate}_${code}_${city}_0001`
+      // 새로운 original_id 생성
+      const newOriginalId = `${currentDate}_${code}_${city}_0001`
       
       return {
         ...item,
-        id: newId,
+        // id는 UUID로 자동 생성되므로 제거
+        id: undefined,
+        // original_id에 새로운 ID 저장
+        original_id: newOriginalId,
         title: `${city} 특별 여행 상품`,
         image_link: `https://example.com/images/${city}/main.jpg`,
         add_image_link: `https://example.com/images/${city}/add1.jpg|https://example.com/images/${city}/add2.jpg|https://example.com/images/${city}/add3.jpg`,
         video_url: `https://example.com/videos/${city}/intro.mp4`,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
+        // created_at, updated_at는 자동 생성되므로 제거
+        created_at: undefined,
+        updated_at: undefined
       }
     })
 

@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
     const { data: backupData, error: backupError } = await supabase
       .from('deleted_items')
       .insert(items.map(item => ({
-        original_id: item.id,
+        original_id: item.id, // UUID id를 original_id로 저장
         original_data: item,
         reason: '클릭수 0으로 인한 삭제'
       })))

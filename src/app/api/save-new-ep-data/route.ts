@@ -11,10 +11,27 @@ export async function POST(request: NextRequest) {
 
     const supabase = getSupabaseClient()
     
+    // Excel 데이터를 ep_data 테이블 구조에 맞게 변환
+    const transformedItems = items.map(item => {
+      const transformed = { ...item }
+      
+      // Excel의 id를 original_id로 이동
+      if (transformed.id) {
+        transformed.original_id = transformed.id
+        delete transformed.id // UUID가 자동 생성되도록 id 삭제
+      }
+      
+      // created_at, updated_at는 자동 생성되므로 제거
+      delete transformed.created_at
+      delete transformed.updated_at
+      
+      return transformed
+    })
+    
     // 새로운 데이터를 데이터베이스에 저장
     const { data, error } = await supabase
       .from('ep_data')
-      .insert(items)
+      .insert(transformedItems)
       .select()
 
     if (error) {
