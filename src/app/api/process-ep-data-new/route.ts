@@ -105,6 +105,7 @@ export async function POST(request: NextRequest) {
         }
       }
     }
+    // 1차 보정: ID 기준 존재 → unchanged 이동
     if (presentInDb.size > 0) {
       const itemsToAddFinal = comparisonResult.itemsToAdd.filter((item) => {
         const id = item.id ? String(item.id) : null
@@ -123,6 +124,46 @@ export async function POST(request: NextRequest) {
         ...comparisonResult,
         itemsToAdd: itemsToAddFinal,
         unchangedItems: unchangedFinal
+      }
+    }
+
+    // 2차 보정: Title 기준 존재 → unchanged 이동 (정확 일치)
+    if (comparisonResult.itemsToAdd.length > 0) {
+      const toAddTitles = Array.from(new Set(
+        comparisonResult.itemsToAdd
+          .map((it) => (it.title != null ? String(it.title) : null))
+          .filter((v): v is string => Boolean(v))
+      ))
+      if (toAddTitles.length > 0) {
+        const existingTitles = new Set<string>()
+        const chunkSize = 1000
+        for (let i = 0; i < toAddTitles.length; i += chunkSize) {
+          const chunk = toAddTitles.slice(i, i + chunkSize)
+          const { data: hitTitle } = await supabase
+            .from('ep_data')
+            .select('title')
+            .in('title', chunk)
+          if (hitTitle) {
+            for (const r of hitTitle as Array<{ title: string | null }>) {
+              if (r?.title) existingTitles.add(String(r.title))
+            }
+          }
+        }
+        if (existingTitles.size > 0) {
+          const itemsToAddFinal2 = comparisonResult.itemsToAdd.filter((item) => {
+            const t = item.title != null ? String(item.title) : null
+            return t ? !existingTitles.has(t) : true
+          })
+          const movedToUnchanged2 = comparisonResult.itemsToAdd.filter((item) => {
+            const t = item.title != null ? String(item.title) : null
+            return !!(t && existingTitles.has(t))
+          })
+          comparisonResult = {
+            ...comparisonResult,
+            itemsToAdd: itemsToAddFinal2,
+            unchangedItems: [...comparisonResult.unchangedItems, ...movedToUnchanged2]
+          }
+        }
       }
     }
 
