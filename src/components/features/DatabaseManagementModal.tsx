@@ -78,7 +78,7 @@ const TABLE_SCHEMAS = {
   titles: {
     displayName: '제목',
     columns: [
-      { key: 'id', label: 'ID', type: 'number', editable: false, required: false },
+      { key: 'id', label: 'ID', type: 'text', editable: false, required: false },
       { key: 'title', label: '제목', type: 'text', editable: true, required: true },
       { key: 'city', label: '도시', type: 'text', editable: true, required: true },
       { key: 'created_at', label: '생성일', type: 'datetime', editable: false, required: false }
@@ -251,13 +251,36 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
       ] : col.type === 'select' && 'options' in col && col.options ?
         col.options.map(option => ({ text: option.toUpperCase(), value: option })) : undefined,
       // 편집 컴포넌트 커스터마이징
-      muiEditTextFieldProps: () => ({
-        type: col.type === 'number' ? 'number' : col.type === 'password' ? 'password' : 'text',
-        required: col.required || false,
-        variant: 'outlined' as const,
-        size: 'small' as const,
-        label: col.required ? `${col.label} *` : col.label,
-      }),
+      muiEditTextFieldProps: ({ cell }) => {
+        // id 필드는 항상 텍스트로 처리
+        const inputType = col.key === 'id' ? 'text' : (col.type === 'number' ? 'number' : col.type === 'password' ? 'password' : 'text')
+        
+        const baseProps = {
+          type: inputType,
+          required: col.required || false,
+          variant: 'outlined' as const,
+          size: 'small' as const,
+          label: col.required ? `${col.label} *` : col.label,
+        }
+
+        // number 타입 필드이면서 id가 아닌 경우에만 validation 추가
+        if (col.type === 'number' && col.key !== 'id') {
+          return {
+            ...baseProps,
+            onBlur: (event: React.FocusEvent<HTMLInputElement>) => {
+              const value = event.target.value
+              // 유효하지 않은 값인 경우 이전 값으로 복원
+              if (value !== '' && isNaN(Number(value))) {
+                event.target.value = String(cell.getValue() || '')
+              }
+            },
+            error: false, // validation error 상태 관리
+            helperText: undefined, // helper text 제거
+          }
+        }
+
+        return baseProps
+      },
       // boolean과 select 타입을 위한 커스텀 편집 컴포넌트
       Edit: col.type === 'boolean' ? ({ cell, column, row, table }) => (
         <Select
