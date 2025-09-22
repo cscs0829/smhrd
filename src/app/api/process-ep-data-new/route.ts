@@ -153,10 +153,9 @@ function compareEPData(
     return str.normalize('NFC').toLowerCase()
   }
 
-  // 기존 데이터 인덱스 구성
+  // 기존/새 데이터 인덱스 구성 (id 우선, 제목은 보조)
   const existingOriginalIdSet = new Set<string>()
   const existingTitleSet = new Set<string>()
-
   for (const item of existingData) {
     const oid = normalizeStr(item.original_id)
     if (oid) existingOriginalIdSet.add(oid)
@@ -164,10 +163,8 @@ function compareEPData(
     if (t) existingTitleSet.add(t)
   }
 
-  // 새 데이터 인덱스 구성
   const newOriginalIdSet = new Set<string>()
   const newTitleSet = new Set<string>()
-
   for (const item of newData) {
     const nid = normalizeStr(item.id)
     if (nid) newOriginalIdSet.add(nid)
@@ -175,37 +172,41 @@ function compareEPData(
     if (t) newTitleSet.add(t)
   }
 
-  // 추가할 항목: (id가 있고 그 id가 기존 original_id에 없고) AND (제목이 없거나 제목도 기존에 없음)
+  // 규칙
+  // 1) 양쪽 모두 id가 있는 경우: id로만 판단
+  // 2) 한쪽이라도 id가 없는 경우에만 title 보조 판단
   const itemsToAdd = newData.filter((item) => {
     const nid = normalizeStr(item.id)
     const t = normalizeStr(item.title)
 
-    const hasByOriginalId = nid ? existingOriginalIdSet.has(nid) : false
-    const hasByTitle = t ? existingTitleSet.has(t) : false
-
-    return !(hasByOriginalId || hasByTitle)
+    if (nid) {
+      // id가 있으면 id로만 판단
+      return !existingOriginalIdSet.has(nid)
+    }
+    // id가 없으면 제목으로 보조 판단
+    return t ? !existingTitleSet.has(t) : true
   })
 
-  // 제거할 항목: 기존 데이터 중에서 (original_id가 새 id 세트에 없고) AND (제목도 새 제목 세트에 없음)
   const itemsToRemove = existingData.filter((item) => {
     const oid = normalizeStr(item.original_id)
     const t = normalizeStr(item.title)
 
-    const presentByOriginalId = oid ? newOriginalIdSet.has(oid) : false
-    const presentByTitle = t ? newTitleSet.has(t) : false
-
-    return !(presentByOriginalId || presentByTitle)
+    if (oid) {
+      // id가 있으면 id로만 판단
+      return !newOriginalIdSet.has(oid)
+    }
+    // id가 없으면 제목으로 보조 판단
+    return t ? !newTitleSet.has(t) : true
   })
 
-  // 변경 없음 항목: 새 데이터 중에서 (original_id 또는 제목으로 기존에 존재)
   const unchangedItems = newData.filter((item) => {
     const nid = normalizeStr(item.id)
     const t = normalizeStr(item.title)
 
-    const hasByOriginalId = nid ? existingOriginalIdSet.has(nid) : false
-    const hasByTitle = t ? existingTitleSet.has(t) : false
-
-    return hasByOriginalId || hasByTitle
+    if (nid) {
+      return existingOriginalIdSet.has(nid)
+    }
+    return t ? existingTitleSet.has(t) : false
   })
 
   return {
