@@ -58,31 +58,77 @@ export async function POST(request: NextRequest) {
     const existingData = aggregated
     const comparisonResult = compareEPData(jsonData, existingData || [])
 
-    // 디버그: 수집된 기존 original_id 세트와 엑셀 id 세트의 차집합 측정
-    const normalizeStr = (s: unknown): string | null => {
-      if (!s) return null
+    // 디버그 및 원인 진단: 비교와 동일한 정규화 규칙 사용
+    const normalizeId = (s: unknown): string | null => {
+      if (s == null) return null
       const str = String(s)
         .replace(/[\u200B-\u200D\uFEFF]/g, '')
-        .replace(/\s+/g, ' ')
         .replace(/_+/g, '_')
+        .trim()
+      if (!str) return null
+      return str.normalize('NFC')
+    }
+    const normalizeIdLoose = (s: unknown): string | null => {
+      const v = normalizeId(s)
+      return v ? v.toLowerCase() : null
+    }
+    const normalizeTitle = (s: unknown): string | null => {
+      if (s == null) return null
+      const str = String(s)
+        .replace(/[\u200B-\u200D\uFEFF]/g, '')
+        .normalize('NFKC')
+        .replace(/[\p{P}\p{S}]+/gu, ' ')
+        .replace(/\s+/g, ' ')
         .trim()
       if (!str) return null
       return str.normalize('NFC').toLowerCase()
     }
-    const collectedExistingIdSet = new Set<string>()
+
+    const existingIdExact = new Set<string>()
+    const existingIdLoose = new Set<string>()
+    const existingTitle = new Set<string>()
     for (const row of existingData) {
-      const oid = normalizeStr(row.original_id)
-      if (oid) collectedExistingIdSet.add(oid)
+      const oid = normalizeId(row.original_id)
+      if (oid) existingIdExact.add(oid)
+      const oidLoose = normalizeIdLoose(row.original_id)
+      if (oidLoose) existingIdLoose.add(oidLoose)
+      const t = normalizeTitle(row.title)
+      if (t) existingTitle.add(t)
     }
-    const excelIdList: string[] = []
+
+    const excelIdExactList: string[] = []
+    const excelIdLooseList: string[] = []
+    const excelTitleList: string[] = []
     for (const row of jsonData) {
-      const nid = normalizeStr(row.id)
-      if (nid) excelIdList.push(nid)
+      const nid = normalizeId(row.id)
+      const nidLoose = normalizeIdLoose(row.id)
+      const t = normalizeTitle(row.title)
+      if (nid) excelIdExactList.push(nid)
+      if (nidLoose) excelIdLooseList.push(nidLoose)
+      if (t) excelTitleList.push(t)
     }
+
     const missingIds: string[] = []
-    for (const nid of excelIdList) {
-      if (!collectedExistingIdSet.has(nid)) missingIds.push(nid)
+    for (const nidLoose of excelIdLooseList) {
+      if (!existingIdLoose.has(nidLoose)) missingIds.push(nidLoose)
     }
+
+    // why_to_add: 각 추가 대상에 대해 어떤 기준이 불일치했는지 표기
+    const whyToAdd = (comparisonResult.itemsToAdd || []).map((item) => {
+      const nid = normalizeId(item.id)
+      const nidLoose = normalizeIdLoose(item.id)
+      const t = normalizeTitle(item.title)
+      const titleMatch = t ? existingTitle.has(t) : false
+      const idExactMatch = nid ? existingIdExact.has(nid) : false
+      const idLooseMatch = nidLoose ? existingIdLoose.has(nidLoose) : false
+      return {
+        id: item.id ?? null,
+        title: item.title ?? null,
+        title_match: titleMatch,
+        id_exact_match: idExactMatch,
+        id_loose_match: idLooseMatch
+      }
+    })
 
     // 디버그: 세트/카운트 로깅 및 진단 정보 동봉
     console.log('[process-ep-data-new] excel_count:', jsonData.length, 'db_count:', existingData?.length || 0,
@@ -107,6 +153,7 @@ export async function POST(request: NextRequest) {
       debug_missing_id_count: missingIds.length,
       debug_missing_id_samples: missingIds.slice(0, 10),
       env_supabase_url: process.env.NEXT_PUBLIC_SUPABASE_URL || 'missing',
+      why_to_add: whyToAdd,
       commit_sha: process.env.VERCEL_GIT_COMMIT_SHA || process.env.NEXT_PUBLIC_COMMIT_SHA || 'unknown',
       id_normalization: 'exact_case_preserved_underscore_preserved',
       sample_existing: (existingData || []).slice(0, 5).map((row) => {
