@@ -72,7 +72,7 @@ export async function POST(request: NextRequest) {
     }
     const excelIdCandidates: string[] = Array.from(new Set(
       (jsonData || [])
-        .map((row) => normalizeIdForGuard((row as any).id))
+        .map((row: { id?: unknown }) => normalizeIdForGuard(row.id))
         .filter((v): v is string => Boolean(v))
     ))
     const presentInDb = new Set<string>()
