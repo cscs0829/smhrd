@@ -24,7 +24,7 @@ export async function POST(request: NextRequest) {
     const { allData, deletedItems } = await getExistingEPData()
     
     // 데이터 비교 로직
-    const comparisonResult = compareEPData(jsonData, allData)
+    const comparisonResult = compareEPData(jsonData as Array<{ id: string; title?: string; [key: string]: unknown }>, allData)
     
     // 삭제된 데이터도 함께 반환
     return NextResponse.json({
@@ -51,7 +51,7 @@ async function getExistingEPData() {
       .order('created_at', { ascending: false }),
     supabase
       .from('deleted_items')
-      .select('original_id as id, original_data, created_at')
+      .select('original_id, original_data, created_at')
       .order('created_at', { ascending: false })
   ])
   
@@ -64,7 +64,7 @@ async function getExistingEPData() {
   }
   
   // 삭제된 데이터에서 title 추출
-  const deletedItemsWithTitle = (deletedData.data || []).map((item: any) => ({
+  const deletedItemsWithTitle = (deletedData.data || []).map((item: { original_id: string; original_data: { title?: string }; created_at: string }) => ({
     id: item.original_id,
     title: item.original_data?.title || '',
     created_at: item.created_at,
@@ -83,7 +83,7 @@ async function getExistingEPData() {
   }
 }
 
-function compareEPData(newData: any[], existingData: any[]) {
+function compareEPData(newData: Array<{ id: string; title?: string; [key: string]: unknown }>, existingData: Array<{ id: string; title?: string; [key: string]: unknown }>) {
   // ID와 title을 모두 고려한 비교를 위해 Map 사용
   const existingDataMap = new Map()
   existingData.forEach(item => {

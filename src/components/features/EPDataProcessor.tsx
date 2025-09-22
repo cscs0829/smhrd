@@ -5,13 +5,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Upload, FileSpreadsheet, CheckCircle, AlertTriangle, Trash2, Plus } from 'lucide-react'
+import { Upload, FileSpreadsheet, CheckCircle, Trash2, Plus } from 'lucide-react'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 
 interface EPDataItem {
   id: string
   title: string
-  [key: string]: any
+  deleted_at?: string
+  [key: string]: unknown
 }
 
 interface ComparisonResult {
@@ -26,7 +27,7 @@ interface EPDataProcessorProps {
   isProcessing: boolean
 }
 
-export function EPDataProcessor({ onFileSelect, isProcessing }: EPDataProcessorProps) {
+export function EPDataProcessor({ onFileSelect }: EPDataProcessorProps) {
   const [file, setFile] = useState<File | null>(null)
   const [comparisonResult, setComparisonResult] = useState<ComparisonResult | null>(null)
   const [showConfirmDialog, setShowConfirmDialog] = useState(false)
@@ -249,7 +250,7 @@ export function EPDataProcessor({ onFileSelect, isProcessing }: EPDataProcessorP
                         <p className="font-medium text-blue-800">{item.title}</p>
                         <p className="text-sm text-blue-600">ID: {item.id}</p>
                         {item.deleted_at && (
-                          <p className="text-xs text-orange-600">삭제된 데이터 (삭제됨: {new Date(item.deleted_at).toLocaleDateString()})</p>
+                          <p className="text-xs text-orange-600">삭제된 데이터 (삭제됨: {new Date(item.deleted_at as string).toLocaleDateString()})</p>
                         )}
                       </div>
                       <Badge variant="outline" className="text-blue-600 border-blue-300">
@@ -286,7 +287,7 @@ export function EPDataProcessor({ onFileSelect, isProcessing }: EPDataProcessorP
                       <div>
                         <p className="font-medium text-orange-800">{item.title}</p>
                         <p className="text-sm text-orange-600">ID: {item.id}</p>
-                        <p className="text-xs text-orange-500">삭제됨: {new Date(item.deleted_at).toLocaleDateString()}</p>
+                        <p className="text-xs text-orange-500">삭제됨: {new Date(item.deleted_at as string).toLocaleDateString()}</p>
                       </div>
                       <Badge variant="outline" className="text-orange-600 border-orange-300">
                         삭제됨

@@ -66,7 +66,7 @@ export async function POST(request: NextRequest) {
     // 삭제된 항목 결과 처리
     if (deletedData) {
       deletedData.forEach(item => {
-        const originalData = item.original_data as any
+        const originalData = item.original_data as { title?: string; city?: string }
         const title = originalData?.title || ''
         const city = originalData?.city || '알 수 없음'
         
