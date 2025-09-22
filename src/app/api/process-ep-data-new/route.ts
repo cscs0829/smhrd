@@ -51,6 +51,8 @@ export async function POST(request: NextRequest) {
       console.log('[process-ep-data-new] sample itemsToAdd ids:', comparisonResult.itemsToAdd.slice(0, 5).map(i => i.id))
     }
     
+    const getStrOrNull = (v: unknown): string | null => (v == null ? null : String(v))
+
     const body = {
       ...comparisonResult,
       // 최상위에 디버그 정보 노출 (일부 뷰어에서 _prefix 숨김 방지)
@@ -61,7 +63,13 @@ export async function POST(request: NextRequest) {
       unchanged_count: comparisonResult.unchangedItems.length,
       sample_to_add: comparisonResult.itemsToAdd.slice(0, 5).map(i => ({ id: i.id, title: i.title })),
       env_supabase_url: process.env.NEXT_PUBLIC_SUPABASE_URL || 'missing',
-      sample_existing: (existingData || []).slice(0, 5).map(i => ({ original_id: (i as any).original_id, title: (i as any).title }))
+      sample_existing: (existingData || []).slice(0, 5).map((row) => {
+        const rec = row as Record<string, unknown>
+        return {
+          original_id: getStrOrNull(rec.original_id),
+          title: getStrOrNull(rec.title)
+        }
+      })
     }
     return new NextResponse(JSON.stringify(body), {
       status: 200,
