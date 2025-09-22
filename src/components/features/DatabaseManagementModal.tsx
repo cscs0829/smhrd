@@ -6,35 +6,19 @@ import {
   MaterialReactTable,
   useMaterialReactTable,
   type MRT_ColumnDef,
-  type MRT_TableOptions,
   type MRT_Cell,
 } from 'material-react-table'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Separator } from '@/components/ui/separator'
-import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { 
   Plus, 
-  Save, 
   X, 
   Edit, 
   Trash2, 
   Search, 
-  Filter, 
-  Download, 
-  Upload,
-  Settings,
   Database,
-  Table,
-  AlertCircle,
-  CheckCircle,
-  RefreshCw
+  AlertCircle
 } from 'lucide-react'
 import { useTheme } from 'next-themes'
 import { toast } from 'sonner'
@@ -552,7 +536,7 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
       setGlobalFilter(value || '')
       setPagination(prev => ({ ...prev, pageIndex: 0 }))
     },
-    onColumnFiltersChange: (value: any) => {
+    onColumnFiltersChange: (value: unknown) => {
       const newValue = typeof value === 'function' ? value(columnFilters) : value
       setColumnFilters(newValue || [])
     },
@@ -560,24 +544,28 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
     onShowColumnFiltersChange: setShowColumnFilters,
     onShowGlobalFilterChange: setShowGlobalFilter,
     // 편집 관련 콜백
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     onEditingRowSave: ({ values, table }: { values: any; table: any }) => {
       saveData(values as TableData)
       table.setEditingRow(null)
     },
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     onEditingRowCancel: ({ table }: { table: any }) => {
       table.setEditingRow(null)
     },
     // 생성 관련 콜백
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     onCreatingRowSave: ({ values, table }: { values: any; table: any }) => {
       createData(values)
       table.setCreatingRow(null)
     },
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     onCreatingRowCancel: ({ table }: { table: any }) => {
       table.setCreatingRow(null)
     },
     
     // 편집 모달의 커스텀 렌더링 - 개선된 반응형 레이아웃
-    renderEditRowDialogContent: ({ internalEditComponents }: { internalEditComponents: any[] }) => {
+    renderEditRowDialogContent: ({ internalEditComponents }: { internalEditComponents: React.ReactNode[] }) => {
       return (
         <div className="space-y-6 p-2">
           <div className="text-sm text-gray-600 dark:text-gray-400 mb-4">
@@ -586,7 +574,7 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
           
           {/* 개선된 그리드 레이아웃 - 더 나은 반응형 */}
           <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
-            {internalEditComponents.map((component: any, index: number) => (
+            {internalEditComponents.map((component: React.ReactNode, index: number) => (
               <div key={index} className="min-h-[60px] flex flex-col">
                 {component}
               </div>
@@ -617,7 +605,7 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
     },
     
     // 생성 모달의 커스텀 렌더링 - 개선된 UI
-    renderCreateRowDialogContent: ({ internalEditComponents }: { internalEditComponents: any[] }) => {
+    renderCreateRowDialogContent: ({ internalEditComponents }: { internalEditComponents: React.ReactNode[] }) => {
       return (
         <div className="space-y-6 p-2">
           <div className="text-center mb-6">
@@ -631,7 +619,7 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
           
           {/* 개선된 그리드 레이아웃 - 더 직관적인 배치 */}
           <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
-            {internalEditComponents.map((component: any, index: number) => (
+            {internalEditComponents.map((component: React.ReactNode, index: number) => (
               <div key={index} className="min-h-[70px] flex flex-col space-y-1">
                 {component}
               </div>
@@ -662,6 +650,7 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
       )
     },
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     renderRowActions: ({ row, table }: { row: any; table: any }) => (
       <div className="flex gap-1">
         <Button 
@@ -680,7 +669,7 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
         </Button>
       </div>
     ),
-    renderTopToolbarCustomActions: ({ table }: { table: any }) => (
+    renderTopToolbarCustomActions: () => (
       <div className="flex gap-2">
         <Button 
           onClick={() => setShowNewDataModal(true)}

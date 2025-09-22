@@ -16,7 +16,7 @@ interface NewDataModalProps {
   isOpen: boolean
   onClose: () => void
   tableName: string
-  onSave: (data: Record<string, any>) => Promise<void>
+  onSave: (data: Record<string, unknown>) => Promise<void>
   schema?: {
     column_name: string
     data_type: string
@@ -33,7 +33,7 @@ export default function NewDataModal({
   schema = []
 }: NewDataModalProps) {
   const { resolvedTheme } = useTheme()
-  const [formData, setFormData] = useState<Record<string, any>>({})
+  const [formData, setFormData] = useState<Record<string, unknown>>({})
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
@@ -41,7 +41,7 @@ export default function NewDataModal({
   // 폼 데이터 초기화
   useEffect(() => {
     if (isOpen && schema.length > 0) {
-      const initialData: Record<string, any> = {}
+      const initialData: Record<string, unknown> = {}
       schema.forEach(column => {
         if (column.column_default !== null) {
           initialData[column.column_name] = column.column_default
@@ -60,7 +60,7 @@ export default function NewDataModal({
   }, [isOpen, schema])
 
   // 폼 데이터 업데이트
-  const handleInputChange = useCallback((columnName: string, value: any) => {
+  const handleInputChange = useCallback((columnName: string, value: unknown) => {
     setFormData(prev => ({
       ...prev,
       [columnName]: value
@@ -89,7 +89,7 @@ export default function NewDataModal({
   }, [formData, onSave, onClose])
 
   // 입력 필드 렌더링
-  const renderInputField = (column: any) => {
+  const renderInputField = (column: { column_name: string; data_type: string; is_nullable: string }) => {
     const { column_name, data_type, is_nullable } = column
     const value = formData[column_name] || ''
     const isRequired = is_nullable === 'NO'
@@ -125,7 +125,7 @@ export default function NewDataModal({
           {data_type.includes('text') ? (
             <Textarea
               id={column_name}
-              value={value}
+              value={String(value)}
               onChange={(e) => handleInputChange(column_name, e.target.value)}
               placeholder={`${column_name}을(를) 입력하세요`}
               className="min-h-[100px]"
@@ -133,7 +133,7 @@ export default function NewDataModal({
           ) : (
             <Input
               id={column_name}
-              value={value}
+              value={String(value)}
               onChange={(e) => handleInputChange(column_name, e.target.value)}
               placeholder={`${column_name}을(를) 입력하세요`}
             />
@@ -151,7 +151,7 @@ export default function NewDataModal({
           <Input
             id={column_name}
             type="number"
-            value={value}
+            value={String(value)}
             onChange={(e) => handleInputChange(column_name, parseFloat(e.target.value) || 0)}
             placeholder={`${column_name}을(를) 입력하세요`}
           />
@@ -168,7 +168,7 @@ export default function NewDataModal({
           <Input
             id={column_name}
             type={data_type.includes('date') ? 'date' : 'datetime-local'}
-            value={value}
+            value={String(value)}
             onChange={(e) => handleInputChange(column_name, e.target.value)}
           />
         </div>
@@ -183,7 +183,7 @@ export default function NewDataModal({
         </Label>
         <Input
           id={column_name}
-          value={value}
+          value={String(value)}
           onChange={(e) => handleInputChange(column_name, e.target.value)}
           placeholder={`${column_name}을(를) 입력하세요`}
         />
