@@ -58,6 +58,32 @@ export async function POST(request: NextRequest) {
     const existingData = aggregated
     const comparisonResult = compareEPData(jsonData, existingData || [])
 
+    // 디버그: 수집된 기존 original_id 세트와 엑셀 id 세트의 차집합 측정
+    const normalizeStr = (s: unknown): string | null => {
+      if (!s) return null
+      const str = String(s)
+        .replace(/[\u200B-\u200D\uFEFF]/g, '')
+        .replace(/\s+/g, ' ')
+        .replace(/_+/g, '_')
+        .trim()
+      if (!str) return null
+      return str.normalize('NFC').toLowerCase()
+    }
+    const collectedExistingIdSet = new Set<string>()
+    for (const row of existingData) {
+      const oid = normalizeStr((row as any).original_id)
+      if (oid) collectedExistingIdSet.add(oid)
+    }
+    const excelIdList: string[] = []
+    for (const row of jsonData) {
+      const nid = normalizeStr((row as any).id)
+      if (nid) excelIdList.push(nid)
+    }
+    const missingIds: string[] = []
+    for (const nid of excelIdList) {
+      if (!collectedExistingIdSet.has(nid)) missingIds.push(nid)
+    }
+
     // 디버그: 세트/카운트 로깅 및 진단 정보 동봉
     console.log('[process-ep-data-new] excel_count:', jsonData.length, 'db_count:', existingData?.length || 0,
       'toAdd:', comparisonResult.itemsToAdd.length,
@@ -78,6 +104,8 @@ export async function POST(request: NextRequest) {
       to_remove: comparisonResult.itemsToRemove.length,
       unchanged_count: comparisonResult.unchangedItems.length,
       sample_to_add: comparisonResult.itemsToAdd.slice(0, 5).map(i => ({ id: i.id, title: i.title })),
+      debug_missing_id_count: missingIds.length,
+      debug_missing_id_samples: missingIds.slice(0, 10),
       env_supabase_url: process.env.NEXT_PUBLIC_SUPABASE_URL || 'missing',
       sample_existing: (existingData || []).slice(0, 5).map((row) => {
         const rec = row as Record<string, unknown>
