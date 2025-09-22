@@ -79,23 +79,13 @@ export async function POST(request: NextRequest) {
     const presentInDb = new Set<string>()
     const presentInDbNormalized = new Set<string>()
     if (excelIdCandidates.length > 0) {
-      const chunkSize = 1000
-      for (let i = 0; i < excelIdCandidates.length; i += chunkSize) {
-        const chunk = excelIdCandidates.slice(i, i + chunkSize)
-        const { data: hit } = await supabase
-          .from('ep_data')
-          .select('original_id')
-          .in('original_id', chunk)
-        if (hit) {
-          for (const r of hit) {
-            if (r && r.original_id) {
-              const raw = String(r.original_id)
-              presentInDb.add(raw)
-              const norm = normalizeIdForGuard(raw)
-              if (norm) presentInDbNormalized.add(norm)
-            }
-          }
-        }
+      // 추가 DB 질의 없이, 이미 로드한 existingData를 기반으로 존재 여부 판단
+      for (const r of existingData) {
+        const raw = r && r.original_id != null ? String(r.original_id) : null
+        if (!raw) continue
+        presentInDb.add(raw)
+        const norm = normalizeIdForGuard(raw)
+        if (norm) presentInDbNormalized.add(norm)
       }
     }
     if (presentInDb.size > 0) {
