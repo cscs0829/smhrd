@@ -59,7 +59,9 @@ export async function POST(request: NextRequest) {
       to_add: comparisonResult.itemsToAdd.length,
       to_remove: comparisonResult.itemsToRemove.length,
       unchanged_count: comparisonResult.unchangedItems.length,
-      sample_to_add: comparisonResult.itemsToAdd.slice(0, 5).map(i => ({ id: i.id, title: i.title }))
+      sample_to_add: comparisonResult.itemsToAdd.slice(0, 5).map(i => ({ id: i.id, title: i.title })),
+      env_supabase_url: process.env.NEXT_PUBLIC_SUPABASE_URL || 'missing',
+      sample_existing: (existingData || []).slice(0, 5).map(i => ({ original_id: (i as any).original_id, title: (i as any).title }))
     }
     return new NextResponse(JSON.stringify(body), {
       status: 200,
