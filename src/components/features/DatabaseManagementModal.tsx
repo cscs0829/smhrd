@@ -767,6 +767,8 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
           keepMounted: false,
           // 무한 재귀 방지
           disableScrollLock: true,
+          // 이벤트 전파 방지
+          disableEscapeKeyDown: false,
           // 메뉴 스타일 설정
           PaperProps: {
             // aria-hidden 제거하여 접근성 개선
@@ -1007,8 +1009,8 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
 
   // 모달 외부 클릭 시 닫히지 않도록 하는 핸들러 - 무한 재귀 방지
   const handleInteractOutside = useCallback((e: Event) => {
-    // 이벤트 전파 중단
-    e.stopPropagation()
+    // 이벤트 전파를 즉시 중단하여 무한 재귀 방지
+    e.stopImmediatePropagation()
     
     const target = e.target as HTMLElement
     
@@ -1018,6 +1020,7 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
     if (shouldPreventClose) {
       e.preventDefault()
       e.stopPropagation()
+      return false
     }
   }, [])
 
@@ -1298,13 +1301,16 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
           z-index: 11 !important;
         }
         
-        /* MUI 포털 컴포넌트들 - 접근성 개선 */
+        /* MUI 포털 컴포넌트들 - 접근성 개선 및 무한 재귀 방지 */
         .MuiMenu-root, .MuiPopover-root {
           z-index: 99999 !important;
           position: fixed !important;
           isolation: isolate !important;
           /* aria-hidden 문제 해결 */
           aria-hidden: false !important;
+          /* 무한 재귀 방지 */
+          pointer-events: auto !important;
+          contain: layout style !important;
         }
         
         .MuiMenu-paper, .MuiPopover-paper {
@@ -1313,6 +1319,9 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
           isolation: isolate !important;
           /* aria-hidden 문제 해결 */
           aria-hidden: false !important;
+          /* 무한 재귀 방지 */
+          pointer-events: auto !important;
+          contain: layout style !important;
         }
         
         .MuiMenuItem-root {
@@ -1458,9 +1467,10 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
 
 
 
-  // 모달 닫기 핸들러 - 포커스 관리 개선
-  const handleClose = useCallback((open: boolean) => {
-    if (!open) {
+  // 모달 닫기 핸들러 - 포커스 관리 개선 (Material-UI 권장사항 적용)
+  const handleClose = useCallback((event: Event, reason: string) => {
+    // backdropClick이나 escapeKeyDown으로 닫힐 때만 처리
+    if (reason === 'backdropClick' || reason === 'escapeKeyDown') {
       // 포커스를 모달을 열었던 버튼으로 돌려보내기
       const triggerButton = document.querySelector('[data-testid="database-management-modal-trigger"]') as HTMLElement
       if (triggerButton) {
@@ -1488,7 +1498,11 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
   return (
     <Dialog
       open={isOpen}
-      onOpenChange={handleClose}
+      onOpenChange={(open) => {
+        if (!open) {
+          handleClose(new Event('close'), 'backdropClick')
+        }
+      }}
       data-testid="database-management-modal"
       // 접근성 개선: aria-hidden 제거
       aria-hidden={false}
