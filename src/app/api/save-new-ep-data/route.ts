@@ -29,10 +29,43 @@ export async function POST(request: NextRequest) {
       return transformed
     })
     
-    // 새로운 데이터를 데이터베이스에 저장
+    // 중복 방지: 이미 존재하는 original_id 선제 제거 후 insert
+    const idsToInsert = Array.from(new Set(
+      transformedItems
+        .map((it: any) => (it?.original_id ? String(it.original_id) : null))
+        .filter((v: string | null): v is string => Boolean(v))
+    ))
+
+    let existing = new Set<string>()
+    if (idsToInsert.length > 0) {
+      const chunkSize = 1000
+      for (let i = 0; i < idsToInsert.length; i += chunkSize) {
+        const chunk = idsToInsert.slice(i, i + chunkSize)
+        const { data: hit, error: hitErr } = await supabase
+          .from('ep_data')
+          .select('original_id')
+          .in('original_id', chunk)
+        if (hitErr) {
+          console.error('기존 확인 오류:', hitErr)
+          return NextResponse.json({ error: '데이터 저장 중 오류가 발생했습니다', detail: hitErr.message }, { status: 500 })
+        }
+        if (hit) {
+          for (const r of hit as Array<{ original_id: string | null }>) {
+            if (r?.original_id) existing.add(String(r.original_id))
+          }
+        }
+      }
+    }
+
+    const toInsert = transformedItems.filter((it: any) => !existing.has(String(it.original_id)))
+
+    if (toInsert.length === 0) {
+      return NextResponse.json({ success: true, message: '추가할 새로운 항목이 없습니다', data: [] })
+    }
+
     const { data, error } = await supabase
       .from('ep_data')
-      .upsert(transformedItems, { onConflict: 'original_id', ignoreDuplicates: true })
+      .insert(toInsert)
       .select()
 
     if (error) {
@@ -43,7 +76,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ 
       success: true, 
-      message: `${items.length}개의 새로운 데이터가 저장되었습니다`,
+      message: `${toInsert.length}개의 새로운 데이터가 저장되었습니다`,
       data 
     })
   } catch (error) {
