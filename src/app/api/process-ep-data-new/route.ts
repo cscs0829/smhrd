@@ -70,9 +70,10 @@ export async function POST(request: NextRequest) {
       if (!str) return null
       return str.normalize('NFC')
     }
+    // URL 길이/쿼리 크기 문제를 피하기 위해 '추가 후보' 24건만 대상으로 보정 수행
     const excelIdCandidates: string[] = Array.from(new Set(
-      (jsonData || [])
-        .map((row: { id?: unknown }) => normalizeIdForGuard(row.id))
+      (comparisonResult.itemsToAdd || [])
+        .map((it) => normalizeIdForGuard(it.id))
         .filter((v): v is string => Boolean(v))
     ))
     const presentInDb = new Set<string>()
