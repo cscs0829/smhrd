@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import * as XLSX from 'xlsx'
-import { getSupabaseClient } from '@/lib/supabase'
+import { getSupabaseAdmin } from '@/lib/supabase'
 
 export async function POST(request: NextRequest) {
   try {
@@ -24,7 +24,8 @@ export async function POST(request: NextRequest) {
     const jsonData = normalizeExcelRows(rawJsonData)
     
     // 데이터베이스에서 기존 데이터 가져오기 (original_id 포함)
-    const supabase = getSupabaseClient()
+    // RLS 영향을 받지 않도록 관리자 클라이언트 사용
+    const supabase = getSupabaseAdmin()
     const { data: existingData, error: epError } = await supabase
       .from('ep_data')
       .select('id, original_id, title, created_at')
