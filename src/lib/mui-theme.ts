@@ -291,9 +291,9 @@ export const createMuiTheme = (mode?: 'light' | 'dark') => {
       speedDial: 1050,
       appBar: 1100,
       drawer: 1200,
-      modal: 9998,
-      snackbar: 1400,
-      tooltip: 99999,
+      modal: 10001, // 편집 모달보다 높게 설정
+      snackbar: 10002,
+      tooltip: 10003,
     },
   })
 }

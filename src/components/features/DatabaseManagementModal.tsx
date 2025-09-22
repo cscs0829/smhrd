@@ -418,6 +418,18 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
     createDisplayMode: 'modal',
     positionCreatingRow: 'top',
     
+    // 편집 모달 z-index 설정
+    muiEditRowDialogProps: {
+      sx: {
+        zIndex: 10000, // 관리 모달보다 높은 z-index
+      },
+    } as any,
+    muiCreateRowModalProps: {
+      sx: {
+        zIndex: 10000, // 관리 모달보다 높은 z-index
+      },
+    } as any,
+    
     // 편집 텍스트 필드 스타일링
     muiEditTextFieldProps: {
       variant: 'outlined',

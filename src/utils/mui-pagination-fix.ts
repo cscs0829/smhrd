@@ -107,6 +107,23 @@ export const applyGlobalMuiStyles = () => {
     .MuiPopover-root {
       z-index: 1300 !important;
     }
+    
+    /* Material React Table 편집 모달 z-index 설정 */
+    .MuiDialog-root {
+      z-index: 10000 !important;
+    }
+    
+    .MuiDialog-container {
+      z-index: 10000 !important;
+    }
+    
+    .MuiDialog-paper {
+      z-index: 10000 !important;
+    }
+    
+    .MuiBackdrop-root {
+      z-index: 9999 !important;
+    }
   `
   
   document.head.appendChild(style)
