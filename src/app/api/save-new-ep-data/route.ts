@@ -37,7 +37,8 @@ export async function POST(request: NextRequest) {
 
     if (error) {
       console.error('데이터 저장 오류:', error)
-      return NextResponse.json({ error: '데이터 저장 중 오류가 발생했습니다', detail: (error as any).message || String(error) }, { status: 500 })
+      const detailMsg = (error as { message?: string } | null)?.message || String(error)
+      return NextResponse.json({ error: '데이터 저장 중 오류가 발생했습니다', detail: detailMsg }, { status: 500 })
     }
 
     return NextResponse.json({ 
