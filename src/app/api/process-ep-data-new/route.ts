@@ -157,7 +157,7 @@ export async function POST(request: NextRequest) {
           return sval ? sval.normalize('NFC').toLowerCase() : null
         })()
         const existsById = presentInDb.has(id) || (idNorm ? presentInDbNormalized.has(idNorm) : false)
-        const existsByTitle = tNorm ? (existingTitle.has(tNorm) || discoveredTitleSet.has(tNorm)) : false
+        const existsByTitle = tNorm ? existingTitle.has(tNorm) : false
         return !(existsById || existsByTitle)
       })
       const movedToUnchanged = comparisonResult.itemsToAdd.filter((item) => {
@@ -176,7 +176,7 @@ export async function POST(request: NextRequest) {
         if (!id && !tNorm) return false
         const idNorm = normalizeIdForGuard(id)
         const existsById = id ? (presentInDb.has(id) || (idNorm ? presentInDbNormalized.has(idNorm) : false)) : false
-        const existsByTitle = tNorm ? (existingTitle.has(tNorm) || discoveredTitleSet.has(tNorm)) : false
+        const existsByTitle = tNorm ? existingTitle.has(tNorm) : false
         return existsById || existsByTitle
       })
       const unchangedFinal = [...comparisonResult.unchangedItems, ...movedToUnchanged]
@@ -324,9 +324,8 @@ export async function POST(request: NextRequest) {
     })
   } catch (error) {
     console.error('EP 데이터 처리 오류:', error)
-    const errMsg = error instanceof Error ? error.message : String(error)
     return NextResponse.json(
-      { error: '파일 처리 중 오류가 발생했습니다', detail: errMsg },
+      { error: '파일 처리 중 오류가 발생했습니다' },
       { status: 500 }
     )
   }
