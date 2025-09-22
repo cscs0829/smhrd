@@ -1458,6 +1458,18 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
 
 
 
+  // 모달 닫기 핸들러 - 포커스 관리 개선
+  const handleClose = useCallback((open: boolean) => {
+    if (!open) {
+      // 포커스를 모달을 열었던 버튼으로 돌려보내기
+      const triggerButton = document.querySelector('[data-testid="database-management-modal-trigger"]') as HTMLElement
+      if (triggerButton) {
+        triggerButton.focus()
+      }
+      onClose()
+    }
+  }, [onClose])
+
   if (!tableSchema) {
     return (
       <Dialog open={isOpen} onOpenChange={onClose}>
@@ -1472,18 +1484,6 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
       </Dialog>
     )
   }
-
-  // 모달 닫기 핸들러 - 포커스 관리 개선
-  const handleClose = useCallback((open: boolean) => {
-    if (!open) {
-      // 포커스를 모달을 열었던 버튼으로 돌려보내기
-      const triggerButton = document.querySelector('[data-testid="database-management-modal-trigger"]') as HTMLElement
-      if (triggerButton) {
-        triggerButton.focus()
-      }
-      onClose()
-    }
-  }, [onClose])
 
   return (
     <Dialog
