@@ -17,9 +17,9 @@ interface EPDataItem {
 }
 
 interface ComparisonResult {
-  newItems: EPDataItem[]
-  removedItems: EPDataItem[]
-  existingItems: EPDataItem[]
+  itemsToAdd: EPDataItem[]
+  itemsToRemove: EPDataItem[]
+  unchangedItems: EPDataItem[]
 }
 
 interface EPDataProcessorNewProps {
@@ -30,7 +30,7 @@ export function EPDataProcessorNew({ onFileSelect }: EPDataProcessorNewProps) {
   const [file, setFile] = useState<File | null>(null)
   const [comparisonResult, setComparisonResult] = useState<ComparisonResult | null>(null)
   const [showConfirmDialog, setShowConfirmDialog] = useState(false)
-  const [confirmAction, setConfirmAction] = useState<'save_new' | 'delete_removed' | null>(null)
+  const [confirmAction, setConfirmAction] = useState<'add_items' | 'remove_items' | null>(null)
   const [isProcessingFile, setIsProcessingFile] = useState(false)
 
 
@@ -77,13 +77,13 @@ export function EPDataProcessorNew({ onFileSelect }: EPDataProcessorNewProps) {
     }
   }
 
-  const handleSaveNewData = () => {
-    setConfirmAction('save_new')
+  const handleAddItems = () => {
+    setConfirmAction('add_items')
     setShowConfirmDialog(true)
   }
 
-  const handleDeleteRemovedData = () => {
-    setConfirmAction('delete_removed')
+  const handleRemoveItems = () => {
+    setConfirmAction('remove_items')
     setShowConfirmDialog(true)
   }
 
@@ -91,14 +91,14 @@ export function EPDataProcessorNew({ onFileSelect }: EPDataProcessorNewProps) {
     if (!comparisonResult || !confirmAction) return
 
     try {
-      const endpoint = confirmAction === 'save_new' ? '/api/save-new-ep-data' : '/api/delete-removed-ep-data'
+      const endpoint = confirmAction === 'add_items' ? '/api/save-new-ep-data' : '/api/delete-removed-ep-data'
       const response = await fetch(endpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          items: confirmAction === 'save_new' ? comparisonResult.newItems : comparisonResult.removedItems
+          items: confirmAction === 'add_items' ? comparisonResult.itemsToAdd : comparisonResult.itemsToRemove
         }),
       })
 
@@ -106,7 +106,7 @@ export function EPDataProcessorNew({ onFileSelect }: EPDataProcessorNewProps) {
         throw new Error('데이터 처리 중 오류가 발생했습니다')
       }
 
-      alert(`${confirmAction === 'save_new' ? '새로운 데이터가 저장되었습니다' : '삭제된 데이터가 보관되었습니다'}`)
+      alert(`${confirmAction === 'add_items' ? '새로운 데이터가 ep_data 테이블에 추가되었습니다' : '삭제된 데이터가 삭제 테이블로 이동되었습니다'}`)
       
       setShowConfirmDialog(false)
       setConfirmAction(null)
@@ -117,7 +117,7 @@ export function EPDataProcessorNew({ onFileSelect }: EPDataProcessorNewProps) {
   }
 
   const handleExportNewData = async () => {
-    if (!comparisonResult?.newItems.length) return
+    if (!comparisonResult?.itemsToAdd.length) return
     
     try {
       const response = await fetch('/api/export-new-data', {
@@ -125,7 +125,7 @@ export function EPDataProcessorNew({ onFileSelect }: EPDataProcessorNewProps) {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ items: comparisonResult.newItems }),
+        body: JSON.stringify({ items: comparisonResult.itemsToAdd }),
       })
       
       if (!response.ok) {
@@ -148,7 +148,7 @@ export function EPDataProcessorNew({ onFileSelect }: EPDataProcessorNewProps) {
   }
 
   const handleExportRemovedData = async () => {
-    if (!comparisonResult?.removedItems.length) return
+    if (!comparisonResult?.itemsToRemove.length) return
     
     try {
       const response = await fetch('/api/export-removed-data', {
@@ -156,7 +156,7 @@ export function EPDataProcessorNew({ onFileSelect }: EPDataProcessorNewProps) {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ items: comparisonResult.removedItems }),
+        body: JSON.stringify({ items: comparisonResult.itemsToRemove }),
       })
       
       if (!response.ok) {
@@ -279,16 +279,16 @@ export function EPDataProcessorNew({ onFileSelect }: EPDataProcessorNewProps) {
       {/* 비교 결과 섹션 */}
       {comparisonResult && (
         <div className="space-y-4">
-          {/* 새로운 데이터 */}
-          {comparisonResult.newItems.length > 0 && (
+          {/* 추가할 데이터 */}
+          {comparisonResult.itemsToAdd.length > 0 && (
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Plus className="h-5 w-5 text-green-600" />
-                  새로운 데이터 ({comparisonResult.newItems.length}개)
+                  추가할 데이터 ({comparisonResult.itemsToAdd.length}개)
                 </CardTitle>
                 <CardDescription>
-                  기존 데이터베이스에 없는 새로운 항목들입니다
+                  Excel에만 있고 ep_data 테이블에 없는 새로운 항목들입니다. 이 항목들을 ep_data 테이블에 추가하시겠습니까?
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -297,13 +297,13 @@ export function EPDataProcessorNew({ onFileSelect }: EPDataProcessorNewProps) {
                     <Table>
                       <TableHeader>
                         <TableRow>
-                          <TableHead>ID</TableHead>
+                          <TableHead>Excel ID</TableHead>
                           <TableHead>제목</TableHead>
                           <TableHead>기타 정보</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {comparisonResult.newItems.map((item, index) => (
+                        {comparisonResult.itemsToAdd.slice(0, 20).map((item, index) => (
                           <TableRow key={index}>
                             <TableCell className="font-medium">{item.id}</TableCell>
                             <TableCell>{item.title}</TableCell>
@@ -314,15 +314,20 @@ export function EPDataProcessorNew({ onFileSelect }: EPDataProcessorNewProps) {
                         ))}
                       </TableBody>
                     </Table>
+                    {comparisonResult.itemsToAdd.length > 20 && (
+                      <p className="text-sm text-gray-500 text-center py-2">
+                        ... 및 {comparisonResult.itemsToAdd.length - 20}개 더
+                      </p>
+                    )}
                   </div>
                   <div className="flex gap-2">
-                    <Button onClick={handleSaveNewData}>
+                    <Button onClick={handleAddItems} className="bg-green-600 hover:bg-green-700">
                       <CheckCircle className="h-4 w-4 mr-2" />
-                      EP 데이터 테이블에 저장
+                      ep_data 테이블에 추가하기
                     </Button>
                     <Button onClick={handleExportNewData} variant="outline">
                       <Download className="h-4 w-4 mr-2" />
-                      엑셀로 내보내기
+                      Excel로 내보내기
                     </Button>
                   </div>
                 </div>
@@ -330,16 +335,16 @@ export function EPDataProcessorNew({ onFileSelect }: EPDataProcessorNewProps) {
             </Card>
           )}
 
-          {/* 삭제된 데이터 */}
-          {comparisonResult.removedItems.length > 0 && (
+          {/* 삭제할 데이터 */}
+          {comparisonResult.itemsToRemove.length > 0 && (
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Trash2 className="h-5 w-5 text-red-600" />
-                  삭제된 데이터 ({comparisonResult.removedItems.length}개)
+                  삭제할 데이터 ({comparisonResult.itemsToRemove.length}개)
                 </CardTitle>
                 <CardDescription>
-                  기존 데이터베이스에서 제거된 항목들입니다
+                  ep_data 테이블에만 있고 Excel 파일에는 없는 항목들입니다. 이 항목들을 삭제 테이블로 이동하시겠습니까?
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -348,32 +353,37 @@ export function EPDataProcessorNew({ onFileSelect }: EPDataProcessorNewProps) {
                     <Table>
                       <TableHeader>
                         <TableRow>
-                          <TableHead>ID</TableHead>
+                          <TableHead>Original ID</TableHead>
                           <TableHead>제목</TableHead>
                           <TableHead>기타 정보</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {comparisonResult.removedItems.map((item, index) => (
+                        {comparisonResult.itemsToRemove.slice(0, 20).map((item, index) => (
                           <TableRow key={index}>
-                            <TableCell className="font-medium">{item.id}</TableCell>
+                            <TableCell className="font-medium">{item.original_id || item.id}</TableCell>
                             <TableCell>{item.title}</TableCell>
                             <TableCell className="max-w-xs truncate">
-                              {Object.keys(item).filter(key => !['id', 'title'].includes(key)).slice(0, 3).join(', ')}
+                              {Object.keys(item).filter(key => !['id', 'original_id', 'title'].includes(key)).slice(0, 3).join(', ')}
                             </TableCell>
                           </TableRow>
                         ))}
                       </TableBody>
                     </Table>
+                    {comparisonResult.itemsToRemove.length > 20 && (
+                      <p className="text-sm text-gray-500 text-center py-2">
+                        ... 및 {comparisonResult.itemsToRemove.length - 20}개 더
+                      </p>
+                    )}
                   </div>
                   <div className="flex gap-2">
-                    <Button onClick={handleDeleteRemovedData} variant="destructive">
+                    <Button onClick={handleRemoveItems} variant="destructive">
                       <Trash2 className="h-4 w-4 mr-2" />
-                      삭제 테이블에 보관
+                      삭제 테이블로 이동하기
                     </Button>
                     <Button onClick={handleExportRemovedData} variant="outline">
                       <Download className="h-4 w-4 mr-2" />
-                      엑셀로 내보내기
+                      Excel로 내보내기
                     </Button>
                   </div>
                 </div>
@@ -381,16 +391,16 @@ export function EPDataProcessorNew({ onFileSelect }: EPDataProcessorNewProps) {
             </Card>
           )}
 
-          {/* 기존 데이터 */}
-          {comparisonResult.existingItems.length > 0 && (
+          {/* 동일한 데이터 */}
+          {comparisonResult.unchangedItems.length > 0 && (
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <CheckCircle className="h-5 w-5 text-blue-600" />
-                  기존 데이터 ({comparisonResult.existingItems.length}개)
+                  동일한 데이터 ({comparisonResult.unchangedItems.length}개)
                 </CardTitle>
                 <CardDescription>
-                  변경사항이 없는 기존 항목들입니다
+                  Excel 파일과 ep_data 테이블에 모두 존재하는 항목들입니다 (변경 없음)
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -398,13 +408,13 @@ export function EPDataProcessorNew({ onFileSelect }: EPDataProcessorNewProps) {
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>ID</TableHead>
+                        <TableHead>Excel ID</TableHead>
                         <TableHead>제목</TableHead>
                         <TableHead>기타 정보</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {comparisonResult.existingItems.slice(0, 10).map((item, index) => (
+                      {comparisonResult.unchangedItems.slice(0, 10).map((item, index) => (
                         <TableRow key={index}>
                           <TableCell className="font-medium">{item.id}</TableCell>
                           <TableCell>{item.title}</TableCell>
@@ -415,9 +425,9 @@ export function EPDataProcessorNew({ onFileSelect }: EPDataProcessorNewProps) {
                       ))}
                     </TableBody>
                   </Table>
-                  {comparisonResult.existingItems.length > 10 && (
+                  {comparisonResult.unchangedItems.length > 10 && (
                     <p className="text-sm text-gray-500 text-center py-2">
-                      ... 및 {comparisonResult.existingItems.length - 10}개 더
+                      ... 및 {comparisonResult.unchangedItems.length - 10}개 더
                     </p>
                   )}
                 </div>
@@ -432,12 +442,12 @@ export function EPDataProcessorNew({ onFileSelect }: EPDataProcessorNewProps) {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
-              {confirmAction === 'save_new' ? '새로운 데이터 저장' : '삭제된 데이터 보관'}
+              {confirmAction === 'add_items' ? '새로운 데이터 추가' : '데이터 삭제'}
             </DialogTitle>
             <DialogDescription>
-              {confirmAction === 'save_new' 
-                ? '새로운 데이터를 EP 데이터 테이블에 저장하시겠습니까?'
-                : '삭제된 데이터를 보관소에 이동하시겠습니까?'
+              {confirmAction === 'add_items' 
+                ? 'Excel에만 있는 새로운 데이터를 ep_data 테이블에 추가하시겠습니까?'
+                : 'ep_data 테이블에만 있는 데이터를 삭제 테이블로 이동하시겠습니까?'
               }
             </DialogDescription>
           </DialogHeader>
@@ -447,9 +457,9 @@ export function EPDataProcessorNew({ onFileSelect }: EPDataProcessorNewProps) {
             </Button>
             <Button 
               onClick={confirmActionHandler}
-              variant={confirmAction === 'delete_removed' ? 'destructive' : 'default'}
+              variant={confirmAction === 'remove_items' ? 'destructive' : 'default'}
             >
-              {confirmAction === 'save_new' ? '저장' : '보관'}
+              {confirmAction === 'add_items' ? '추가' : '삭제'}
             </Button>
           </DialogFooter>
         </DialogContent>
