@@ -18,7 +18,10 @@ export async function POST(request: NextRequest) {
     // 첫 번째 시트의 데이터 읽기
     const sheetName = workbook.SheetNames[0]
     const worksheet = workbook.Sheets[sheetName]
-    const jsonData = XLSX.utils.sheet_to_json(worksheet)
+    const rawJsonData = XLSX.utils.sheet_to_json<Record<string, unknown>>(worksheet)
+
+    // 엑셀 헤더/값 정규화
+    const jsonData = normalizeExcelRows(rawJsonData)
     
     // 데이터베이스에서 기존 데이터 가져오기 (original_id 포함)
     const supabase = getSupabaseClient()
@@ -33,7 +36,7 @@ export async function POST(request: NextRequest) {
     }
     
     // 데이터 비교 로직
-    const comparisonResult = compareEPData(jsonData as Array<{ id: string; title?: string; [key: string]: unknown }>, existingData || [])
+    const comparisonResult = compareEPData(jsonData, existingData || [])
     
     return NextResponse.json(comparisonResult)
   } catch (error) {
@@ -45,42 +48,105 @@ export async function POST(request: NextRequest) {
   }
 }
 
-function compareEPData(newData: Array<{ id: string; title?: string; [key: string]: unknown }>, existingData: Array<{ id: string; original_id?: string; title?: string; [key: string]: unknown }>) {
-  // title만 비교하는 맵 생성
-  const existingTitleMap = new Map()
-  
-  existingData.forEach(item => {
-    if (item.title) {
-      existingTitleMap.set(item.title.toLowerCase().trim(), item)
-    }
+// 헤더/값 정규화: 다양한 한글/영문 헤더를 통일하고 문자열은 trim/lower
+function normalizeExcelRows(rows: Array<Record<string, unknown>>): Array<{ id?: string; title?: string; [key: string]: unknown }> {
+  const headerMap: Record<string, string> = {
+    // id 계열
+    'id': 'id', 'ID': 'id', '상품id': 'id', '상품ID': 'id', '상품Id': 'id', '상품 id': 'id',
+    // title 계열
+    'title': 'title', 'TITLE': 'title', '제목': 'title', '상품명': 'title', '상품 명': 'title'
+  }
+
+  const normalizeKey = (key: string): string => {
+    const keyTrim = key.trim()
+    const direct = headerMap[keyTrim]
+    if (direct) return direct
+    const lower = keyTrim.toLowerCase()
+    return headerMap[lower] || lower
+  }
+
+  const normalizeValue = (val: unknown): unknown => {
+    if (typeof val === 'string') return val.trim()
+    return val
+  }
+
+  return rows.map((row) => {
+    const normalized: Record<string, unknown> = {}
+    Object.entries(row).forEach(([k, v]) => {
+      const nk = normalizeKey(String(k))
+      const nv = normalizeValue(v)
+      normalized[nk] = nv
+    })
+    return normalized as { id?: string; title?: string; [key: string]: unknown }
   })
-  
-  const newTitleMap = new Map()
-  
-  newData.forEach(item => {
-    if (item.title) {
-      newTitleMap.set(item.title.toLowerCase().trim(), item)
-    }
+}
+
+function compareEPData(
+  newData: Array<{ id?: string; title?: string; [key: string]: unknown }>,
+  existingData: Array<{ id: string; original_id?: string | null; title?: string | null; [key: string]: unknown }>
+) {
+  const normalizeStr = (s: unknown): string | null => {
+    if (!s) return null
+    const str = String(s).trim()
+    if (!str) return null
+    return str.toLowerCase()
+  }
+
+  // 기존 데이터 인덱스 구성
+  const existingOriginalIdSet = new Set<string>()
+  const existingTitleSet = new Set<string>()
+
+  for (const item of existingData) {
+    const oid = normalizeStr(item.original_id)
+    if (oid) existingOriginalIdSet.add(oid)
+    const t = normalizeStr(item.title)
+    if (t) existingTitleSet.add(t)
+  }
+
+  // 새 데이터 인덱스 구성
+  const newOriginalIdSet = new Set<string>()
+  const newTitleSet = new Set<string>()
+
+  for (const item of newData) {
+    const nid = normalizeStr(item.id)
+    if (nid) newOriginalIdSet.add(nid)
+    const t = normalizeStr(item.title)
+    if (t) newTitleSet.add(t)
+  }
+
+  // 추가할 항목: (id가 있고 그 id가 기존 original_id에 없고) AND (제목이 없거나 제목도 기존에 없음)
+  const itemsToAdd = newData.filter((item) => {
+    const nid = normalizeStr(item.id)
+    const t = normalizeStr(item.title)
+
+    const hasByOriginalId = nid ? existingOriginalIdSet.has(nid) : false
+    const hasByTitle = t ? existingTitleSet.has(t) : false
+
+    return !(hasByOriginalId || hasByTitle)
   })
-  
-  // Excel에만 있는 항목들 (ep_data에 추가해야 할 항목)
-  const itemsToAdd = newData.filter(item => {
-    const hasTitle = item.title && existingTitleMap.has(item.title.toLowerCase().trim())
-    return !hasTitle
+
+  // 제거할 항목: 기존 데이터 중에서 (original_id가 새 id 세트에 없고) AND (제목도 새 제목 세트에 없음)
+  const itemsToRemove = existingData.filter((item) => {
+    const oid = normalizeStr(item.original_id)
+    const t = normalizeStr(item.title)
+
+    const presentByOriginalId = oid ? newOriginalIdSet.has(oid) : false
+    const presentByTitle = t ? newTitleSet.has(t) : false
+
+    return !(presentByOriginalId || presentByTitle)
   })
-  
-  // ep_data에만 있는 항목들 (삭제 테이블로 이동해야 할 항목)
-  const itemsToRemove = existingData.filter(item => {
-    const hasTitle = item.title && newTitleMap.has(item.title.toLowerCase().trim())
-    return !hasTitle
+
+  // 변경 없음 항목: 새 데이터 중에서 (original_id 또는 제목으로 기존에 존재)
+  const unchangedItems = newData.filter((item) => {
+    const nid = normalizeStr(item.id)
+    const t = normalizeStr(item.title)
+
+    const hasByOriginalId = nid ? existingOriginalIdSet.has(nid) : false
+    const hasByTitle = t ? existingTitleSet.has(t) : false
+
+    return hasByOriginalId || hasByTitle
   })
-  
-  // 동일한 항목들 (변경 없음)
-  const unchangedItems = newData.filter(item => {
-    const hasTitle = item.title && existingTitleMap.has(item.title.toLowerCase().trim())
-    return hasTitle
-  })
-  
+
   return {
     itemsToAdd,
     itemsToRemove,
