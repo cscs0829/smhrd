@@ -393,6 +393,8 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
     createDisplayMode: 'modal',
     positionCreatingRow: 'top',
     
+    // 모달 다이얼로그 props는 CSS로 처리
+    
     
     
     
@@ -562,24 +564,24 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
     },
     
     
-    // 편집 모달의 커스텀 렌더링 - 스크롤 가능한 그리드 레이아웃
+    // 편집 모달의 커스텀 렌더링 - 개선된 반응형 레이아웃
     renderEditRowDialogContent: ({ internalEditComponents }: { internalEditComponents: React.ReactNode[]; row: unknown; table: unknown }) => {
       return (
-        <div className="space-y-4">
+        <div className="space-y-6 p-2">
           <div className="text-sm text-gray-600 dark:text-gray-400 mb-4">
             편집할 필드를 수정하고 저장 버튼을 클릭하세요.
           </div>
           
-          {/* 기본 편집 컴포넌트들을 그리드 레이아웃으로 배치 */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {/* 개선된 그리드 레이아웃 - 더 나은 반응형 */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
             {internalEditComponents.map((component, index) => (
-              <div key={index} className="min-h-[40px]">
+              <div key={index} className="min-h-[60px] flex flex-col">
                 {component}
               </div>
             ))}
           </div>
           
-          {/* 추가 정보 표시 */}
+          {/* 간소화된 정보 표시 */}
           <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
             <div className="flex items-start space-x-3">
               <div className="flex-shrink-0">
@@ -602,25 +604,30 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
       )
     },
     
-    // 생성 모달의 커스텀 렌더링
+    // 생성 모달의 커스텀 렌더링 - 개선된 UI
     renderCreateRowDialogContent: ({ internalEditComponents }: { internalEditComponents: React.ReactNode[]; row: unknown; table: unknown }) => {
       return (
-        <div className="space-y-4">
-          <div className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-            새로운 {tableSchema.displayName} 데이터를 추가하세요.
+        <div className="space-y-6 p-2">
+          <div className="text-center mb-6">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">
+              새로운 {tableSchema?.displayName || '데이터'} 추가
+            </h3>
+            <p className="text-sm text-gray-600 dark:text-gray-400">
+              아래 폼을 작성하여 새로운 데이터를 추가하세요
+            </p>
           </div>
           
-          {/* 기본 편집 컴포넌트들을 그리드 레이아웃으로 배치 */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {/* 개선된 그리드 레이아웃 - 더 직관적인 배치 */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
             {internalEditComponents.map((component, index) => (
-              <div key={index} className="min-h-[40px]">
+              <div key={index} className="min-h-[70px] flex flex-col space-y-1">
                 {component}
               </div>
             ))}
           </div>
           
-          {/* 추가 정보 표시 */}
-          <div className="mt-6 p-4 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
+          {/* 간소화된 정보 표시 */}
+          <div className="mt-8 p-4 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
             <div className="flex items-start space-x-3">
               <div className="flex-shrink-0">
                 <svg className="h-5 w-5 text-green-400" fill="currentColor" viewBox="0 0 20 20">
@@ -1012,12 +1019,12 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
       const style = document.createElement('style')
       style.id = 'mui-select-fix'
       style.textContent = `
-        /* 편집/생성 모달 스크롤 스타일 */
+        /* 편집/생성 모달 스크롤 스타일 - 개선된 반응형 */
         .MuiDialog-paper {
-          width: 90vw !important;
-          max-width: 1200px !important;
-          height: 80vh !important;
-          max-height: 800px !important;
+          width: 95vw !important;
+          max-width: 1400px !important;
+          height: 85vh !important;
+          max-height: 900px !important;
           overflow: hidden !important;
           display: flex !important;
           flex-direction: column !important;
@@ -1025,27 +1032,50 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
           background-color: ${resolvedTheme === 'dark' ? '#1f2937' : '#ffffff'} !important;
         }
         
-        /* Material React Table 편집/생성 모달 크기 조정 */
+        /* Material React Table 편집/생성 모달 크기 조정 - 반응형 */
         .MuiDialog-root .MuiDialog-paper {
-          width: 90vw !important;
-          max-width: 1200px !important;
-          height: 80vh !important;
-          max-height: 800px !important;
+          width: 95vw !important;
+          max-width: 1400px !important;
+          height: 85vh !important;
+          max-height: 900px !important;
         }
         
-        /* Material React Table 모달 컨테이너 */
+        /* Material React Table 모달 컨테이너 - 반응형 */
         .MuiDialog-root[role="dialog"] .MuiDialog-paper {
-          width: 90vw !important;
-          max-width: 1200px !important;
-          height: 80vh !important;
-          max-height: 800px !important;
+          width: 95vw !important;
+          max-width: 1400px !important;
+          height: 85vh !important;
+          max-height: 900px !important;
+        }
+        
+        /* 모바일 대응 */
+        @media (max-width: 768px) {
+          .MuiDialog-paper,
+          .MuiDialog-root .MuiDialog-paper,
+          .MuiDialog-root[role="dialog"] .MuiDialog-paper {
+            width: 98vw !important;
+            max-width: none !important;
+            height: 90vh !important;
+            max-height: none !important;
+            margin: 1vh !important;
+          }
         }
         
         .MuiDialogContent-root {
           overflow: auto !important;
-          padding: 20px !important;
-          max-height: calc(80vh - 120px) !important;
+          padding: 24px !important;
+          max-height: calc(85vh - 140px) !important;
           flex: 1 !important;
+          /* 부드러운 스크롤 */
+          scroll-behavior: smooth !important;
+        }
+        
+        /* 모바일에서 컨텐츠 영역 조정 */
+        @media (max-width: 768px) {
+          .MuiDialogContent-root {
+            padding: 16px !important;
+            max-height: calc(90vh - 120px) !important;
+          }
         }
         
         .MuiDialogContent-root::-webkit-scrollbar {
@@ -1108,38 +1138,57 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
           color: ${resolvedTheme === 'dark' ? '#3b82f6' : '#2563eb'} !important;
         }
         
-        /* 편집 모달 그리드 레이아웃 */
-        .MuiDialogContent-root .space-y-4 {
+        /* 편집 모달 그리드 레이아웃 - 개선된 반응형 */
+        .MuiDialogContent-root .space-y-4,
+        .MuiDialogContent-root .space-y-6 {
           display: flex !important;
           flex-direction: column !important;
-          gap: 16px !important;
+          gap: 20px !important;
         }
         
         .MuiDialogContent-root .grid {
           display: grid !important;
-          grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)) !important;
-          gap: 16px !important;
+          grid-template-columns: 1fr !important;
+          gap: 24px !important;
         }
         
-        @media (min-width: 768px) {
+        /* 태블릿 */
+        @media (min-width: 640px) {
           .MuiDialogContent-root .grid {
             grid-template-columns: repeat(2, 1fr) !important;
+            gap: 20px !important;
           }
         }
         
-        @media (min-width: 1024px) {
+        /* 데스크톱 */
+        @media (min-width: 1280px) {
           .MuiDialogContent-root .grid {
             grid-template-columns: repeat(3, 1fr) !important;
+            gap: 24px !important;
           }
         }
         
-        /* 필드 라벨 스타일링 */
+        /* 큰 화면 */
+        @media (min-width: 1536px) {
+          .MuiDialogContent-root .grid {
+            grid-template-columns: repeat(4, 1fr) !important;
+            gap: 24px !important;
+          }
+        }
+        
+        /* 필드 라벨 스타일링 - 개선된 가독성 */
         .MuiDialogContent-root label {
           display: block !important;
           font-size: 0.875rem !important;
-          font-weight: 500 !important;
-          color: ${resolvedTheme === 'dark' ? '#d1d5db' : '#374151'} !important;
-          margin-bottom: 4px !important;
+          font-weight: 600 !important;
+          color: ${resolvedTheme === 'dark' ? '#f3f4f6' : '#1f2937'} !important;
+          margin-bottom: 6px !important;
+          line-height: 1.4 !important;
+        }
+        
+        /* 필수 필드 표시 개선 */
+        .MuiDialogContent-root label:has-text('*') {
+          color: ${resolvedTheme === 'dark' ? '#fbbf24' : '#d97706'} !important;
         }
         
         /* 필수 필드 표시 */
