@@ -7,6 +7,7 @@ import {
   useMaterialReactTable,
   type MRT_ColumnDef,
   type MRT_Cell,
+  type MRT_TableOptions,
 } from 'material-react-table'
 import { Button } from '@/components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
@@ -419,11 +420,13 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
     positionCreatingRow: 'top',
     
     // 편집 모달 z-index 설정
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     muiEditRowDialogProps: {
       sx: {
         zIndex: 10000, // 관리 모달보다 높은 z-index
       },
     } as any,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     muiCreateRowModalProps: {
       sx: {
         zIndex: 10000, // 관리 모달보다 높은 z-index
