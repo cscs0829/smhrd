@@ -91,29 +91,35 @@ export async function POST(request: NextRequest) {
         const nk = normalizeHeader(k)
         out[nk] = v
       }
+      
+      // original_id 보존 (Excel의 원래 ID)
+      if (out['id']) {
+        out['original_id'] = String(out['id']) // Excel의 원래 ID 보존
+        delete out['id'] // id 컬럼은 삭제 (UUID가 자동 생성됨)
+      }
+      
       // 필수 기본값 채우기
-      if (out['id']) out['id'] = String(out['id'])
       if (out['price_pc'] != null) out['price_pc'] = Number(out['price_pc'])
       if (out['benefit_price'] != null) out['benefit_price'] = Number(out['benefit_price'])
       if (out['normal_price'] != null) out['normal_price'] = Number(out['normal_price'])
       return out
     })
 
-    // id 없는 행 제거
-    const validRows = normalized.filter(r => r['id'])
+    // original_id 없는 행 제거
+    const validRows = normalized.filter(r => r['original_id'])
     if (!validRows.length) {
-      return NextResponse.json({ success: false, message: '유효한 ID가 있는 행이 없습니다.' }, { status: 400 })
+      return NextResponse.json({ success: false, message: '유효한 original_id가 있는 행이 없습니다.' }, { status: 400 })
     }
 
     const supabase = getSupabaseAdmin()
 
-    // 배치 업서트
+    // 배치 업서트 (original_id 기반)
     const chunkSize = 1000
     for (let i = 0; i < validRows.length; i += chunkSize) {
       const chunk = validRows.slice(i, i + chunkSize)
       const { error } = await supabase
         .from('ep_data')
-        .upsert(chunk, { onConflict: 'id' })
+        .upsert(chunk, { onConflict: 'original_id' })
       if (error) throw error
     }
 

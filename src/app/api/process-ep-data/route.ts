@@ -47,7 +47,7 @@ async function getExistingEPData() {
   const [activeData, deletedData] = await Promise.all([
     supabase
       .from('ep_data')
-      .select('id, title, created_at')
+      .select('id, original_id, title, created_at')
       .order('created_at', { ascending: false }),
     supabase
       .from('deleted_items')
@@ -63,9 +63,10 @@ async function getExistingEPData() {
     console.error('삭제된 데이터 조회 오류:', deletedData.error)
   }
   
-  // 삭제된 데이터에서 title 추출
-  const deletedItemsWithTitle = (deletedData.data || []).map((item: { original_id: string; original_data: { title?: string }; created_at: string }) => ({
-    id: item.original_id,
+  // 삭제된 데이터에서 original_id와 title 추출
+  const deletedItemsWithTitle = (deletedData.data || []).map((item: { original_id: string; original_data: { title?: string; id?: string }; created_at: string }) => ({
+    id: item.original_data?.id || '', // UUID
+    original_id: item.original_id,
     title: item.original_data?.title || '',
     created_at: item.created_at,
     deleted_at: item.created_at // 삭제된 시점
@@ -83,36 +84,52 @@ async function getExistingEPData() {
   }
 }
 
-function compareEPData(newData: Array<{ id: string; title?: string; [key: string]: unknown }>, existingData: Array<{ id: string; title?: string; [key: string]: unknown }>) {
-  // 제목 기반으로만 비교 (ID는 UUID로 변경되어 Excel ID와 매칭 불가)
-  const existingTitlesMap = new Map()
+function compareEPData(newData: Array<{ id: string; title?: string; [key: string]: unknown }>, existingData: Array<{ id: string; original_id?: string; title?: string; [key: string]: unknown }>) {
+  // original_id 기반으로 비교 (Excel ID와 DB original_id 매칭)
+  const existingOriginalIdMap = new Map()
+  const existingTitleMap = new Map()
+  
   existingData.forEach(item => {
+    if (item.original_id) {
+      existingOriginalIdMap.set(item.original_id, item)
+    }
     if (item.title) {
-      existingTitlesMap.set(item.title.toLowerCase().trim(), item)
+      existingTitleMap.set(item.title.toLowerCase().trim(), item)
     }
   })
   
-  const newTitlesMap = new Map()
+  const newOriginalIdMap = new Map()
+  const newTitleMap = new Map()
+  
   newData.forEach(item => {
+    if (item.id) {
+      newOriginalIdMap.set(item.id, item)
+    }
     if (item.title) {
-      newTitlesMap.set(item.title.toLowerCase().trim(), item)
+      newTitleMap.set(item.title.toLowerCase().trim(), item)
     }
   })
   
-  // 새로운 데이터 중에서 제목이 기존에 없는 것들
+  // 새로운 데이터 중에서 original_id나 title이 기존에 없는 것들
   const newItems = newData.filter(item => {
-    return item.title && !existingTitlesMap.has(item.title.toLowerCase().trim())
+    const hasOriginalId = item.id && existingOriginalIdMap.has(item.id)
+    const hasTitle = item.title && existingTitleMap.has(item.title.toLowerCase().trim())
+    return !hasOriginalId && !hasTitle
   })
   
-  // 기존 데이터 중에서 제목이 새로운 데이터에 없는 것들 (삭제된 항목)
+  // 기존 데이터 중에서 original_id나 title이 새로운 데이터에 없는 것들 (삭제된 항목)
   // 백업 테이블에서 온 데이터는 제외 (이미 삭제된 것으로 간주)
   const removedItems = existingData.filter(item => {
-    return item.title && !newTitlesMap.has(item.title.toLowerCase().trim()) && !item.deleted_at
+    const hasOriginalId = item.original_id && newOriginalIdMap.has(item.original_id)
+    const hasTitle = item.title && newTitleMap.has(item.title.toLowerCase().trim())
+    return !hasOriginalId && !hasTitle && !item.deleted_at
   })
   
-  // 기존 데이터 중에서 제목이 새로운 데이터에 있는 것들
+  // 기존 데이터 중에서 original_id나 title이 새로운 데이터에 있는 것들
   const existingItems = newData.filter(item => {
-    return item.title && existingTitlesMap.has(item.title.toLowerCase().trim())
+    const hasOriginalId = item.id && existingOriginalIdMap.has(item.id)
+    const hasTitle = item.title && existingTitleMap.has(item.title.toLowerCase().trim())
+    return hasOriginalId || hasTitle
   })
   
   return {
