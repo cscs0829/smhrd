@@ -109,9 +109,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const excelIdExactList: string[] = comparisonResult.debug_new_id_exact || []
     const excelIdLooseList: string[] = comparisonResult.debug_new_id_loose || []
-    const excelTitleList: string[] = comparisonResult.debug_new_title || []
 
     const missingIds: string[] = []
     for (const nidLoose of excelIdLooseList) {
