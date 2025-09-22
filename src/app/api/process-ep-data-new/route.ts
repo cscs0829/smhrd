@@ -107,6 +107,8 @@ export async function POST(request: NextRequest) {
       debug_missing_id_count: missingIds.length,
       debug_missing_id_samples: missingIds.slice(0, 10),
       env_supabase_url: process.env.NEXT_PUBLIC_SUPABASE_URL || 'missing',
+      commit_sha: process.env.VERCEL_GIT_COMMIT_SHA || process.env.NEXT_PUBLIC_COMMIT_SHA || 'unknown',
+      id_normalization: 'exact_case_preserved_underscore_preserved',
       sample_existing: (existingData || []).slice(0, 5).map((row) => {
         const rec = row as Record<string, unknown>
         return {
