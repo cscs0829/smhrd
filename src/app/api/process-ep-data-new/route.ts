@@ -46,26 +46,18 @@ export async function POST(request: NextRequest) {
 }
 
 function compareEPData(newData: Array<{ id: string; title?: string; [key: string]: unknown }>, existingData: Array<{ id: string; original_id?: string; title?: string; [key: string]: unknown }>) {
-  // Excel ID와 original_id를 비교하는 맵 생성
-  const existingIdMap = new Map()
+  // title만 비교하는 맵 생성
   const existingTitleMap = new Map()
   
   existingData.forEach(item => {
-    if (item.original_id) {
-      existingIdMap.set(item.original_id, item)
-    }
     if (item.title) {
       existingTitleMap.set(item.title.toLowerCase().trim(), item)
     }
   })
   
-  const newIdMap = new Map()
   const newTitleMap = new Map()
   
   newData.forEach(item => {
-    if (item.id) {
-      newIdMap.set(item.id, item)
-    }
     if (item.title) {
       newTitleMap.set(item.title.toLowerCase().trim(), item)
     }
@@ -73,23 +65,20 @@ function compareEPData(newData: Array<{ id: string; title?: string; [key: string
   
   // Excel에만 있는 항목들 (ep_data에 추가해야 할 항목)
   const itemsToAdd = newData.filter(item => {
-    const hasId = item.id && existingIdMap.has(item.id)
     const hasTitle = item.title && existingTitleMap.has(item.title.toLowerCase().trim())
-    return !hasId && !hasTitle
+    return !hasTitle
   })
   
   // ep_data에만 있는 항목들 (삭제 테이블로 이동해야 할 항목)
   const itemsToRemove = existingData.filter(item => {
-    const hasId = item.original_id && newIdMap.has(item.original_id)
     const hasTitle = item.title && newTitleMap.has(item.title.toLowerCase().trim())
-    return !hasId && !hasTitle
+    return !hasTitle
   })
   
   // 동일한 항목들 (변경 없음)
   const unchangedItems = newData.filter(item => {
-    const hasId = item.id && existingIdMap.has(item.id)
     const hasTitle = item.title && existingTitleMap.has(item.title.toLowerCase().trim())
-    return hasId || hasTitle
+    return hasTitle
   })
   
   return {
