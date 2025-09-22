@@ -35,7 +35,7 @@ export async function POST(request: NextRequest) {
       })
     }
 
-    // 데이터베이스에서 모든 EP 데이터 조회
+    // 데이터베이스에서 모든 EP 데이터 가져오기
     const supabase = getSupabaseClient()
     const { data: allEpData, error: epError } = await supabase
       .from('ep_data')
