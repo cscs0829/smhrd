@@ -136,7 +136,7 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
     } finally {
       setLoading(false)
     }
-  }, [tableName, pagination.pageIndex, pagination.pageSize, globalFilter]) // totalCount 의존성 제거하여 무한 루프 방지
+  }, [tableName, pagination.pageIndex, pagination.pageSize, globalFilter])
 
   // 데이터 저장 (편집)
   const saveData = useCallback(async (rowData: TableData) => {
@@ -1000,7 +1000,20 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
   useEffect(() => {
     if (!isOpen || !tableName) return
     loadData()
-  }, [isOpen, tableName, pagination.pageIndex, pagination.pageSize, globalFilter]) // loadData 의존성 제거하여 무한 루프 방지
+  }, [isOpen, tableName, pagination.pageIndex, pagination.pageSize, globalFilter, loadData])
+
+  // 모달 외부 클릭 시 닫히지 않도록 하는 핸들러
+  const handleInteractOutside = useCallback((e: Event & { preventDefault: () => void }) => {
+    // 무한 재귀 방지를 위한 간단한 체크
+    const target = e.target as HTMLElement
+    
+    // MUI 관련 요소들이나 모달 내부 요소 클릭 시 모달이 닫히지 않도록 방지
+    const shouldPreventClose = target.closest('.MuiMenu-root, .MuiPopover-root, .MuiDialog-root, [data-testid="database-management-modal"]')
+    
+    if (shouldPreventClose) {
+      e.preventDefault()
+    }
+  }, [])
 
   // 모달 열림/닫힘 시 MUI Select 클릭 문제 해결 - 무한 루프 방지
   useEffect(() => {
@@ -1463,17 +1476,7 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
       <DialogContent
         size="full"
         className="w-[95vw] h-[90vh] max-w-none max-h-none p-0 relative z-50"
-        onInteractOutside={useCallback((e: Event & { preventDefault: () => void }) => {
-          // 무한 재귀 방지를 위한 간단한 체크
-          const target = e.target as HTMLElement
-          
-          // MUI 관련 요소들이나 모달 내부 요소 클릭 시 모달이 닫히지 않도록 방지
-          const shouldPreventClose = target.closest('.MuiMenu-root, .MuiPopover-root, .MuiDialog-root, [data-testid="database-management-modal"]')
-          
-          if (shouldPreventClose) {
-            e.preventDefault()
-          }
-        }, [])}
+        onInteractOutside={handleInteractOutside}
         aria-describedby={undefined}
         // 접근성 개선: aria-hidden 제거하여 스크린 리더가 모달 내용에 접근할 수 있도록 함
         aria-hidden={false}
