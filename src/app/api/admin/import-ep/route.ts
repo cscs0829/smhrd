@@ -92,7 +92,7 @@ export async function POST(request: NextRequest) {
         out[nk] = v
       }
       
-      // id 컬럼은 삭제 (UUID가 자동 생성됨)
+      // id 컬럼은 삭제 (UUID가 자동 생성)
       if (out['id']) {
         delete out['id']
       }
