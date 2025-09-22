@@ -28,18 +28,34 @@ export async function POST(request: NextRequest) {
     // 데이터베이스에서 기존 데이터 가져오기 (original_id 포함)
     // RLS 영향을 받지 않도록 관리자 클라이언트 사용
     const supabase = getSupabaseAdmin()
-    const { data: existingData, error: epError } = await supabase
-      .from('ep_data')
-      .select('id, original_id, title, created_at')
-      .order('created_at', { ascending: false })
-      .limit(20000)
 
-    if (epError) {
-      console.error('EP 데이터 조회 오류:', epError)
-      return NextResponse.json({ error: '데이터 조회 중 오류가 발생했습니다' }, { status: 500 })
+    // Supabase REST는 기본 max_rows(1000) 제한이 있어 반복 조회로 전체 수집
+    const pageSize = 1000
+    let from = 0
+    const aggregated: Array<{ id: string; original_id?: string | null; title?: string | null; created_at?: string }> = []
+    // 안전장치: 최대 100k 행까지만 수집
+    const hardLimit = 100_000
+    while (aggregated.length < hardLimit) {
+      const to = from + pageSize - 1
+      const { data: pageData, error: pageError } = await supabase
+        .from('ep_data')
+        .select('id, original_id, title, created_at')
+        .order('created_at', { ascending: false })
+        .range(from, to)
+
+      if (pageError) {
+        console.error('EP 데이터 페이지 조회 오류:', pageError, { from, to })
+        return NextResponse.json({ error: '데이터 조회 중 오류가 발생했습니다' }, { status: 500 })
+      }
+
+      if (!pageData || pageData.length === 0) break
+      aggregated.push(...pageData)
+      if (pageData.length < pageSize) break
+      from += pageSize
     }
     
     // 데이터 비교 로직
+    const existingData = aggregated
     const comparisonResult = compareEPData(jsonData, existingData || [])
 
     // 디버그: 세트/카운트 로깅 및 진단 정보 동봉
