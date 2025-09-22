@@ -1,16 +1,44 @@
 'use client'
 
-import { useState, useEffect, useMemo, useCallback } from 'react'
-import { MaterialReactTable, useMaterialReactTable, type MRT_ColumnDef, type MRT_Cell } from 'material-react-table'
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import React, { useState, useCallback, useEffect, useMemo } from 'react'
+import { Sheet } from 'react-modal-sheet'
+import {
+  MaterialReactTable,
+  useMaterialReactTable,
+  type MRT_ColumnDef,
+  type MRT_TableOptions,
+  type MRT_Cell,
+} from 'material-react-table'
 import { Button } from '@/components/ui/button'
-
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { toast } from 'sonner'
-import { Plus, Edit, Trash2, Search } from 'lucide-react'
+import { Separator } from '@/components/ui/separator'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { 
+  Plus, 
+  Save, 
+  X, 
+  Edit, 
+  Trash2, 
+  Search, 
+  Filter, 
+  Download, 
+  Upload,
+  Settings,
+  Database,
+  Table,
+  AlertCircle,
+  CheckCircle,
+  RefreshCw
+} from 'lucide-react'
 import { useTheme } from 'next-themes'
-// import { applyMuiPaginationFixes } from '@/utils/mui-pagination-fix' // 현재 사용하지 않음
+import { toast } from 'sonner'
+import NewDataModal from './NewDataModal'
 
 interface TableData {
   id: string | number
@@ -97,6 +125,7 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
   const [data, setData] = useState<TableData[]>([])
   const [loading, setLoading] = useState(false)
   const [totalCount, setTotalCount] = useState<number>(tableCount || 0)
+  const [showNewDataModal, setShowNewDataModal] = useState(false)
 
   const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 20 })
   const { resolvedTheme } = useTheme()
@@ -106,15 +135,6 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
   const [showGlobalFilter, setShowGlobalFilter] = useState(true)
 
   const tableSchema = TABLE_SCHEMAS[tableName as keyof typeof TABLE_SCHEMAS]
-
-  // MUI Pagination 클릭 문제 해결 - CSS로만 처리 (무한 루프 방지)
-  useEffect(() => {
-    if (!isOpen) return
-
-    // CSS 스타일만으로 처리하므로 JavaScript 수정사항은 비활성화
-    // const cleanup = applyMuiPaginationFixes()
-    // return cleanup
-  }, [isOpen])
 
   // 데이터 로드
   const loadData = useCallback(async () => {
@@ -227,8 +247,6 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
       toast.error('삭제 중 오류가 발생했습니다')
     }
   }, [tableName, loadData])
-
-
 
   // 컬럼 정의 생성
   const columns = useMemo<MRT_ColumnDef<TableData>[]>(() => {
@@ -379,7 +397,7 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
     enableSorting: true,
     enableColumnFilterModes: true, // 필터 모드 활성화
     columnFilterDisplayMode: 'subheader', // 필터를 서브헤더에 표시
-    getRowId: (originalRow) => String(originalRow.id ?? ''),
+    getRowId: (originalRow: TableData) => String(originalRow.id ?? ''),
     enableRowActions: true,
     positionActionsColumn: 'last',
     enableTopToolbar: true,
@@ -392,11 +410,6 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
     editDisplayMode: 'modal',
     createDisplayMode: 'modal',
     positionCreatingRow: 'top',
-    
-    // 모달 다이얼로그 props는 CSS로 처리
-    
-    
-    
     
     // 편집 텍스트 필드 스타일링
     muiEditTextFieldProps: {
@@ -431,7 +444,6 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
         },
       },
     },
-    // 모달 다이얼로그 props 설정은 CSS로 처리
     // 한국어 로컬라이제이션
     localization: {
       language: 'ko',
@@ -536,11 +548,11 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
       showColumnFilters,
       showGlobalFilter,
     },
-    onGlobalFilterChange: (value) => {
+    onGlobalFilterChange: (value: string) => {
       setGlobalFilter(value || '')
       setPagination(prev => ({ ...prev, pageIndex: 0 }))
     },
-    onColumnFiltersChange: (value) => {
+    onColumnFiltersChange: (value: any) => {
       const newValue = typeof value === 'function' ? value(columnFilters) : value
       setColumnFilters(newValue || [])
     },
@@ -548,25 +560,24 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
     onShowColumnFiltersChange: setShowColumnFilters,
     onShowGlobalFilterChange: setShowGlobalFilter,
     // 편집 관련 콜백
-    onEditingRowSave: ({ values, table }) => {
+    onEditingRowSave: ({ values, table }: { values: any; table: any }) => {
       saveData(values as TableData)
       table.setEditingRow(null)
     },
-    onEditingRowCancel: ({ table }) => {
+    onEditingRowCancel: ({ table }: { table: any }) => {
       table.setEditingRow(null)
     },
     // 생성 관련 콜백
-    onCreatingRowSave: ({ values, table }) => {
+    onCreatingRowSave: ({ values, table }: { values: any; table: any }) => {
       createData(values)
       table.setCreatingRow(null)
     },
-    onCreatingRowCancel: ({ table }) => {
+    onCreatingRowCancel: ({ table }: { table: any }) => {
       table.setCreatingRow(null)
     },
     
-    
     // 편집 모달의 커스텀 렌더링 - 개선된 반응형 레이아웃
-    renderEditRowDialogContent: ({ internalEditComponents }: { internalEditComponents: React.ReactNode[]; row: unknown; table: unknown }) => {
+    renderEditRowDialogContent: ({ internalEditComponents }: { internalEditComponents: any[] }) => {
       return (
         <div className="space-y-6 p-2">
           <div className="text-sm text-gray-600 dark:text-gray-400 mb-4">
@@ -575,7 +586,7 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
           
           {/* 개선된 그리드 레이아웃 - 더 나은 반응형 */}
           <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
-            {internalEditComponents.map((component, index) => (
+            {internalEditComponents.map((component: any, index: number) => (
               <div key={index} className="min-h-[60px] flex flex-col">
                 {component}
               </div>
@@ -606,7 +617,7 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
     },
     
     // 생성 모달의 커스텀 렌더링 - 개선된 UI
-    renderCreateRowDialogContent: ({ internalEditComponents }: { internalEditComponents: React.ReactNode[]; row: unknown; table: unknown }) => {
+    renderCreateRowDialogContent: ({ internalEditComponents }: { internalEditComponents: any[] }) => {
       return (
         <div className="space-y-6 p-2">
           <div className="text-center mb-6">
@@ -620,7 +631,7 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
           
           {/* 개선된 그리드 레이아웃 - 더 직관적인 배치 */}
           <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
-            {internalEditComponents.map((component, index) => (
+            {internalEditComponents.map((component: any, index: number) => (
               <div key={index} className="min-h-[70px] flex flex-col space-y-1">
                 {component}
               </div>
@@ -651,7 +662,7 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
       )
     },
 
-    renderRowActions: ({ row, table }) => (
+    renderRowActions: ({ row, table }: { row: any; table: any }) => (
       <div className="flex gap-1">
         <Button 
           size="sm" 
@@ -669,10 +680,10 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
         </Button>
       </div>
     ),
-    renderTopToolbarCustomActions: ({ table }) => (
+    renderTopToolbarCustomActions: ({ table }: { table: any }) => (
       <div className="flex gap-2">
         <Button 
-          onClick={() => table.setCreatingRow(true)}
+          onClick={() => setShowNewDataModal(true)}
           disabled={loading}
           className="bg-blue-600 hover:bg-blue-700 text-white"
         >
@@ -705,293 +716,8 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
         overflow: 'auto',
         position: 'relative',
         zIndex: 1,
-        // 페이지네이션 영역은 더 높은 z-index 허용
-        '& .MuiTablePagination-root': {
-          position: 'relative',
-          zIndex: 9999,
-          isolation: 'isolate',
-        }
       }
     },
-    // 컬럼 필터 모드 설정
-    columnFilterModeOptions: ['contains', 'startsWith', 'endsWith', 'equals'],
-
-    // 전역 필터 텍스트 필드 props
-    muiSearchTextFieldProps: {
-      placeholder: '전체 검색...',
-      variant: 'outlined' as const,
-      size: 'small' as const,
-      sx: {
-        '& .MuiInputBase-root': {
-          backgroundColor: resolvedTheme === 'dark' ? '#374151' : '#ffffff',
-          color: resolvedTheme === 'dark' ? '#f9fafb' : '#1f2937',
-        },
-        '& .MuiOutlinedInput-notchedOutline': {
-          borderColor: resolvedTheme === 'dark' ? '#4b5563' : '#d1d5db',
-        },
-        '&:hover .MuiOutlinedInput-notchedOutline': {
-          borderColor: resolvedTheme === 'dark' ? '#6b7280' : '#9ca3af',
-        },
-        '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-          borderColor: resolvedTheme === 'dark' ? '#3b82f6' : '#2563eb',
-        }
-      }
-    },
-
-
-
-    // 테이블 헤더 셀 props 설정
-    muiTableHeadCellProps: {
-      sx: {
-        '& .MuiIconButton-root': {
-          '&:hover': {
-            backgroundColor: resolvedTheme === 'dark' ? '#374151' : '#f1f5f9',
-          }
-        }
-      }
-    },
-
-    // 페이지네이션 props 설정 - 데스크톱 클릭 문제 해결
-    muiPaginationProps: {
-      // Select 컴포넌트의 MenuProps 설정으로 드롭다운 문제 해결
-      SelectProps: {
-        MenuProps: {
-          // 메뉴가 올바른 컨테이너에 렌더링되도록 설정
-          container: typeof document !== 'undefined' ? document.body : undefined,
-          // 포털 사용하여 z-index 문제 해결
-          disablePortal: false,
-          // aria-hidden 문제 해결을 위한 설정
-          disableAutoFocusItem: true,
-          autoFocus: false,
-          // 접근성 개선
-          keepMounted: false,
-          // 무한 재귀 방지
-          disableScrollLock: true,
-          // 이벤트 전파 방지
-          disableEscapeKeyDown: false,
-          // 메뉴 스타일 설정
-          PaperProps: {
-            // aria-hidden 제거하여 접근성 개선
-            sx: {
-              backgroundColor: resolvedTheme === 'dark' ? '#374151' : '#ffffff',
-              border: `1px solid ${resolvedTheme === 'dark' ? '#4b5563' : '#d1d5db'}`,
-              borderRadius: '6px',
-              boxShadow: resolvedTheme === 'dark'
-                ? '0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.2)'
-                : '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
-              zIndex: 9999,
-              maxHeight: '300px',
-              // 드롭다운 메뉴 아이템 스타일 - 데스크톱에서도 모바일 크기로 통일
-              '& .MuiMenuItem-root': {
-                color: resolvedTheme === 'dark' ? '#f9fafb' : '#1f2937',
-                fontSize: '13px',
-                padding: '4px 8px',
-                minHeight: '28px',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                '&:hover': {
-                  backgroundColor: resolvedTheme === 'dark' ? '#4b5563' : '#f3f4f6',
-                },
-                '&.Mui-selected': {
-                  backgroundColor: resolvedTheme === 'dark' ? '#1e40af' : '#dbeafe',
-                  '&:hover': {
-                    backgroundColor: resolvedTheme === 'dark' ? '#1e3a8a' : '#bfdbfe',
-                  },
-                },
-              },
-            },
-          },
-        },
-        // Select 자체 스타일 설정
-        sx: {
-          '&.MuiInputBase-root': {
-            backgroundColor: resolvedTheme === 'dark' ? '#374151' : '#ffffff',
-            border: `1px solid ${resolvedTheme === 'dark' ? '#4b5563' : '#d1d5db'}`,
-            borderRadius: '6px',
-            minHeight: '32px',
-            cursor: 'pointer',
-            '&:hover': {
-              backgroundColor: resolvedTheme === 'dark' ? '#4b5563' : '#f9fafb',
-              borderColor: resolvedTheme === 'dark' ? '#6b7280' : '#9ca3af',
-            },
-            '&.Mui-focused': {
-              backgroundColor: resolvedTheme === 'dark' ? '#374151' : '#ffffff',
-              borderColor: resolvedTheme === 'dark' ? '#3b82f6' : '#2563eb',
-              boxShadow: `0 0 0 1px ${resolvedTheme === 'dark' ? '#3b82f6' : '#2563eb'}`,
-            },
-            // 기본 MUI underline 제거
-            '&::before, &::after': {
-              display: 'none',
-            },
-          },
-          // Select 내부 요소들
-          '& .MuiSelect-select': {
-            padding: '6px 32px 6px 12px',
-            minHeight: 'auto',
-            display: 'flex',
-            alignItems: 'center',
-            cursor: 'pointer',
-            '&:focus': {
-              backgroundColor: 'transparent',
-            },
-          },
-          '& .MuiSelect-icon': {
-            right: '8px',
-            color: resolvedTheme === 'dark' ? '#9ca3af' : '#6b7280',
-            cursor: 'pointer',
-          },
-        },
-      },
-      sx: {
-        // 기본 스타일 초기화
-        '& .MuiTablePagination-root': {
-          position: 'relative',
-          zIndex: 1,
-        },
-        // 페이지네이션 버튼들
-        '& .MuiTablePagination-actions button': {
-          color: resolvedTheme === 'dark' ? '#f9fafb' : '#1f2937',
-          cursor: 'pointer',
-          '&:hover': {
-            backgroundColor: resolvedTheme === 'dark' ? '#374151' : '#f3f4f6',
-          },
-          '&.Mui-disabled': {
-            color: resolvedTheme === 'dark' ? '#6b7280' : '#9ca3af',
-          },
-        },
-        // 텍스트 색상
-        '& .MuiTablePagination-selectLabel, & .MuiTablePagination-displayedRows': {
-          color: resolvedTheme === 'dark' ? '#f9fafb' : '#1f2937',
-        },
-      }
-    },
-
-    // 테이블 페이퍼에 포털 컨테이너 설정 - z-index 문제 해결
-    muiTablePaperProps: {
-      elevation: 0,
-      sx: {
-        borderRadius: '12px',
-        border: `1px solid ${resolvedTheme === 'dark' ? '#374151' : '#e5e7eb'}`,
-        backgroundColor: resolvedTheme === 'dark' ? '#1f2937' : '#ffffff',
-        position: 'relative',
-        zIndex: 1,
-        isolation: 'isolate',
-        // 필요한 상호작용 요소들만 클릭 가능하도록 설정
-        '& button, & input, & select, & [role="button"], & [role="menuitem"]': {
-          pointerEvents: 'auto !important',
-        },
-        // 페이지네이션 영역 특별 처리
-        '& .MuiTablePagination-root': {
-          position: 'relative',
-          zIndex: 5,
-          isolation: 'isolate',
-          // Select 컴포넌트 강화
-          '& .MuiTablePagination-select': {
-            position: 'relative',
-            zIndex: 10,
-            isolation: 'isolate',
-            cursor: 'pointer',
-            '&.MuiInputBase-root': {
-              cursor: 'pointer',
-          // 데스크톱에서 더 명확한 스타일 - 버튼 크기에 맞춤
-          '@media (min-width: 768px)': {
-            border: `1px solid ${resolvedTheme === 'dark' ? '#4b5563' : '#d1d5db'}`,
-            borderRadius: '6px',
-            backgroundColor: resolvedTheme === 'dark' ? '#374151' : '#ffffff',
-            width: '60px', // 버튼 크기에 맞춤
-            minWidth: '60px',
-            maxWidth: '60px',
-            height: '32px',
-            minHeight: '32px',
-            maxHeight: '32px',
-            '&:hover': {
-              backgroundColor: resolvedTheme === 'dark' ? '#4b5563' : '#f9fafb',
-              borderColor: resolvedTheme === 'dark' ? '#6b7280' : '#9ca3af',
-            },
-            '&.Mui-focused': {
-              borderColor: resolvedTheme === 'dark' ? '#3b82f6' : '#2563eb',
-              boxShadow: `0 0 0 1px ${resolvedTheme === 'dark' ? '#3b82f6' : '#2563eb'}`,
-            },
-          },
-            },
-            '& .MuiSelect-select': {
-              cursor: 'pointer',
-              userSelect: 'none',
-              position: 'relative',
-              zIndex: 11,
-              // 데스크톱에서 패딩 조정
-              '@media (min-width: 768px)': {
-                padding: '4px 24px 4px 8px',
-                height: '24px',
-                minHeight: '24px',
-                lineHeight: '24px',
-              },
-            },
-            '& .MuiSelect-icon': {
-              cursor: 'pointer',
-              position: 'relative',
-              zIndex: 11,
-              // 데스크톱에서 아이콘 위치 조정
-              '@media (min-width: 768px)': {
-                right: '6px',
-                top: '50%',
-                transform: 'translateY(-50%)',
-              },
-            },
-          },
-        },
-        // 툴바 버튼들
-        '& .MuiIconButton-root, & .MuiButton-root, & .MuiButtonBase-root': {
-          cursor: 'pointer !important',
-          position: 'relative',
-          zIndex: 10,
-        },
-        // 테이블 헤더 액션 버튼들
-        '& .MuiTableHead-root .MuiIconButton-root': {
-          cursor: 'pointer !important',
-          position: 'relative',
-          zIndex: 10,
-        },
-      }
-    },
-
-
-
-    // 필터 버튼 커스터마이징 - 토글 기능 강화
-    renderToolbarInternalActions: ({ table }) => (
-      <div className="flex items-center gap-1">
-        {/* 컬럼 필터 토글 버튼 */}
-        <button
-          onClick={() => {
-            const newValue = !showColumnFilters
-            setShowColumnFilters(newValue)
-            table.setShowColumnFilters(newValue)
-          }}
-          className={`p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-700 ${showColumnFilters ? 'bg-blue-100 dark:bg-blue-900' : ''
-            }`}
-          title="컬럼 필터 토글"
-        >
-          <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-            <path d="M10.83 8H21V6H8.83zm5 5H18v-2h-4.17zM14 16.83V18h-4v-2h3.17l-3-3H6v-2h2.17l-3-3H3V6h.17L1.39 4.22 2.8 2.81l18.38 18.38-1.41 1.41z" />
-          </svg>
-        </button>
-
-        {/* 글로벌 필터 토글 버튼 */}
-        <button
-          onClick={() => {
-            const newValue = !showGlobalFilter
-            setShowGlobalFilter(newValue)
-            table.setShowGlobalFilter(newValue)
-          }}
-          className={`p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-700 ${showGlobalFilter ? 'bg-blue-100 dark:bg-blue-900' : ''
-            }`}
-          title="검색 필터 토글"
-        >
-          <Search className="w-5 h-5" />
-        </button>
-      </div>
-    )
   })
 
   // 모달이 열릴 때 데이터 로드
@@ -1007,538 +733,101 @@ export function DatabaseManagementModal({ isOpen, onClose, tableName, tableCount
     loadData()
   }, [isOpen, tableName, pagination.pageIndex, pagination.pageSize, globalFilter, loadData])
 
-  // 모달 외부 클릭 시 닫히지 않도록 하는 핸들러 - 무한 재귀 방지
-  const handleInteractOutside = useCallback((e: Event) => {
-    // 이벤트 전파를 즉시 중단하여 무한 재귀 방지
-    e.stopImmediatePropagation()
-    
-    const target = e.target as HTMLElement
-    
-    // MUI 관련 요소들이나 모달 내부 요소 클릭 시 모달이 닫히지 않도록 방지
-    const shouldPreventClose = target.closest('.MuiMenu-root, .MuiPopover-root, .MuiDialog-root, [data-testid="database-management-modal"]')
-    
-    if (shouldPreventClose) {
-      e.preventDefault()
-      e.stopPropagation()
-      return false
-    }
-  }, [])
-
-  // 모달 열림/닫힘 시 MUI Select 클릭 문제 해결 - 무한 루프 방지
-  useEffect(() => {
-    if (!isOpen) return
-
-    // 기존 스타일이 있으면 제거
-    const existingStyle = document.getElementById('mui-select-fix')
-    if (existingStyle) {
-      existingStyle.remove()
-    }
-
-    // aria-hidden 문제 해결을 위한 전역 스타일 추가
-    const style = document.createElement('style')
-    style.id = 'mui-select-fix'
-    style.textContent = `
-        /* 관리 모달창 z-index 설정 (기본 모달) */
-        .MuiDialog-root[data-testid="database-management-modal"] {
-          z-index: 1300 !important;
-        }
-        
-        .MuiDialog-root[data-testid="database-management-modal"] .MuiBackdrop-root {
-          z-index: 1299 !important;
-        }
-        
-        /* 새 데이터 추가 모달창 z-index 설정 (관리 모달 위에 표시) */
-        .MuiDialog-root:not([data-testid="database-management-modal"]) {
-          z-index: 1400 !important;
-        }
-        
-        .MuiDialog-root:not([data-testid="database-management-modal"]) .MuiBackdrop-root {
-          z-index: 1399 !important;
-        }
-        
-        /* 새 데이터 추가 모달 스크롤 스타일 - 개선된 반응형 */
-        .MuiDialog-root:not([data-testid="database-management-modal"]) .MuiDialog-paper {
-          width: 95vw !important;
-          max-width: 1400px !important;
-          height: 85vh !important;
-          max-height: 900px !important;
-          overflow: hidden !important;
-          display: flex !important;
-          flex-direction: column !important;
-          border-radius: 12px !important;
-          background-color: ${resolvedTheme === 'dark' ? '#1f2937' : '#ffffff'} !important;
-          z-index: 1400 !important;
-          position: relative !important;
-        }
-        
-        /* Material React Table 편집/생성 모달 크기 조정 - 반응형 (새 데이터 추가 모달만) */
-        .MuiDialog-root:not([data-testid="database-management-modal"]) .MuiDialog-paper {
-          width: 95vw !important;
-          max-width: 1400px !important;
-          height: 85vh !important;
-          max-height: 900px !important;
-          z-index: 1400 !important;
-        }
-        
-        /* Material React Table 모달 컨테이너 - 반응형 (새 데이터 추가 모달만) */
-        .MuiDialog-root:not([data-testid="database-management-modal"])[role="dialog"] .MuiDialog-paper {
-          width: 95vw !important;
-          max-width: 1400px !important;
-          height: 85vh !important;
-          max-height: 900px !important;
-          z-index: 1400 !important;
-        }
-        
-        /* 모바일 대응 - 새 데이터 추가 모달만 */
-        @media (max-width: 768px) {
-          .MuiDialog-root:not([data-testid="database-management-modal"]) .MuiDialog-paper,
-          .MuiDialog-root:not([data-testid="database-management-modal"])[role="dialog"] .MuiDialog-paper {
-            width: 98vw !important;
-            max-width: none !important;
-            height: 90vh !important;
-            max-height: none !important;
-            margin: 1vh !important;
-          }
-        }
-        
-        /* 큰 화면에서 새 데이터 추가 모달 크기 증가 */
-        @media (min-width: 1920px) {
-          .MuiDialog-root:not([data-testid="database-management-modal"]) .MuiDialog-paper,
-          .MuiDialog-root:not([data-testid="database-management-modal"])[role="dialog"] .MuiDialog-paper {
-            width: 90vw !important;
-            max-width: 1600px !important;
-            height: 80vh !important;
-            max-height: 1000px !important;
-          }
-        }
-        
-        .MuiDialogContent-root {
-          overflow: auto !important;
-          padding: 24px !important;
-          max-height: calc(85vh - 160px) !important;
-          flex: 1 !important;
-          /* 부드러운 스크롤 */
-          scroll-behavior: smooth !important;
-          /* 스크롤바 스타일링 */
-          scrollbar-width: thin !important;
-          scrollbar-color: ${resolvedTheme === 'dark' ? '#6b7280 #374151' : '#cbd5e1 #f1f5f9'} !important;
-        }
-        
-        /* 모바일에서 컨텐츠 영역 조정 */
-        @media (max-width: 768px) {
-          .MuiDialogContent-root {
-            padding: 16px !important;
-            max-height: calc(90vh - 140px) !important;
-          }
-        }
-        
-        /* 큰 화면에서 컨텐츠 영역 조정 */
-        @media (min-width: 1920px) {
-          .MuiDialogContent-root {
-            max-height: calc(80vh - 180px) !important;
-            padding: 32px !important;
-          }
-        }
-        
-        .MuiDialogContent-root::-webkit-scrollbar {
-          width: 8px !important;
-        }
-        
-        .MuiDialogContent-root::-webkit-scrollbar-track {
-          background: ${resolvedTheme === 'dark' ? '#374151' : '#f1f5f9'} !important;
-          border-radius: 4px !important;
-        }
-        
-        .MuiDialogContent-root::-webkit-scrollbar-thumb {
-          background: ${resolvedTheme === 'dark' ? '#6b7280' : '#cbd5e1'} !important;
-          border-radius: 4px !important;
-        }
-        
-        .MuiDialogContent-root::-webkit-scrollbar-thumb:hover {
-          background: ${resolvedTheme === 'dark' ? '#9ca3af' : '#94a3b8'} !important;
-        }
-        
-        .MuiDialogActions-root {
-          padding: 16px 20px !important;
-          border-top: 1px solid ${resolvedTheme === 'dark' ? '#374151' : '#e5e7eb'} !important;
-          background-color: ${resolvedTheme === 'dark' ? '#1f2937' : '#ffffff'} !important;
-          flex-shrink: 0 !important;
-          gap: 8px !important;
-        }
-        
-        .MuiDialogTitle-root {
-          padding: 20px 20px 0 20px !important;
-          border-bottom: 1px solid ${resolvedTheme === 'dark' ? '#374151' : '#e5e7eb'} !important;
-          margin-bottom: 16px !important;
-          flex-shrink: 0 !important;
-        }
-        
-        /* 편집 모달 폼 필드 스타일링 */
-        .MuiDialogContent-root .MuiFormControl-root,
-        .MuiDialogContent-root .MuiTextField-root,
-        .MuiDialogContent-root .MuiSelect-root {
-          margin-bottom: 16px !important;
-        }
-        
-        .MuiDialogContent-root .MuiOutlinedInput-root {
-          background-color: ${resolvedTheme === 'dark' ? '#374151' : '#ffffff'} !important;
-        }
-        
-        .MuiDialogContent-root .MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline {
-          border-color: ${resolvedTheme === 'dark' ? '#6b7280' : '#9ca3af'} !important;
-        }
-        
-        .MuiDialogContent-root .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline {
-          border-color: ${resolvedTheme === 'dark' ? '#3b82f6' : '#2563eb'} !important;
-        }
-        
-        .MuiDialogContent-root .MuiInputLabel-root {
-          color: ${resolvedTheme === 'dark' ? '#d1d5db' : '#374151'} !important;
-        }
-        
-        .MuiDialogContent-root .MuiInputLabel-root.Mui-focused {
-          color: ${resolvedTheme === 'dark' ? '#3b82f6' : '#2563eb'} !important;
-        }
-        
-        /* 편집 모달 그리드 레이아웃 - 개선된 반응형 */
-        .MuiDialogContent-root .space-y-4,
-        .MuiDialogContent-root .space-y-6 {
-          display: flex !important;
-          flex-direction: column !important;
-          gap: 20px !important;
-        }
-        
-        .MuiDialogContent-root .grid {
-          display: grid !important;
-          grid-template-columns: 1fr !important;
-          gap: 24px !important;
-        }
-        
-        /* 태블릿 */
-        @media (min-width: 640px) {
-          .MuiDialogContent-root .grid {
-            grid-template-columns: repeat(2, 1fr) !important;
-            gap: 20px !important;
-          }
-        }
-        
-        /* 데스크톱 */
-        @media (min-width: 1280px) {
-          .MuiDialogContent-root .grid {
-            grid-template-columns: repeat(3, 1fr) !important;
-            gap: 24px !important;
-          }
-        }
-        
-        /* 큰 화면 */
-        @media (min-width: 1536px) {
-          .MuiDialogContent-root .grid {
-            grid-template-columns: repeat(4, 1fr) !important;
-            gap: 24px !important;
-          }
-        }
-        
-        /* 필드 라벨 스타일링 - 개선된 가독성 */
-        .MuiDialogContent-root label {
-          display: block !important;
-          font-size: 0.875rem !important;
-          font-weight: 600 !important;
-          color: ${resolvedTheme === 'dark' ? '#f3f4f6' : '#1f2937'} !important;
-          margin-bottom: 6px !important;
-          line-height: 1.4 !important;
-        }
-        
-        /* 필수 필드 표시 개선 */
-        .MuiDialogContent-root label:has-text('*') {
-          color: ${resolvedTheme === 'dark' ? '#fbbf24' : '#d97706'} !important;
-        }
-        
-        /* 필수 필드 표시 */
-        .MuiDialogContent-root .text-red-500 {
-          color: #ef4444 !important;
-          margin-left: 4px !important;
-        }
-        
-        /* 정보 박스 스타일링 */
-        .MuiDialogContent-root .bg-blue-50 {
-          background-color: ${resolvedTheme === 'dark' ? 'rgba(59, 130, 246, 0.1)' : '#eff6ff'} !important;
-          border-color: ${resolvedTheme === 'dark' ? 'rgba(59, 130, 246, 0.3)' : '#dbeafe'} !important;
-        }
-        
-        .MuiDialogContent-root .bg-green-50 {
-          background-color: ${resolvedTheme === 'dark' ? 'rgba(34, 197, 94, 0.1)' : '#f0fdf4'} !important;
-          border-color: ${resolvedTheme === 'dark' ? 'rgba(34, 197, 94, 0.3)' : '#dcfce7'} !important;
-        }
-        
-        .MuiDialogContent-root .text-blue-700 {
-          color: ${resolvedTheme === 'dark' ? '#93c5fd' : '#1d4ed8'} !important;
-        }
-        
-        .MuiDialogContent-root .text-green-700 {
-          color: ${resolvedTheme === 'dark' ? '#86efac' : '#15803d'} !important;
-        }
-        /* MUI Select 데스크톱 클릭 문제 해결 - 접근성 개선 */
-        .MuiTablePagination-select.MuiInputBase-root {
-          cursor: pointer !important;
-          position: relative !important;
-          z-index: 10 !important;
-          isolation: isolate !important;
-        }
-        
-        .MuiTablePagination-select .MuiSelect-select {
-          cursor: pointer !important;
-          user-select: none !important;
-          position: relative !important;
-          z-index: 11 !important;
-          min-height: 32px !important;
-          display: flex !important;
-          align-items: center !important;
-        }
-        
-        .MuiTablePagination-select .MuiSelect-icon {
-          cursor: pointer !important;
-          position: relative !important;
-          z-index: 11 !important;
-        }
-        
-        /* MUI 포털 컴포넌트들 - 접근성 개선 및 무한 재귀 방지 */
-        .MuiMenu-root, .MuiPopover-root {
-          z-index: 99999 !important;
-          position: fixed !important;
-          isolation: isolate !important;
-          /* aria-hidden 문제 해결 */
-          aria-hidden: false !important;
-          /* 무한 재귀 방지 */
-          pointer-events: auto !important;
-          contain: layout style !important;
-        }
-        
-        .MuiMenu-paper, .MuiPopover-paper {
-          z-index: 99999 !important;
-          position: relative !important;
-          isolation: isolate !important;
-          /* aria-hidden 문제 해결 */
-          aria-hidden: false !important;
-          /* 무한 재귀 방지 */
-          pointer-events: auto !important;
-          contain: layout style !important;
-        }
-        
-        .MuiMenuItem-root {
-          cursor: pointer !important;
-          user-select: none !important;
-          min-height: 28px !important;
-          display: flex !important;
-          align-items: center !important;
-          font-size: 13px !important;
-          padding: 4px 8px !important;
-        }
-        
-        /* 필요한 MUI 버튼 요소들만 클릭 가능하게 */
-        .MuiIconButton-root, .MuiButton-root, .MuiButtonBase-root {
-          cursor: pointer !important;
-          position: relative !important;
-          z-index: 10 !important;
-        }
-        
-        /* 입력 필드 포커스 및 상호작용 보장 */
-        .MuiTextField-root, .MuiInputBase-root, .MuiOutlinedInput-root,
-        .MuiSelect-root, .MuiFormControl-root {
-          z-index: 1500 !important;
-          position: relative !important;
-        }
-        
-        .MuiTextField-root input, .MuiInputBase-input, .MuiOutlinedInput-input {
-          z-index: 1501 !important;
-          position: relative !important;
-        }
-        
-        /* Select 드롭다운 z-index */
-        .MuiSelect-select {
-          z-index: 1501 !important;
-        }
-        
-        .MuiMenu-root, .MuiPopover-root {
-          z-index: 1500 !important;
-        }
-        
-        .MuiMenu-paper, .MuiPopover-paper {
-          z-index: 1500 !important;
-        }
-        
-        /* 테이블 페이지네이션 전체 영역 */
-        .MuiTablePagination-root {
-          position: relative !important;
-          z-index: 5 !important;
-          isolation: isolate !important;
-        }
-        
-        .MuiTablePagination-toolbar {
-          position: relative !important;
-          z-index: 5 !important;
-        }
-        
-        /* 데스크톱 특화 스타일 - 버튼 크기에 맞춤 */
-        @media (min-width: 768px) {
-          .MuiTablePagination-select.MuiInputBase-root {
-            border: 1px solid ${resolvedTheme === 'dark' ? '#4b5563' : '#d1d5db'} !important;
-            border-radius: 6px !important;
-            background-color: ${resolvedTheme === 'dark' ? '#374151' : '#ffffff'} !important;
-            width: 60px !important;
-            min-width: 60px !important;
-            max-width: 60px !important;
-            height: 32px !important;
-            min-height: 32px !important;
-            max-height: 32px !important;
-          }
-          
-          .MuiTablePagination-select.MuiInputBase-root:hover {
-            background-color: ${resolvedTheme === 'dark' ? '#4b5563' : '#f9fafb'} !important;
-            border-color: ${resolvedTheme === 'dark' ? '#6b7280' : '#9ca3af'} !important;
-          }
-          
-          /* 데스크톱에서 드롭다운 메뉴 아이템을 모바일 크기로 맞춤 */
-          .MuiMenuItem-root {
-            min-height: 28px !important;
-            font-size: 13px !important;
-            padding: 4px 8px !important;
-          }
-          
-          .MuiMenuItem-root:hover {
-            background-color: ${resolvedTheme === 'dark' ? '#4b5563' : '#f3f4f6'} !important;
-          }
-          
-          .MuiTablePagination-select .MuiSelect-select {
-            padding: 4px 24px 4px 8px !important;
-            height: 24px !important;
-            min-height: 24px !important;
-            line-height: 24px !important;
-          }
-          
-          .MuiTablePagination-select .MuiSelect-icon {
-            right: 6px !important;
-            top: 50% !important;
-            transform: translateY(-50%) !important;
-          }
-        }
-        
-        /* 모바일 터치 최적화 */
-        @media (max-width: 767px) {
-          .MuiTablePagination-select.MuiInputBase-root,
-          .MuiMenuItem-root,
-          .MuiIconButton-root {
-            touch-action: manipulation !important;
-            -webkit-tap-highlight-color: transparent !important;
-          }
-          
-          .MuiTablePagination-select .MuiSelect-select {
-            min-height: 44px !important;
-            padding: 10px 32px 10px 12px !important;
-          }
-          
-          .MuiMenuItem-root {
-            min-height: 44px !important;
-            padding: 12px 16px !important;
-          }
-        }
-        
-        /* 포커스 상태 개선 */
-        .MuiTablePagination-select.MuiInputBase-root.Mui-focused {
-          border-color: ${resolvedTheme === 'dark' ? '#3b82f6' : '#2563eb'} !important;
-          box-shadow: 0 0 0 1px ${resolvedTheme === 'dark' ? '#3b82f6' : '#2563eb'} !important;
-        }
-        
-        /* underline 제거 */
-        .MuiTablePagination-select.MuiInputBase-root::before,
-        .MuiTablePagination-select.MuiInputBase-root::after {
-          display: none !important;
-        }
-      `
-
-    document.head.appendChild(style)
-
-    return () => {
-      const styleElement = document.getElementById('mui-select-fix')
-      if (styleElement) {
-        styleElement.remove()
-      }
-    }
-  }, [isOpen, resolvedTheme])
-
-
-
-  // 모달 닫기 핸들러 - 포커스 관리 개선 (Material-UI 권장사항 적용)
-  const handleClose = useCallback((event: Event, reason: string) => {
-    // backdropClick이나 escapeKeyDown으로 닫힐 때만 처리
-    if (reason === 'backdropClick' || reason === 'escapeKeyDown') {
-      // 포커스를 모달을 열었던 버튼으로 돌려보내기
-      const triggerButton = document.querySelector('[data-testid="database-management-modal-trigger"]') as HTMLElement
-      if (triggerButton) {
-        triggerButton.focus()
-      }
-      onClose()
-    }
-  }, [onClose])
-
   if (!tableSchema) {
     return (
-      <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent size="default" className="w-full max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>알 수 없는 테이블</DialogTitle>
-            <DialogDescription>
+      <Sheet isOpen={isOpen} onClose={onClose}>
+        <Sheet.Container
+          style={{
+            backgroundColor: resolvedTheme === 'dark' ? '#1f2937' : '#ffffff',
+            borderTopLeftRadius: '12px',
+            borderTopRightRadius: '12px',
+          }}
+        >
+          <Sheet.Header>
+            <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
+              <div className="flex items-center gap-2">
+                <AlertCircle className="h-5 w-5 text-red-500" />
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+                  알 수 없는 테이블
+                </h2>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={onClose}
+                className="h-8 w-8 p-0"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          </Sheet.Header>
+          <Sheet.Content>
+            <div className="p-4">
+              <p className="text-gray-600 dark:text-gray-400">
               선택한 테이블을 찾을 수 없습니다.
-            </DialogDescription>
-          </DialogHeader>
-        </DialogContent>
-      </Dialog>
+              </p>
+            </div>
+          </Sheet.Content>
+        </Sheet.Container>
+        <Sheet.Backdrop />
+      </Sheet>
     )
   }
 
   return (
-    <Dialog
-      open={isOpen}
-      onOpenChange={(open) => {
-        if (!open) {
-          handleClose(new Event('close'), 'backdropClick')
-        }
-      }}
-      data-testid="database-management-modal"
-      // 접근성 개선: aria-hidden 제거
-      aria-hidden={false}
-    >
-      <DialogContent
-        size="full"
-        className="w-[95vw] h-[90vh] max-w-none max-h-none p-0 relative z-50"
-        onInteractOutside={handleInteractOutside}
-        aria-describedby={undefined}
-        // 접근성 개선: aria-hidden 제거하여 스크린 리더가 모달 내용에 접근할 수 있도록 함
-        aria-hidden={false}
-      >
-        <DialogHeader className="px-4 sm:px-6 py-4 border-b border-gray-200 dark:border-gray-700">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div className="flex-1">
-              <DialogTitle className="flex items-center gap-2 text-lg sm:text-xl font-semibold">
-                {tableSchema.displayName} 관리
-              </DialogTitle>
-              <DialogDescription className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                총 {totalCount.toLocaleString()}개의 데이터 표시 중
-              </DialogDescription>
-            </div>
-          </div>
-        </DialogHeader>
-
-        {/* 테이블 컨테이너 */}
-        <div
-          className="flex-1 px-4 sm:px-6 pb-4 sm:pb-6 relative z-10 max-h-[calc(90vh-120px)] overflow-auto"
+    <>
+      <Sheet isOpen={isOpen} onClose={onClose}>
+        <Sheet.Container
           style={{
-            isolation: 'isolate',
-            pointerEvents: 'auto'
+            backgroundColor: resolvedTheme === 'dark' ? '#1f2937' : '#ffffff',
+            borderTopLeftRadius: '12px',
+            borderTopRightRadius: '12px',
           }}
         >
+          <Sheet.Header>
+            <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
+              <div className="flex items-center gap-2">
+                <Database className="h-5 w-5 text-blue-600" />
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+                {tableSchema.displayName} 관리
+                </h2>
+                <Badge variant="secondary" className="ml-2">
+                  {totalCount.toLocaleString()}개
+                </Badge>
+            </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={onClose}
+                className="h-8 w-8 p-0"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+          </div>
+          </Sheet.Header>
+
+          <Sheet.Content>
+            <div className="p-4 max-h-[80vh] overflow-y-auto">
           <MaterialReactTable table={table} />
         </div>
-      </DialogContent>
-    </Dialog>
+          </Sheet.Content>
+        </Sheet.Container>
+        <Sheet.Backdrop />
+      </Sheet>
+
+      {/* 새 데이터 추가 모달 */}
+      <NewDataModal
+        isOpen={showNewDataModal}
+        onClose={() => setShowNewDataModal(false)}
+        tableName={tableName}
+        onSave={createData}
+        schema={tableSchema.columns.map(col => ({
+          column_name: col.key,
+          data_type: col.type === 'number' ? 'integer' : col.type === 'boolean' ? 'boolean' : 'text',
+          is_nullable: col.required ? 'NO' : 'YES',
+          column_default: null
+        }))}
+      />
+    </>
   )
 }
