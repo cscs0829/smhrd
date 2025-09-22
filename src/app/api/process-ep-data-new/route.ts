@@ -98,6 +98,7 @@ export async function POST(request: NextRequest) {
     // compareEPData에서 반환한 세트를 그대로 사용하여 일관성 확보
     const existingIdExact = new Set<string>(comparisonResult.debug_existing_id_exact || [])
     const existingIdLoose = new Set<string>(comparisonResult.debug_existing_id_loose || [])
+    const existingIdUltra = new Set<string>(comparisonResult.debug_existing_id_ultra || [])
     const existingTitle = new Set<string>(comparisonResult.debug_existing_title || [])
     // 기존 데이터의 (ultra 정규화된 original_id) -> (정규화된 title) 맵 구성
     const dbUltraIdToNormTitle = new Map<string, string>()
@@ -133,7 +134,7 @@ export async function POST(request: NextRequest) {
         title_match: titleMatch,
         id_exact_match: idExactMatch,
         id_loose_match: idLooseMatch,
-        id_ultra_match: nidUltra ? (existingIdExact.has(nidUltra) || existingIdLoose.has(nidUltra)) : false,
+        id_ultra_match: nidUltra ? (existingIdUltra.has(nidUltra) || existingIdExact.has(nidUltra) || existingIdLoose.has(nidUltra)) : false,
         excel_id_normalized_ultra: nidUltra,
         excel_title_normalized: t ?? null,
         db_title_normalized_for_id: dbTitleForId,
