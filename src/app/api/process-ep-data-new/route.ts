@@ -65,9 +65,7 @@ export async function POST(request: NextRequest) {
       if (s == null) return null
       const str = String(s)
         .replace(/[\u200B-\u200D\uFEFF]/g, '')
-        .replace(/[^0-9A-Za-z가-힣_-]/g, '_') // 특수문자를 밑줄로 변환
         .replace(/_+/g, '_')
-        .replace(/^_+|_+$/g, '')
         .trim()
       if (!str) return null
       return str.normalize('NFC')
@@ -133,9 +131,7 @@ export async function POST(request: NextRequest) {
       if (s == null) return null
       const str = String(s)
         .replace(/[\u200B-\u200D\uFEFF]/g, '')
-        .replace(/[^0-9A-Za-z가-힣_-]/g, '_') // 특수문자를 밑줄로 변환
         .replace(/_+/g, '_')
-        .replace(/^_+|_+$/g, '')
         .trim()
       if (!str) return null
       return str.normalize('NFC')
@@ -219,19 +215,8 @@ export async function POST(request: NextRequest) {
       'toAdd:', comparisonResult.itemsToAdd.length,
       'toRemove:', comparisonResult.itemsToRemove.length,
       'unchanged:', comparisonResult.unchangedItems.length)
-    
-    // 추가 디버그 정보
     if (comparisonResult.itemsToAdd.length > 0) {
-      console.log('[process-ep-data-new] 추가될 데이터 샘플:', comparisonResult.itemsToAdd.slice(0, 10).map(i => ({
-        id: i.id,
-        title: i.title,
-        normalizedId: normalizeId(i.id),
-        normalizedTitle: normalizeTitle(i.title)
-      })))
-    }
-    
-    if (comparisonResult.itemsToAdd.length > 10) {
-      console.log(`[process-ep-data-new] 경고: ${comparisonResult.itemsToAdd.length}개의 데이터가 추가 대상으로 분류되었습니다. 중복 제거 로직을 확인해주세요.`)
+      console.log('[process-ep-data-new] sample itemsToAdd ids:', comparisonResult.itemsToAdd.slice(0, 5).map(i => i.id))
     }
     
     const getStrOrNull = (v: unknown): string | null => (v == null ? null : String(v))
@@ -280,19 +265,11 @@ export async function POST(request: NextRequest) {
 // 헤더/값 정규화: 다양한 한글/영문 헤더를 통일하고 문자열은 trim/lower
 function normalizeExcelRows(rows: Array<Record<string, unknown>>): Array<{ id?: string; title?: string; [key: string]: unknown }> {
   const headerMap: Record<string, string> = {
-    // id 계열 - 더 많은 변형 추가
-    'id': 'id', 'ID': 'id', 'Id': 'id', 'iD': 'id',
-    '상품id': 'id', '상품ID': 'id', '상품Id': 'id', '상품 id': 'id', '상품_id': 'id',
-    '상품코드': 'id', '상품 코드': 'id', '상품_코드': 'id',
-    'excel id': 'id', 'Excel ID': 'id', 'excel_id': 'id', 'Excel_ID': 'id',
-    'original id': 'id', 'Original ID': 'id', 'original_id': 'id', 'Original_ID': 'id',
-    '원본ID': 'id', '원본id': 'id', '원본 id': 'id', '원본_id': 'id',
-    'product_id': 'id', 'productId': 'id', 'product id': 'id', 'product_ID': 'id',
-    // title 계열 - 더 많은 변형 추가
-    'title': 'title', 'TITLE': 'title', 'Title': 'title', 'tItLe': 'title',
-    '제목': 'title', '상품명': 'title', '상품 명': 'title', '상품명(제목)': 'title',
-    '상품_명': 'title', 'product_name': 'title', 'productName': 'title', 'product name': 'title',
-    'name': 'title', 'NAME': 'title', 'Name': 'title', '이름': 'title'
+    // id 계열
+    'id': 'id', 'ID': 'id', '상품id': 'id', '상품ID': 'id', '상품Id': 'id', '상품 id': 'id',
+    '상품코드': 'id', '상품 코드': 'id', 'excel id': 'id', 'Excel ID': 'id', 'original id': 'id', 'Original ID': 'id', '원본ID': 'id',
+    // title 계열
+    'title': 'title', 'TITLE': 'title', '제목': 'title', '상품명': 'title', '상품 명': 'title', '상품명(제목)': 'title'
   }
 
   const normalizeKey = (key: string): string => {
@@ -333,39 +310,30 @@ function compareEPData(
   // ID와 제목은 서로 다른 정규화 규칙을 적용한다.
   // - ID: 대소문자는 보존, 연속 밑줄은 1개로 축약(표기 차이 허용), zero-width 제거 및 trim
   // - Title: 공백 축약 및 소문자화로 유사 문자열 흡수
-  
-  // 통합된 ID 정규화 함수 - 더 강력한 중복 제거를 위해
   const normalizeId = (s: unknown): string | null => {
     if (s == null) return null
     const str = String(s)
-      .replace(/[\u200B-\u200D\uFEFF]/g, '') // zero-width 문자 제거
-      .replace(/_+/g, '_') // 연속 밑줄을 하나로
-      .replace(/[^0-9A-Za-z가-힣_-]/g, '_') // 특수문자를 밑줄로 변환
-      .replace(/_+/g, '_') // 다시 연속 밑줄 정리
-      .replace(/^_+|_+$/g, '') // 앞뒤 밑줄 제거
+      .replace(/[\u200B-\u200D\uFEFF]/g, '')
+      .replace(/_+/g, '_')
       .trim()
     if (!str) return null
     return str.normalize('NFC')
   }
-  
   const normalizeIdLoose = (s: unknown): string | null => {
     const v = normalizeId(s)
     return v ? v.toLowerCase() : null
   }
-  
   const normalizeIdUltraLoose = (s: unknown): string | null => {
     if (s == null) return null
     const str = String(s)
       .replace(/[\u200B-\u200D\uFEFF]/g, '')
       .normalize('NFKC')
-      .replace(/[^0-9A-Za-z가-힣]+/g, '_') // 한글도 포함하여 정규화
+      .replace(/[^0-9A-Za-z]+/g, '_')
       .replace(/_+/g, '_')
-      .replace(/^_+|_+$/g, '')
       .trim()
     if (!str) return null
     return str.normalize('NFC').toLowerCase()
   }
-  
   const normalizeTitle = (s: unknown): string | null => {
     if (s == null) return null
     const str = String(s)
@@ -409,52 +377,22 @@ function compareEPData(
     if (t) newTitleSet.add(t)
   }
 
-  // 개선된 중복 제거 로직 - 더 강력한 매칭
+  // 규칙 (요청 반영: 제목 우선, ID 보조)
   const itemsToAdd = newData.filter((item) => {
     const nid = normalizeId(item.id)
     const t = normalizeTitle(item.title)
-    
-    // 제목이 있으면 제목 기준으로 먼저 확인
-    if (t && existingTitleSet.has(t)) {
-      console.log(`[DEBUG] 제목으로 중복 발견: "${item.title}" (정규화: "${t}")`)
-      return false
-    }
-    
-    // ID가 있으면 모든 정규화 방식으로 확인
+
+    // 제목 기준 우선 판단
+    if (t && existingTitleSet.has(t)) return false
+    // ID로만 동일 판단을 허용 (요청 옵션) - exact/loose/ultra 중 하나라도 매칭되면 추가 아님
     if (nid) {
       const nidLoose = normalizeIdLoose(item.id)
       const nidUltra = normalizeIdUltraLoose(item.id)
-      
-      // 원본 ID도 함께 확인 (대소문자 차이 고려)
-      const originalIdLower = item.id ? String(item.id).toLowerCase() : null
-      
-      if (existingOriginalIdSet.has(nid)) {
-        console.log(`[DEBUG] ID로 중복 발견 (exact): "${item.id}" (정규화: "${nid}")`)
-        return false
-      }
-      if (nidLoose && existingOriginalIdLooseSet.has(nidLoose)) {
-        console.log(`[DEBUG] ID로 중복 발견 (loose): "${item.id}" (정규화: "${nidLoose}")`)
-        return false
-      }
-      if (nidUltra && existingOriginalIdUltraLooseSet.has(nidUltra)) {
-        console.log(`[DEBUG] ID로 중복 발견 (ultra): "${item.id}" (정규화: "${nidUltra}")`)
-        return false
-      }
-      
-      // 기존 데이터의 원본 ID와도 비교 (대소문자 무시)
-      for (const existing of existingData) {
-        if (existing.original_id) {
-          const existingIdLower = String(existing.original_id).toLowerCase()
-          if (originalIdLower && existingIdLower === originalIdLower) {
-            console.log(`[DEBUG] 원본 ID로 중복 발견: "${item.id}" = "${existing.original_id}"`)
-            return false
-          }
-        }
-      }
+      if (existingOriginalIdSet.has(nid)) return false
+      if (nidLoose && existingOriginalIdLooseSet.has(nidLoose)) return false
+      if (nidUltra && existingOriginalIdUltraLooseSet.has(nidUltra)) return false
     }
-    
     // 제목/ID 모두 불일치 → 추가 대상
-    console.log(`[DEBUG] 새 데이터로 분류: ID="${item.id}", 제목="${item.title}"`)
     return true
   })
 
