@@ -76,6 +76,7 @@ export async function POST(request: NextRequest) {
         .filter((v): v is string => Boolean(v))
     ))
     const presentInDb = new Set<string>()
+    const presentInDbNormalized = new Set<string>()
     if (excelIdCandidates.length > 0) {
       const chunkSize = 1000
       for (let i = 0; i < excelIdCandidates.length; i += chunkSize) {
@@ -86,7 +87,12 @@ export async function POST(request: NextRequest) {
           .in('original_id', chunk)
         if (hit) {
           for (const r of hit) {
-            if (r && r.original_id) presentInDb.add(String(r.original_id))
+            if (r && r.original_id) {
+              const raw = String(r.original_id)
+              presentInDb.add(raw)
+              const norm = normalizeIdForGuard(raw)
+              if (norm) presentInDbNormalized.add(norm)
+            }
           }
         }
       }
@@ -95,11 +101,14 @@ export async function POST(request: NextRequest) {
       const itemsToAddFinal = comparisonResult.itemsToAdd.filter((item) => {
         const id = item.id ? String(item.id) : null
         if (!id) return true
-        return !presentInDb.has(id)
+        const idNorm = normalizeIdForGuard(id)
+        return !(presentInDb.has(id) || (idNorm ? presentInDbNormalized.has(idNorm) : false))
       })
       const movedToUnchanged = comparisonResult.itemsToAdd.filter((item) => {
         const id = item.id ? String(item.id) : null
-        return !!(id && presentInDb.has(id))
+        if (!id) return false
+        const idNorm = normalizeIdForGuard(id)
+        return presentInDb.has(id) || (idNorm ? presentInDbNormalized.has(idNorm) : false)
       })
       const unchangedFinal = [...comparisonResult.unchangedItems, ...movedToUnchanged]
       comparisonResult = {
