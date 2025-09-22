@@ -51,14 +51,13 @@ export async function POST(request: NextRequest) {
     
     return NextResponse.json({
       ...comparisonResult,
-      _debug: {
-        excel_count: jsonData.length,
-        db_count: existingData?.length || 0,
-        to_add: comparisonResult.itemsToAdd.length,
-        to_remove: comparisonResult.itemsToRemove.length,
-        unchanged: comparisonResult.unchangedItems.length,
-        sample_to_add: comparisonResult.itemsToAdd.slice(0, 5).map(i => ({ id: i.id, title: i.title }))
-      }
+      // 최상위에 디버그 정보 노출 (일부 뷰어에서 _prefix 숨김 방지)
+      excel_count: jsonData.length,
+      db_count: existingData?.length || 0,
+      to_add: comparisonResult.itemsToAdd.length,
+      to_remove: comparisonResult.itemsToRemove.length,
+      unchanged_count: comparisonResult.unchangedItems.length,
+      sample_to_add: comparisonResult.itemsToAdd.slice(0, 5).map(i => ({ id: i.id, title: i.title }))
     })
   } catch (error) {
     console.error('EP 데이터 처리 오류:', error)
