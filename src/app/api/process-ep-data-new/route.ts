@@ -95,29 +95,14 @@ export async function POST(request: NextRequest) {
       return str.normalize('NFC').toLowerCase()
     }
 
-    const existingIdExact = new Set<string>()
-    const existingIdLoose = new Set<string>()
-    const existingTitle = new Set<string>()
-    for (const row of existingData) {
-      const oid = normalizeId(row.original_id)
-      if (oid) existingIdExact.add(oid)
-      const oidLoose = normalizeIdLoose(row.original_id)
-      if (oidLoose) existingIdLoose.add(oidLoose)
-      const t = normalizeTitle(row.title)
-      if (t) existingTitle.add(t)
-    }
+    // compareEPData에서 반환한 세트를 그대로 사용하여 일관성 확보
+    const existingIdExact = new Set<string>(comparisonResult.debug_existing_id_exact || [])
+    const existingIdLoose = new Set<string>(comparisonResult.debug_existing_id_loose || [])
+    const existingTitle = new Set<string>(comparisonResult.debug_existing_title || [])
 
-    const excelIdExactList: string[] = []
-    const excelIdLooseList: string[] = []
-    const excelTitleList: string[] = []
-    for (const row of jsonData) {
-      const nid = normalizeId(row.id)
-      const nidLoose = normalizeIdLoose(row.id)
-      const t = normalizeTitle(row.title)
-      if (nid) excelIdExactList.push(nid)
-      if (nidLoose) excelIdLooseList.push(nidLoose)
-      if (t) excelTitleList.push(t)
-    }
+    const excelIdExactList: string[] = comparisonResult.debug_new_id_exact || []
+    const excelIdLooseList: string[] = comparisonResult.debug_new_id_loose || []
+    const excelTitleList: string[] = comparisonResult.debug_new_title || []
 
     const missingIds: string[] = []
     for (const nidLoose of excelIdLooseList) {
@@ -370,6 +355,14 @@ function compareEPData(
   return {
     itemsToAdd,
     itemsToRemove,
-    unchangedItems
+    unchangedItems,
+    debug_existing_id_exact: Array.from(existingOriginalIdSet),
+    debug_existing_id_loose: Array.from(existingOriginalIdLooseSet),
+    debug_existing_id_ultra: Array.from(existingOriginalIdUltraLooseSet),
+    debug_existing_title: Array.from(existingTitleSet),
+    debug_new_id_exact: Array.from(newOriginalIdSet),
+    debug_new_id_loose: Array.from(newOriginalIdLooseSet),
+    debug_new_id_ultra: Array.from(newOriginalIdUltraLooseSet),
+    debug_new_title: Array.from(newTitleSet)
   }
 }
