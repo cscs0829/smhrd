@@ -41,6 +41,7 @@ const TABLE_SCHEMAS = {
     displayName: 'EP 데이터',
     columns: [
       { key: 'id', label: 'ID', type: 'text', editable: false, required: false },
+      { key: 'original_id', label: 'Original ID', type: 'text', editable: false, required: false },
       { key: 'title', label: '제목', type: 'text', editable: true, required: true },
       { key: 'price_pc', label: 'PC 가격', type: 'number', editable: true, required: false },
       { key: 'benefit_price', label: '혜택 가격', type: 'number', editable: true, required: false },
