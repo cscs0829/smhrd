@@ -247,7 +247,7 @@ export function ImageLinkGenerator() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {/* 간단한 미리보기 1행 */}
+                      {/* 간단한 미리보기 */}
                       <TableRow>
                         <TableCell className="truncate max-w-xs" title={mainCandidates[0]?.url || ''}>
                           {mainCandidates[0]?.url || '-'}
