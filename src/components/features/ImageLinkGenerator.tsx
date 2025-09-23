@@ -234,7 +234,7 @@ export function ImageLinkGenerator() {
                   <div className="flex items-center gap-2 flex-wrap">
                     <Badge variant="outline">고유 링크: {uniqueEntries.length} / 11</Badge>
                     <Badge variant="outline">메인 후보: {mainCandidates.length}</Badge>
-                    {/* add 최대 배지 제거 */}
+                    {/* add 최대 배지 */}
                   </div>
                 </div>
 
