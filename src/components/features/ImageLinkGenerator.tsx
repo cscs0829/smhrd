@@ -47,7 +47,6 @@ function shuffleArray<T>(array: T[]): T[] {
 export function ImageLinkGenerator() {
   const [entries, setEntries] = useState<ImageEntry[]>([{ url: '', isMain: false }])
   const [numRows, setNumRows] = useState<number>(10)
-  const [maxAddCount, setMaxAddCount] = useState<number>(10) // add_image_link 최대 개수 (0~10)
 
   const uniqueEntries = useMemo(() => {
     const seen = new Set<string>()
@@ -89,24 +88,9 @@ export function ImageLinkGenerator() {
     setEntries(prev => prev.map((e, i) => (i === index ? { ...e, isMain: !e.isMain } : e)))
   }
 
-  const handleBulkPaste = (value: string) => {
-    const lines = value
-      .split(/\r?\n|\s+/)
-      .map(v => v.trim())
-      .filter(Boolean)
-    if (lines.length === 0) return
-    const merged: ImageEntry[] = [...entries]
-    for (const line of lines) {
-      if (merged.length >= 11) break
-      merged.push({ url: line, isMain: false })
-    }
-    setEntries(merged)
-  }
-
   const handleReset = () => {
     setEntries([{ url: '', isMain: false }])
     setNumRows(10)
-    setMaxAddCount(10)
   }
 
   const handleGenerate = () => {
@@ -128,16 +112,7 @@ export function ImageLinkGenerator() {
     const rows: { image_link: string; add_image_link: string }[] = []
     for (let i = 0; i < numRows; i++) {
       const imageLink = mainPool[getRandomInt(0, mainPool.length - 1)]
-
-      const maxAllow = Math.min(10, maxAddCount, allUrls.length)
-      const count = maxAllow === 0 ? 0 : getRandomInt(0, maxAllow)
-      const shuffled = shuffleArray(allUrls)
-      const addSet = new Set<string>()
-      for (const u of shuffled) {
-        if (addSet.size >= count) break
-        addSet.add(u)
-      }
-      const addList = Array.from(addSet)
+      const addList = shuffleArray(allUrls)
       const addImageLink = addList.join('|') // 마지막 | 없이
 
       rows.push({ image_link: imageLink, add_image_link: addImageLink })
@@ -177,15 +152,7 @@ export function ImageLinkGenerator() {
     const rows: { image_link: string; add_image_link: string }[] = []
     for (let i = 0; i < numRows; i++) {
       const imageLink = mainPool[getRandomInt(0, mainPool.length - 1)]
-      const maxAllow = Math.min(10, maxAddCount, allUrls.length)
-      const count = maxAllow === 0 ? 0 : getRandomInt(0, maxAllow)
-      const shuffled = shuffleArray(allUrls)
-      const addSet = new Set<string>()
-      for (const u of shuffled) {
-        if (addSet.size >= count) break
-        addSet.add(u)
-      }
-      const addList = Array.from(addSet)
+      const addList = shuffleArray(allUrls)
       const addImageLink = addList.join('|')
       rows.push({ image_link: imageLink, add_image_link: addImageLink })
     }
@@ -243,33 +210,14 @@ export function ImageLinkGenerator() {
                       onChange={(e) => setNumRows(Number(e.target.value))}
                     />
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="max-add">add_image_link 최대 (0~10)</Label>
-                    <Input
-                      id="max-add"
-                      type="number"
-                      min={0}
-                      max={10}
-                      value={maxAddCount}
-                      onChange={(e) => setMaxAddCount(Math.max(0, Math.min(10, Number(e.target.value))))}
-                    />
-                  </div>
+                  {/* add_image_link 최대 입력 제거 */}
                 </div>
 
-                {/* 벌크 붙여넣기 */}
-                <div className="space-y-2">
-                  <Label htmlFor="bulk">여러 링크 한꺼번에 추가 (공백/줄바꿈 구분)</Label>
-                  <div className="flex gap-2">
-                    <Input id="bulk" placeholder="https://... 줄바꿈으로 여러 개" onChange={(e) => handleBulkPaste(e.target.value)} />
-                    <Button variant="secondary" type="button" onClick={() => handleReset()}>
-                      <RefreshCw className="h-4 w-4" /> 초기화
-                    </Button>
-                  </div>
-                  <Alert>
-                    <AlertDescription>
-                      아무 것도 체크하지 않으면 모든 링크가 메인 후보로 사용됩니다. 최대 11개까지 추가할 수 있어요.
-                    </AlertDescription>
-                  </Alert>
+                {/* 벌크 붙여넣기 제거. 초기화 버튼만 유지할 수 있도록 간단 버튼 제공 */}
+                <div>
+                  <Button variant="secondary" type="button" onClick={() => handleReset()}>
+                    <RefreshCw className="h-4 w-4" /> 초기화
+                  </Button>
                 </div>
 
                 {/* 입력 테이블 (간소 뷰) */}
@@ -334,7 +282,7 @@ export function ImageLinkGenerator() {
                   <div className="flex items-center gap-2 flex-wrap">
                     <Badge variant="outline">고유 링크: {uniqueEntries.length} / 11</Badge>
                     <Badge variant="outline">메인 후보: {mainCandidates.length}</Badge>
-                    <Badge variant="outline">add 최대: {Math.min(10, maxAddCount)}</Badge>
+                    {/* add 최대 배지 제거 */}
                   </div>
                 </div>
 
@@ -352,8 +300,8 @@ export function ImageLinkGenerator() {
                         <TableCell className="truncate max-w-xs" title={mainCandidates[0]?.url || ''}>
                           {mainCandidates[0]?.url || '-'}
                         </TableCell>
-                        <TableCell className="truncate max-w-xs" title={uniqueEntries.map(e => e.url).slice(0, Math.min(10, maxAddCount)).join('|')}>
-                          {uniqueEntries.map(e => e.url).slice(0, Math.min(10, maxAddCount)).join('|') || '-'}
+                        <TableCell className="truncate max-w-xs" title={uniqueEntries.map(e => e.url).join('|')}>
+                          {uniqueEntries.map(e => e.url).join('|') || '-'}
                         </TableCell>
                       </TableRow>
                     </TableBody>
