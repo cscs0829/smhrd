@@ -170,7 +170,7 @@ export function ImageLinkGenerator() {
                 </div>
 
                 {/* 입력 테이블 (간소 뷰) */}
-                <div className="border rounded-lg">
+                <div className="relative w-full overflow-x-auto border rounded-lg">
                   <Table>
                     <TableHeader>
                       <TableRow>
@@ -221,6 +221,9 @@ export function ImageLinkGenerator() {
                       )}
                     </TableBody>
                   </Table>
+                  <div className="p-2 text-xs text-muted-foreground">
+                    아무 것도 체크하지 않으면 모든 링크가 메인 후보로 사용됩니다. 최대 11개까지 추가할 수 있어요.
+                  </div>
                 </div>
               </div>
 
@@ -235,7 +238,7 @@ export function ImageLinkGenerator() {
                   </div>
                 </div>
 
-                <div className="border rounded-lg">
+                <div className="relative w-full overflow-x-auto border rounded-lg">
                   <Table>
                     <TableHeader>
                       <TableRow>
@@ -255,6 +258,9 @@ export function ImageLinkGenerator() {
                       </TableRow>
                     </TableBody>
                   </Table>
+                  <div className="p-2 text-xs text-muted-foreground">
+                    아무 것도 체크하지 않으면 모든 링크가 메인 후보로 사용됩니다. 최대 11개까지 추가할 수 있어요.
+                  </div>
                 </div>
               </div>
             </div>
