@@ -17,18 +17,6 @@ type ImageEntry = {
   isMain: boolean
 }
 
-function downloadTextFile(filename: string, content: string) {
-  const blob = new Blob([content], { type: 'text/csv;charset=utf-8;' })
-  const url = URL.createObjectURL(blob)
-  const link = document.createElement('a')
-  link.href = url
-  link.setAttribute('download', filename)
-  document.body.appendChild(link)
-  link.click()
-  document.body.removeChild(link)
-  URL.revokeObjectURL(url)
-}
-
 function getRandomInt(min: number, max: number) {
   const minCeil = Math.ceil(min)
   const maxFloor = Math.floor(max)
@@ -91,45 +79,6 @@ export function ImageLinkGenerator() {
   const handleReset = () => {
     setEntries([{ url: '', isMain: false }])
     setNumRows(10)
-  }
-
-  const handleGenerate = () => {
-    if (uniqueEntries.length === 0) {
-      toast.error('이미지 링크를 최소 1개 이상 입력해주세요')
-      return
-    }
-    if (numRows <= 0) {
-      toast.error('생성할 행 수를 1 이상으로 입력해주세요')
-      return
-    }
-    const allUrls = uniqueEntries.map(e => e.url)
-    const mainPool = mainCandidates.map(e => e.url)
-    if (mainPool.length === 0) {
-      toast.error('메인 후보가 없습니다. 링크를 확인해주세요')
-      return
-    }
-
-    const rows: { image_link: string; add_image_link: string }[] = []
-    for (let i = 0; i < numRows; i++) {
-      const imageLink = mainPool[getRandomInt(0, mainPool.length - 1)]
-      const addList = shuffleArray(allUrls)
-      const addImageLink = addList.join('|') // 마지막 | 없이
-
-      rows.push({ image_link: imageLink, add_image_link: addImageLink })
-    }
-
-    // CSV 생성
-    const header = ['image_link', 'add_image_link']
-    const csvLines = [header.join(',')]
-    for (const r of rows) {
-      // CSV 안전 처리 (따옴표 포함 시 이스케이프)
-      const image = r.image_link.includes(',') || r.image_link.includes('"') ? `"${r.image_link.replace(/"/g, '""')}"` : r.image_link
-      const add = r.add_image_link.includes(',') || r.add_image_link.includes('"') ? `"${r.add_image_link.replace(/"/g, '""')}"` : r.add_image_link
-      csvLines.push([image, add].join(','))
-    }
-    const csv = csvLines.join('\n')
-    downloadTextFile('image_links.csv', csv)
-    toast.success(`${rows.length}개 행을 생성했어요`)
   }
 
   const handleGenerateXlsx = async () => {
@@ -312,16 +261,13 @@ export function ImageLinkGenerator() {
           </div>
         </CardContent>
         <CardFooter>
-          <div className="w-full flex items-center justify-between gap-2 flex-wrap">
+            <div className="w-full flex items-center justify-between gap-2 flex-wrap">
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <span>행 수: {numRows}</span>
               <span>·</span>
               <span>고유 링크: {uniqueEntries.length}/11</span>
             </div>
             <div className="flex items-center gap-2">
-              <Button onClick={handleGenerate} className="px-4" disabled={uniqueEntries.length === 0}>
-                <Download className="h-4 w-4" /> CSV
-              </Button>
               <Button onClick={handleGenerateXlsx} className="px-4" variant="secondary" disabled={uniqueEntries.length === 0}>
                 <Download className="h-4 w-4" /> 엑셀(xlsx)
               </Button>
