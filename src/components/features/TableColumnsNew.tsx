@@ -5,7 +5,6 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Checkbox } from '@/components/ui/checkbox'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -19,24 +18,31 @@ import { Row } from '@tanstack/react-table'
 
 // EP 데이터 액션 컴포넌트
 function EpDataActions({ row }: { row: Row<EpData> }) {
-  const [isEditOpen, setIsEditOpen] = useState(false)
+  const [isEditing, setIsEditing] = useState(false)
   const [isDeleteOpen, setIsDeleteOpen] = useState(false)
   const [editData, setEditData] = useState({
     title: row.getValue('title') as string,
   })
 
   const handleEdit = () => {
-    setIsEditOpen(true)
+    setIsEditing(true)
   }
 
   const handleSaveEdit = async () => {
     try {
       // TODO: API 호출로 데이터 수정
       toast.success('데이터가 성공적으로 수정되었습니다.')
-      setIsEditOpen(false)
+      setIsEditing(false)
     } catch {
       toast.error('데이터 수정 중 오류가 발생했습니다.')
     }
+  }
+
+  const handleCancelEdit = () => {
+    setEditData({
+      title: row.getValue('title') as string,
+    })
+    setIsEditing(false)
   }
 
   const handleDelete = async () => {
@@ -47,6 +53,25 @@ function EpDataActions({ row }: { row: Row<EpData> }) {
     } catch {
       toast.error('데이터 삭제 중 오류가 발생했습니다.')
     }
+  }
+
+  if (isEditing) {
+    return (
+      <div className="flex items-center space-x-2">
+        <Input
+          value={editData.title}
+          onChange={(e) => setEditData({...editData, title: e.target.value})}
+          className="h-8"
+          placeholder="제목을 입력하세요"
+        />
+        <Button size="sm" onClick={handleSaveEdit}>
+          저장
+        </Button>
+        <Button size="sm" variant="outline" onClick={handleCancelEdit}>
+          취소
+        </Button>
+      </div>
+    )
   }
 
   return (
@@ -79,37 +104,6 @@ function EpDataActions({ row }: { row: Row<EpData> }) {
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
-
-      {/* 수정 Dialog */}
-      <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>EP 데이터 수정</DialogTitle>
-            <DialogDescription>
-              제목을 수정하고 저장하세요.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="title">제목</Label>
-              <Input
-                id="title"
-                value={editData.title}
-                onChange={(e) => setEditData({...editData, title: e.target.value})}
-                placeholder="제목을 입력하세요"
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsEditOpen(false)}>
-              취소
-            </Button>
-            <Button onClick={handleSaveEdit}>
-              저장
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
 
       {/* 삭제 AlertDialog */}
       <AlertDialog open={isDeleteOpen} onOpenChange={setIsDeleteOpen}>
@@ -205,7 +199,7 @@ function DeletedItemActions({ row }: { row: Row<DeletedItem> }) {
 
 // API 키 액션 컴포넌트
 function ApiKeyActions({ row }: { row: Row<ApiKey> }) {
-  const [isEditOpen, setIsEditOpen] = useState(false)
+  const [isEditing, setIsEditing] = useState(false)
   const [isDeleteOpen, setIsDeleteOpen] = useState(false)
   const [editData, setEditData] = useState({
     name: row.getValue('name') as string,
@@ -216,17 +210,28 @@ function ApiKeyActions({ row }: { row: Row<ApiKey> }) {
   })
 
   const handleEdit = () => {
-    setIsEditOpen(true)
+    setIsEditing(true)
   }
 
   const handleSaveEdit = async () => {
     try {
       // TODO: API 호출로 데이터 수정
       toast.success('API 키가 성공적으로 수정되었습니다.')
-      setIsEditOpen(false)
+      setIsEditing(false)
     } catch {
       toast.error('API 키 수정 중 오류가 발생했습니다.')
     }
+  }
+
+  const handleCancelEdit = () => {
+    setEditData({
+      name: row.getValue('name') as string,
+      provider: row.getValue('provider') as string,
+      api_key: row.getValue('api_key') as string,
+      is_active: row.getValue('is_active') as boolean,
+      is_default: row.getValue('is_default') as boolean,
+    })
+    setIsEditing(false)
   }
 
   const handleDelete = async () => {
@@ -237,6 +242,58 @@ function ApiKeyActions({ row }: { row: Row<ApiKey> }) {
     } catch {
       toast.error('API 키 삭제 중 오류가 발생했습니다.')
     }
+  }
+
+  if (isEditing) {
+    return (
+      <div className="flex items-center space-x-2">
+        <div className="flex flex-col space-y-2">
+          <Input
+            value={editData.name}
+            onChange={(e) => setEditData({...editData, name: e.target.value})}
+            className="h-8"
+            placeholder="이름"
+          />
+          <Input
+            type="password"
+            value={editData.api_key}
+            onChange={(e) => setEditData({...editData, api_key: e.target.value})}
+            className="h-8"
+            placeholder="API 키"
+          />
+          <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                id="is_active"
+                checked={editData.is_active}
+                onChange={(e) => setEditData({...editData, is_active: e.target.checked})}
+                className="rounded"
+              />
+              <Label htmlFor="is_active" className="text-sm">활성화</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                id="is_default"
+                checked={editData.is_default}
+                onChange={(e) => setEditData({...editData, is_default: e.target.checked})}
+                className="rounded"
+              />
+              <Label htmlFor="is_default" className="text-sm">기본값</Label>
+            </div>
+          </div>
+        </div>
+        <div className="flex flex-col space-y-1">
+          <Button size="sm" onClick={handleSaveEdit}>
+            저장
+          </Button>
+          <Button size="sm" variant="outline" onClick={handleCancelEdit}>
+            취소
+          </Button>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -269,76 +326,6 @@ function ApiKeyActions({ row }: { row: Row<ApiKey> }) {
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
-
-      {/* 수정 Dialog */}
-      <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>API 키 수정</DialogTitle>
-            <DialogDescription>
-              API 키 정보를 수정하고 저장하세요.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="name">이름</Label>
-              <Input
-                id="name"
-                value={editData.name}
-                onChange={(e) => setEditData({...editData, name: e.target.value})}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="provider">제공자</Label>
-              <Input
-                id="provider"
-                value={editData.provider}
-                onChange={(e) => setEditData({...editData, provider: e.target.value})}
-                disabled
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="api_key">API 키</Label>
-              <Input
-                id="api_key"
-                type="password"
-                value={editData.api_key}
-                onChange={(e) => setEditData({...editData, api_key: e.target.value})}
-              />
-            </div>
-            <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-2">
-                <input
-                  type="checkbox"
-                  id="is_active"
-                  checked={editData.is_active}
-                  onChange={(e) => setEditData({...editData, is_active: e.target.checked})}
-                  className="rounded"
-                />
-                <Label htmlFor="is_active">활성화</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <input
-                  type="checkbox"
-                  id="is_default"
-                  checked={editData.is_default}
-                  onChange={(e) => setEditData({...editData, is_default: e.target.checked})}
-                  className="rounded"
-                />
-                <Label htmlFor="is_default">기본값</Label>
-              </div>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsEditOpen(false)}>
-              취소
-            </Button>
-            <Button onClick={handleSaveEdit}>
-              저장
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
 
       {/* 삭제 AlertDialog */}
       <AlertDialog open={isDeleteOpen} onOpenChange={setIsDeleteOpen}>

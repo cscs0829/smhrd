@@ -1,15 +1,13 @@
 'use client'
 
-import React, { useState, useMemo } from 'react'
+import React, { useState } from 'react'
 import { ColumnDef, flexRender, getCoreRowModel, getFilteredRowModel, getPaginationRowModel, getSortedRowModel, useReactTable, SortingState, ColumnFiltersState, VisibilityState, RowSelectionState } from '@tanstack/react-table'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Badge } from '@/components/ui/badge'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { Search, Filter, Trash2, Download, Upload, RefreshCw, Settings, X } from 'lucide-react'
+import { Search, Trash2, Download, Upload, RefreshCw, Settings } from 'lucide-react'
 import { toast } from 'sonner'
 
 // 타입 정의
@@ -24,6 +22,7 @@ interface TableDataManagerProps {
   columns: ColumnDef<TableRowData>[]
   onRefresh?: () => void
   onDelete?: (ids: string[]) => Promise<void>
+  onDeleteAll?: () => Promise<void>
   onExport?: (data: TableRowData[]) => void
   onImport?: (file: File) => Promise<void>
 }
@@ -33,8 +32,10 @@ export function TableDataManager({
   columns,
   onRefresh,
   onDelete,
+  onDeleteAll,
   onExport,
-  onImport
+  onImport,
+  tableName,
 }: TableDataManagerProps) {
   const [sorting, setSorting] = useState<SortingState>([])
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
@@ -42,36 +43,44 @@ export function TableDataManager({
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({})
   const [globalFilter, setGlobalFilter] = useState('')
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [deleteAllDialogOpen, setDeleteAllDialogOpen] = useState(false)
   const [selectedRows, setSelectedRows] = useState<TableRowData[]>([])
-  const [filterType, setFilterType] = useState<string>('all')
   const [isLoading, setIsLoading] = useState(false)
+  const [totalCount, setTotalCount] = useState<number | null>(null)
 
-  // 필터링된 데이터
-  const filteredData = useMemo(() => {
-    if (filterType === 'all') return data
-    
-    return data.filter(item => {
-      switch (filterType) {
-        case 'recent':
-          const oneWeekAgo = new Date()
-          oneWeekAgo.setDate(oneWeekAgo.getDate() - 7)
-          const createdAt = item.created_at || item.updated_at
-          if (typeof createdAt === 'string' || typeof createdAt === 'number') {
-            return new Date(createdAt) > oneWeekAgo
-          }
-          return false
-        case 'active':
-          return item.is_active !== false && item.status !== 'inactive'
-        case 'inactive':
-          return item.is_active === false || item.status === 'inactive'
-        default:
-          return true
+  // 테이블 총 개수 가져오기
+  React.useEffect(() => {
+    let isMounted = true
+    async function fetchCount() {
+      try {
+        const res = await fetch('/api/admin/table-data/count')
+        const json: { success?: boolean; counts?: Record<string, number> } = await res.json()
+        if (!res.ok || !json?.success) return
+        const count = json.counts?.[tableName]
+        if (isMounted) setTotalCount(typeof count === 'number' ? count : data.length)
+      } catch {
+        if (isMounted) setTotalCount(data.length)
       }
-    })
-  }, [data, filterType])
+    }
+    fetchCount()
+    return () => { isMounted = false }
+  }, [tableName, data.length])
+
+  // 페이지 옵션 계산
+  const pageOptions = React.useMemo(() => {
+    const base = [10, 20, 50, 100]
+    if (!totalCount) return base
+    const extra: number[] = []
+    if (totalCount > 100) extra.push(200)
+    if (totalCount > 200) extra.push(500)
+    if (totalCount > 500) extra.push(1000)
+    if (totalCount > 1000 && totalCount <= 5000) extra.push(2000)
+    if (totalCount > 5000) extra.push(5000)
+    return Array.from(new Set([...base, ...extra]))
+  }, [totalCount])
 
   const table = useReactTable({
-    data: filteredData,
+    data,
     columns,
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
@@ -91,6 +100,12 @@ export function TableDataManager({
     },
   })
 
+  // 기본 페이지 사이즈를 동적으로 설정 (총 개수 기반)
+  if (table.getState().pagination.pageSize === 10) {
+    const defaultSize = totalCount && totalCount > 100 ? 100 : 50
+    table.setPageSize(defaultSize)
+  }
+
   const handleDelete = async () => {
     if (!onDelete || selectedRows.length === 0) return
 
@@ -106,6 +121,24 @@ export function TableDataManager({
     } catch (error) {
       toast.error('삭제 중 오류가 발생했습니다')
       console.error('Delete error:', error)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleDeleteAll = async () => {
+    if (!onDeleteAll) return
+
+    try {
+      setIsLoading(true)
+      await onDeleteAll()
+      toast.success('모든 항목이 삭제되었습니다')
+      setDeleteAllDialogOpen(false)
+      table.resetRowSelection()
+      onRefresh?.()
+    } catch (error) {
+      toast.error('전체 삭제 중 오류가 발생했습니다')
+      console.error('Delete all error:', error)
     } finally {
       setIsLoading(false)
     }
@@ -149,29 +182,6 @@ export function TableDataManager({
             />
           </div>
           
-          <Select value={filterType} onValueChange={setFilterType}>
-            <SelectTrigger className="w-[150px]">
-              <SelectValue placeholder="필터" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">전체</SelectItem>
-              <SelectItem value="recent">최근 7일</SelectItem>
-              <SelectItem value="active">활성</SelectItem>
-              <SelectItem value="inactive">비활성</SelectItem>
-            </SelectContent>
-          </Select>
-
-          {filterType !== 'all' && (
-            <Badge variant="outline" className="flex items-center gap-1">
-              <Filter className="h-3 w-3" />
-              {filterType === 'recent' ? '최근 7일' : 
-               filterType === 'active' ? '활성' : '비활성'}
-              <X 
-                className="h-3 w-3 cursor-pointer" 
-                onClick={() => setFilterType('all')}
-              />
-            </Badge>
-          )}
         </div>
 
         <div className="flex gap-2">
@@ -200,6 +210,18 @@ export function TableDataManager({
             <Button variant="outline" size="sm" onClick={() => onExport(data)}>
               <Download className="h-4 w-4 mr-2" />
               내보내기
+            </Button>
+          )}
+
+          {onDeleteAll && data.length > 0 && (
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => setDeleteAllDialogOpen(true)}
+              className="text-red-600 hover:text-red-700 hover:bg-red-50"
+            >
+              <Trash2 className="h-4 w-4 mr-2" />
+              전체 삭제
             </Button>
           )}
 
@@ -288,23 +310,19 @@ export function TableDataManager({
         </div>
         <div className="flex items-center space-x-2">
           <p className="text-sm font-medium">페이지당 행 수</p>
-          <Select
-            value={`${table.getState().pagination.pageSize}`}
-            onValueChange={(value) => {
-              table.setPageSize(Number(value))
+          <select
+            value={table.getState().pagination.pageSize}
+            onChange={(e) => {
+              table.setPageSize(Number(e.target.value))
             }}
+            className="h-8 w-24 rounded border border-input bg-background px-2 text-sm"
           >
-            <SelectTrigger className="h-8 w-[70px]">
-              <SelectValue placeholder={table.getState().pagination.pageSize} />
-            </SelectTrigger>
-            <SelectContent side="top">
-              {[10, 20, 30, 40, 50].map((pageSize) => (
-                <SelectItem key={pageSize} value={`${pageSize}`}>
-                  {pageSize}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+            {pageOptions.map((pageSize) => (
+              <option key={pageSize} value={pageSize}>
+                {pageSize}
+              </option>
+            ))}
+          </select>
         </div>
         <div className="flex items-center space-x-2">
           <Button
@@ -350,6 +368,35 @@ export function TableDataManager({
               disabled={isLoading}
             >
               {isLoading ? '삭제 중...' : '삭제'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* 전체 삭제 확인 다이얼로그 */}
+      <Dialog open={deleteAllDialogOpen} onOpenChange={setDeleteAllDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>전체 삭제 확인</DialogTitle>
+            <DialogDescription>
+              테이블의 모든 데이터({data.length}개 항목)를 삭제하시겠습니까? 
+              이 작업은 되돌릴 수 없습니다.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setDeleteAllDialogOpen(false)}
+              disabled={isLoading}
+            >
+              취소
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleDeleteAll}
+              disabled={isLoading}
+            >
+              {isLoading ? '삭제 중...' : '전체 삭제'}
             </Button>
           </DialogFooter>
         </DialogContent>

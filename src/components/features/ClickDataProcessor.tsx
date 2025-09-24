@@ -14,8 +14,12 @@ import {
   AlertCircle, 
   Loader2,
   Database,
-  X
+  X,
+  Eye,
+  Play
 } from 'lucide-react'
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ClickDataResponse } from '@/types'
 
@@ -23,9 +27,18 @@ interface ClickDataProcessorProps {
   onFileSelect?: () => void
 }
 
+interface PreviewData {
+  zeroClickItems: Array<{id: string, title: string, clicks: number}>
+  newItems: Array<{id: string, title: string, clicks: number}>
+  existingItems: Array<{id: string, title: string, clicks: number}>
+  totalCount: number
+}
+
 export default function ClickDataProcessor({}: ClickDataProcessorProps) {
   const [file, setFile] = useState<File | null>(null)
   const [isProcessing, setIsProcessing] = useState(false)
+  const [isPreviewing, setIsPreviewing] = useState(false)
+  const [previewData, setPreviewData] = useState<PreviewData | null>(null)
   const [processingResult, setProcessingResult] = useState<ClickDataResponse | null>(null)
   const [error, setError] = useState<string | null>(null)
 
@@ -55,17 +68,42 @@ export default function ClickDataProcessor({}: ClickDataProcessorProps) {
     setFile(null)
     setError(null)
     setProcessingResult(null)
+    setPreviewData(null)
   }
 
-  const handleProcessClickData = async () => {
-    if (!file) {
-      setError('파일을 선택해주세요.')
-      return
+  const handlePreview = async () => {
+    if (!file) return
+
+    setIsPreviewing(true)
+    setError(null)
+
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+
+      const response = await fetch('/api/admin/click-data/preview', {
+        method: 'POST',
+        body: formData,
+      })
+
+      if (!response.ok) {
+        throw new Error('미리보기 생성 중 오류가 발생했습니다.')
+      }
+
+      const data = await response.json()
+      setPreviewData(data)
+    } catch (error) {
+      setError(error instanceof Error ? error.message : '미리보기 생성 중 오류가 발생했습니다.')
+    } finally {
+      setIsPreviewing(false)
     }
+  }
+
+  const handleProcessData = async () => {
+    if (!file) return
 
     setIsProcessing(true)
     setError(null)
-    setProcessingResult(null)
 
     try {
       const formData = new FormData()
@@ -76,20 +114,20 @@ export default function ClickDataProcessor({}: ClickDataProcessorProps) {
         body: formData,
       })
 
-      const result = await response.json()
-
-      if (result.success) {
-        setProcessingResult(result)
-      } else {
-        setError(result.error || '클릭수 데이터 처리 중 오류가 발생했습니다.')
+      if (!response.ok) {
+        throw new Error('데이터 처리 중 오류가 발생했습니다.')
       }
+
+      const result = await response.json()
+      setProcessingResult(result)
+      setPreviewData(null)
     } catch (error) {
-      console.error('클릭수 데이터 처리 오류:', error)
-      setError('클릭수 데이터 처리 중 오류가 발생했습니다.')
+      setError(error instanceof Error ? error.message : '데이터 처리 중 오류가 발생했습니다.')
     } finally {
       setIsProcessing(false)
     }
   }
+
 
   const renderProcessingResult = () => {
     if (!processingResult) return null
@@ -160,7 +198,7 @@ export default function ClickDataProcessor({}: ClickDataProcessorProps) {
             <p>• ep_data에 있던 데이터: {processingResult.movedToDelect}개 → delect 테이블로 이동</p>
             <p>• ep_data에 없던 데이터: {processingResult.notFoundInEpData}개 → delect 테이블에 추가</p>
             <p>• 총 {processingResult.totalMovedToDelect}개 데이터가 delect 테이블로 이동되었습니다.</p>
-          </div>
+      </div>
         </motion.div>
       </motion.div>
     )
@@ -168,15 +206,15 @@ export default function ClickDataProcessor({}: ClickDataProcessorProps) {
 
   return (
     <Card className="w-full">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
           <FileText className="h-5 w-5" />
-          클릭수 데이터 처리
-        </CardTitle>
-        <CardDescription>
+            클릭수 데이터 처리
+          </CardTitle>
+          <CardDescription>
           CSV 파일에서 클릭수가 0인 상품들을 찾아서 delect 테이블로 이동시킵니다.
-        </CardDescription>
-      </CardHeader>
+          </CardDescription>
+        </CardHeader>
       <CardContent className="space-y-6">
         {/* 드래그 앤 드롭 영역 */}
         <div
@@ -258,28 +296,57 @@ export default function ClickDataProcessor({}: ClickDataProcessorProps) {
           </motion.div>
         )}
 
-        <motion.div
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
-        >
-          <Button 
-            onClick={handleProcessClickData}
-            disabled={!file || isProcessing}
-            className="w-full"
+        {/* 파일이 선택되었을 때의 버튼들 */}
+        {file && !processingResult && (
+          <div className="flex gap-3">
+            <motion.div
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              className="flex-1"
+            >
+              <Button 
+                onClick={handlePreview}
+                disabled={isPreviewing}
+                variant="outline"
+                className="w-full"
+                size="lg"
+              >
+                {isPreviewing ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    미리보기 생성 중...
+                  </>
+                ) : (
+                  <>
+                    <Eye className="mr-2 h-4 w-4" />
+                    미리보기 보기
+                  </>
+                )}
+              </Button>
+            </motion.div>
+          </div>
+        )}
+
+        {/* 처리 결과가 있을 때의 버튼 */}
+        {processingResult && (
+          <motion.div
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
           >
-            {isProcessing ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                처리 중...
-              </>
-            ) : (
-              <>
-                <Upload className="mr-2 h-4 w-4" />
-                클릭수 데이터 처리
-              </>
-            )}
-          </Button>
-        </motion.div>
+            <Button 
+              onClick={() => {
+                setProcessingResult(null)
+                setFile(null)
+              }}
+              className="w-full"
+              size="lg"
+              variant="outline"
+            >
+              <X className="mr-2 h-4 w-4" />
+              새 파일 선택
+            </Button>
+          </motion.div>
+        )}
 
         {isProcessing && (
           <div className="space-y-2">
@@ -294,7 +361,149 @@ export default function ClickDataProcessor({}: ClickDataProcessorProps) {
         <AnimatePresence>
           {processingResult && renderProcessingResult()}
         </AnimatePresence>
-      </CardContent>
-    </Card>
+
+        {/* 미리보기 다이얼로그 */}
+        <Dialog open={!!previewData} onOpenChange={() => setPreviewData(null)}>
+          <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>데이터 미리보기</DialogTitle>
+              <DialogDescription>
+                파일에서 읽은 데이터를 확인하고 데이터베이스에 적용할지 결정하세요.
+              </DialogDescription>
+            </DialogHeader>
+            
+            {previewData && (
+              <div className="space-y-6">
+                {/* 통계 요약 */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <Card>
+                    <CardContent className="p-4">
+                      <div className="flex items-center gap-2">
+                        <Database className="h-5 w-5 text-blue-600" />
+                        <div>
+                          <p className="text-sm font-medium text-gray-600">전체 데이터</p>
+                          <p className="text-2xl font-bold text-blue-600">{previewData.totalCount}</p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                  
+                  <Card>
+                    <CardContent className="p-4">
+                      <div className="flex items-center gap-2">
+                        <AlertCircle className="h-5 w-5 text-red-600" />
+                        <div>
+                          <p className="text-sm font-medium text-gray-600">0클릭 상품</p>
+                          <p className="text-2xl font-bold text-red-600">{previewData.zeroClickItems.length}</p>
+                        </div>
+          </div>
+        </CardContent>
+      </Card>
+
+                  <Card>
+                    <CardContent className="p-4">
+                      <div className="flex items-center gap-2">
+                        <CheckCircle className="h-5 w-5 text-green-600" />
+                        <div>
+                          <p className="text-sm font-medium text-gray-600">새로 추가될 데이터</p>
+                          <p className="text-2xl font-bold text-green-600">{previewData.newItems.length}</p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+
+                {/* 0클릭 상품 테이블 */}
+                {previewData.zeroClickItems.length > 0 && (
+                  <div>
+                    <h3 className="text-lg font-semibold mb-3 text-red-700">0클릭 상품 ({previewData.zeroClickItems.length}개)</h3>
+                    <div className="border rounded-lg overflow-hidden">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>ID</TableHead>
+                            <TableHead>제목</TableHead>
+                            <TableHead>클릭수</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {previewData.zeroClickItems.slice(0, 10).map((item, index) => (
+                            <TableRow key={index}>
+                              <TableCell className="font-mono text-sm">{item.id}</TableCell>
+                              <TableCell className="max-w-xs truncate">{item.title}</TableCell>
+                              <TableCell className="text-red-600 font-bold">{item.clicks}</TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                      {previewData.zeroClickItems.length > 10 && (
+                        <div className="p-3 text-sm text-gray-500 text-center">
+                          ... 및 {previewData.zeroClickItems.length - 10}개 더
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* 새로 추가될 데이터 테이블 */}
+                {previewData.newItems.length > 0 && (
+                  <div>
+                    <h3 className="text-lg font-semibold mb-3 text-green-700">새로 추가될 데이터 ({previewData.newItems.length}개)</h3>
+                    <div className="border rounded-lg overflow-hidden">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>ID</TableHead>
+                            <TableHead>제목</TableHead>
+                            <TableHead>클릭수</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {previewData.newItems.slice(0, 10).map((item, index) => (
+                            <TableRow key={index}>
+                              <TableCell className="font-mono text-sm">{item.id}</TableCell>
+                              <TableCell className="max-w-xs truncate">{item.title}</TableCell>
+                              <TableCell>{item.clicks}</TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                      {previewData.newItems.length > 10 && (
+                        <div className="p-3 text-sm text-gray-500 text-center">
+                          ... 및 {previewData.newItems.length - 10}개 더
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            <DialogFooter className="gap-2">
+              <Button variant="outline" onClick={() => setPreviewData(null)}>
+              취소
+            </Button>
+            <Button 
+                onClick={handleProcessData}
+                disabled={isProcessing}
+                className="bg-green-600 hover:bg-green-700"
+              >
+                {isProcessing ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    처리 중...
+                  </>
+                ) : (
+                  <>
+                    <Play className="mr-2 h-4 w-4" />
+                    데이터베이스에 적용
+                  </>
+                )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+        </CardContent>
+      </Card>
   )
 }
