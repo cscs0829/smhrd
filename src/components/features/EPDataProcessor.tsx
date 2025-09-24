@@ -360,7 +360,7 @@ export function EPDataProcessor({}: EPDataProcessorProps) {
 
         {/* 미리보기 다이얼로그 */}
         <Dialog open={!!previewData} onOpenChange={() => setPreviewData(null)}>
-          <DialogContent className="w-[90vw] max-w-[1280px] max-h-[85vh] overflow-y-auto">
+          <DialogContent className="w-[95vw] max-w-7xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>데이터 미리보기</DialogTitle>
               <DialogDescription>
