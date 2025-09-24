@@ -18,7 +18,16 @@ interface DuplicateItem {
   }>
 }
 
-export function DuplicateChecker() {
+interface DuplicateCheckerProps {
+  generatedTitles?: Array<{
+    title: string
+    category: string
+    keywords: string[]
+  }>
+  onRegenerateTitles?: (excludeTitles?: string[]) => Promise<void>
+}
+
+export function DuplicateChecker({ generatedTitles: _generatedTitles, onRegenerateTitles: _onRegenerateTitles }: DuplicateCheckerProps = {}) {
   const [duplicates, setDuplicates] = useState<DuplicateItem[]>([])
   const [isSearching, setIsSearching] = useState(false)
 
