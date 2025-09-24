@@ -41,7 +41,8 @@ export function ClickDataProcessor({ onFileSelect }: FileProcessorProps) {
     maxFileSize: FILE_CONFIG.MAX_SIZE_MB,
     onSuccess: (data) => {
       // 클릭수가 0인 아이템만 필터링
-      const zeroClicks = data.filter((item: CSVDataItem) => item.clicks === 0)
+      const csvData = data as CSVDataItem[]
+      const zeroClicks = csvData.filter((item: CSVDataItem) => item.clicks === 0)
       setZeroClickItems(zeroClicks)
     },
     onError: (error) => {
