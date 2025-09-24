@@ -49,9 +49,25 @@ END $$;
 -- 5. 인덱스 재생성
 DROP INDEX IF EXISTS public.delete_product_id_idx;
 DROP INDEX IF EXISTS public.delete_created_at_idx;
+DROP INDEX IF EXISTS public.deleted_items_original_id_idx;
+DROP INDEX IF EXISTS public.deleted_items_created_at_idx;
 
-CREATE INDEX deleted_items_original_id_idx ON public.deleted_items (original_id);
-CREATE INDEX deleted_items_created_at_idx ON public.deleted_items (created_at);
+-- 인덱스가 존재하지 않는 경우에만 생성
+DO $$
+BEGIN
+    -- deleted_items 테이블이 존재하는 경우에만 인덱스 생성
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'deleted_items') THEN
+        -- original_id 컬럼이 존재하는 경우에만 인덱스 생성
+        IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'deleted_items' AND column_name = 'original_id') THEN
+            CREATE INDEX IF NOT EXISTS deleted_items_original_id_idx ON public.deleted_items (original_id);
+        END IF;
+        
+        -- created_at 컬럼이 존재하는 경우에만 인덱스 생성
+        IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'deleted_items' AND column_name = 'created_at') THEN
+            CREATE INDEX IF NOT EXISTS deleted_items_created_at_idx ON public.deleted_items (created_at);
+        END IF;
+    END IF;
+END $$;
 
 -- 6. RLS 정책 업데이트
 DROP POLICY IF EXISTS delete_read ON public.deleted_items;
