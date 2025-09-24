@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSupabaseClient } from '@/lib/supabase'
+import { TABLE_NAMES, type TableName } from '@/types/database'
 
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
-    const table = searchParams.get('table')
+    const table = searchParams.get('table') as TableName
     const page = parseInt(searchParams.get('page') || '1')
     const limit = parseInt(searchParams.get('limit') || '50')
     const search = searchParams.get('search') || ''
@@ -22,7 +23,7 @@ export async function GET(request: NextRequest) {
     const offset = (page - 1) * limit
 
     // 허용된 테이블 목록
-    const allowedTables = ['ep_data', 'delete', 'api_keys']
+    const allowedTables = Object.values(TABLE_NAMES)
     if (!allowedTables.includes(table)) {
       return NextResponse.json(
         { error: '허용되지 않은 테이블입니다' },
@@ -38,14 +39,20 @@ export async function GET(request: NextRequest) {
     // 검색 조건 추가
     if (search) {
       switch (table) {
-        case 'ep_data':
-          query = query.or(`title.ilike.%${search}%,category.ilike.%${search}%`)
+        case TABLE_NAMES.EP_DATA:
+          query = query.or(`title.ilike.%${search}%,brand.ilike.%${search}%,maker.ilike.%${search}%`)
           break
-        case 'delete':
-          query = query.or(`title.ilike.%${search}%,product_id.ilike.%${search}%,reason.ilike.%${search}%`)
+        case TABLE_NAMES.DELETED_ITEMS:
+          query = query.or(`original_id.ilike.%${search}%,reason.ilike.%${search}%`)
           break
-        case 'api_keys':
+        case TABLE_NAMES.API_KEYS:
           query = query.or(`name.ilike.%${search}%,provider.ilike.%${search}%`)
+          break
+        case TABLE_NAMES.CITY_IMAGES:
+          query = query.or(`city.ilike.%${search}%`)
+          break
+        case TABLE_NAMES.TITLES:
+          query = query.or(`title.ilike.%${search}%,city.ilike.%${search}%`)
           break
       }
     }

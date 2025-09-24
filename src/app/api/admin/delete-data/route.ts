@@ -13,7 +13,7 @@ export async function DELETE(request: NextRequest) {
     }
 
     // 허용된 테이블 목록
-    const allowedTables = ['ep_data', 'delete', 'api_keys']
+    const allowedTables = ['ep_data', 'deleted_items', 'api_keys', 'city_images', 'titles']
     if (!allowedTables.includes(table)) {
       return NextResponse.json(
         { error: '허용되지 않은 테이블입니다' },
@@ -26,11 +26,15 @@ export async function DELETE(request: NextRequest) {
     // ID 필드명 결정
     let idField = 'id'
     if (table === 'ep_data') {
-      idField = 'id'
-    } else if (table === 'delete') {
-      idField = 'id'
+      idField = 'id' // text ID
+    } else if (table === 'deleted_items') {
+      idField = 'id' // bigserial ID
     } else if (table === 'api_keys') {
-      idField = 'id'
+      idField = 'id' // bigserial ID
+    } else if (table === 'city_images') {
+      idField = 'id' // bigserial ID
+    } else if (table === 'titles') {
+      idField = 'id' // uuid ID
     }
 
     // 데이터 삭제

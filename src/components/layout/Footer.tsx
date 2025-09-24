@@ -9,28 +9,28 @@ import { Separator } from '@/components/ui/separator'
 
 const footerLinks = {
   product: [
-    { name: '데이터 관리', href: '/' },
-    { name: '분석 도구', href: '/analytics' },
-    { name: 'API 문서', href: '/docs' },
-    { name: '가격 정책', href: '/pricing' },
+    { name: '데이터 관리', href: '/', prefetch: false },
+    { name: '분석 도구', href: '#', prefetch: false },
+    { name: 'API 문서', href: '#', prefetch: false },
+    { name: '가격 정책', href: '#', prefetch: false },
   ],
   company: [
-    { name: '회사 소개', href: '/about' },
-    { name: '블로그', href: '/blog' },
-    { name: '채용', href: '/careers' },
-    { name: '연락처', href: '/contact' },
+    { name: '회사 소개', href: '#', prefetch: false },
+    { name: '블로그', href: '#', prefetch: false },
+    { name: '채용', href: '#', prefetch: false },
+    { name: '연락처', href: '#', prefetch: false },
   ],
   resources: [
-    { name: '도움말', href: '/help' },
-    { name: '문서', href: '/docs' },
-    { name: '커뮤니티', href: '/community' },
-    { name: '상태', href: '/status' },
+    { name: '도움말', href: '#', prefetch: false },
+    { name: '문서', href: '#', prefetch: false },
+    { name: '커뮤니티', href: '#', prefetch: false },
+    { name: '상태', href: '#', prefetch: false },
   ],
   legal: [
-    { name: '개인정보처리방침', href: '/privacy' },
-    { name: '이용약관', href: '/terms' },
-    { name: '쿠키 정책', href: '/cookies' },
-    { name: '라이선스', href: '/license' },
+    { name: '개인정보처리방침', href: '#', prefetch: false },
+    { name: '이용약관', href: '#', prefetch: false },
+    { name: '쿠키 정책', href: '#', prefetch: false },
+    { name: '라이선스', href: '#', prefetch: false },
   ],
 }
 
@@ -80,73 +80,77 @@ export function Footer() {
           {/* Product Links */}
           <div>
             <h3 className="text-sm font-semibold mb-4">제품</h3>
-            <ul className="space-y-3">
-              {footerLinks.product.map((link) => (
-                <li key={link.name}>
-                  <Link
-                    href={link.href}
-                    className="text-sm text-muted-foreground hover:text-foreground transition-colors flex items-center group"
-                  >
-                    {link.name}
-                    <ExternalLink className="ml-1 h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity" />
-                  </Link>
-                </li>
-              ))}
-            </ul>
+                   <ul className="space-y-3">
+                     {footerLinks.product.map((link) => (
+                       <li key={link.name}>
+                         <Link
+                           href={link.href}
+                           prefetch={link.prefetch}
+                           className="text-sm text-muted-foreground hover:text-foreground transition-colors flex items-center group"
+                         >
+                           {link.name}
+                           <ExternalLink className="ml-1 h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+                         </Link>
+                       </li>
+                     ))}
+                   </ul>
           </div>
 
           {/* Company Links */}
           <div>
             <h3 className="text-sm font-semibold mb-4">회사</h3>
-            <ul className="space-y-3">
-              {footerLinks.company.map((link) => (
-                <li key={link.name}>
-                  <Link
-                    href={link.href}
-                    className="text-sm text-muted-foreground hover:text-foreground transition-colors flex items-center group"
-                  >
-                    {link.name}
-                    <ExternalLink className="ml-1 h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity" />
-                  </Link>
-                </li>
-              ))}
-            </ul>
+                   <ul className="space-y-3">
+                     {footerLinks.company.map((link) => (
+                       <li key={link.name}>
+                         <Link
+                           href={link.href}
+                           prefetch={link.prefetch}
+                           className="text-sm text-muted-foreground hover:text-foreground transition-colors flex items-center group"
+                         >
+                           {link.name}
+                           <ExternalLink className="ml-1 h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+                         </Link>
+                       </li>
+                     ))}
+                   </ul>
           </div>
 
           {/* Resources Links */}
           <div>
             <h3 className="text-sm font-semibold mb-4">리소스</h3>
-            <ul className="space-y-3">
-              {footerLinks.resources.map((link) => (
-                <li key={link.name}>
-                  <Link
-                    href={link.href}
-                    className="text-sm text-muted-foreground hover:text-foreground transition-colors flex items-center group"
-                  >
-                    {link.name}
-                    <ExternalLink className="ml-1 h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity" />
-                  </Link>
-                </li>
-              ))}
-            </ul>
+                   <ul className="space-y-3">
+                     {footerLinks.resources.map((link) => (
+                       <li key={link.name}>
+                         <Link
+                           href={link.href}
+                           prefetch={link.prefetch}
+                           className="text-sm text-muted-foreground hover:text-foreground transition-colors flex items-center group"
+                         >
+                           {link.name}
+                           <ExternalLink className="ml-1 h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+                         </Link>
+                       </li>
+                     ))}
+                   </ul>
           </div>
 
           {/* Legal Links */}
           <div>
             <h3 className="text-sm font-semibold mb-4">법적 고지</h3>
-            <ul className="space-y-3">
-              {footerLinks.legal.map((link) => (
-                <li key={link.name}>
-                  <Link
-                    href={link.href}
-                    className="text-sm text-muted-foreground hover:text-foreground transition-colors flex items-center group"
-                  >
-                    {link.name}
-                    <ExternalLink className="ml-1 h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity" />
-                  </Link>
-                </li>
-              ))}
-            </ul>
+                   <ul className="space-y-3">
+                     {footerLinks.legal.map((link) => (
+                       <li key={link.name}>
+                         <Link
+                           href={link.href}
+                           prefetch={link.prefetch}
+                           className="text-sm text-muted-foreground hover:text-foreground transition-colors flex items-center group"
+                         >
+                           {link.name}
+                           <ExternalLink className="ml-1 h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+                         </Link>
+                       </li>
+                     ))}
+                   </ul>
           </div>
         </div>
 

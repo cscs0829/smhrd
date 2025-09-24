@@ -8,8 +8,15 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Database, RefreshCw, CheckCircle, XCircle, AlertTriangle, Settings, Eye } from 'lucide-react'
 import { toast } from 'sonner'
 import { TableDataManager } from './TableDataManager'
-import { epDataColumns, deleteDataColumns, apiKeyColumns } from './TableColumns'
+import { 
+  epDataColumns, 
+  deletedItemsColumns, 
+  apiKeyColumns, 
+  cityImagesColumns, 
+  titlesColumns 
+} from './TableColumnsNew'
 import { ColumnDef } from '@tanstack/react-table'
+import { TABLE_NAMES, type DatabaseStatus as DbStatusType } from '@/types/database'
 
 // 공통 타입 정의
 interface TableRowData {
@@ -56,7 +63,7 @@ interface DatabaseStatusProps {
 }
 
 export function DatabaseStatus({ onRefresh }: DatabaseStatusProps) {
-  const [dbStatus, setDbStatus] = useState<DbStatus | null>(null)
+  const [dbStatus, setDbStatus] = useState<DbStatusType | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [activeTable, setActiveTable] = useState<string | null>(null)
@@ -162,12 +169,16 @@ export function DatabaseStatus({ onRefresh }: DatabaseStatusProps) {
 
   const getTableColumns = (tableName: string): ColumnDef<TableRowData>[] => {
     switch (tableName) {
-      case 'ep_data':
+      case TABLE_NAMES.EP_DATA:
         return epDataColumns as ColumnDef<TableRowData>[]
-      case 'delete':
-        return deleteDataColumns as ColumnDef<TableRowData>[]
-      case 'api_keys':
+      case TABLE_NAMES.DELETED_ITEMS:
+        return deletedItemsColumns as ColumnDef<TableRowData>[]
+      case TABLE_NAMES.API_KEYS:
         return apiKeyColumns as ColumnDef<TableRowData>[]
+      case TABLE_NAMES.CITY_IMAGES:
+        return cityImagesColumns as ColumnDef<TableRowData>[]
+      case TABLE_NAMES.TITLES:
+        return titlesColumns as ColumnDef<TableRowData>[]
       default:
         return []
     }
@@ -175,12 +186,16 @@ export function DatabaseStatus({ onRefresh }: DatabaseStatusProps) {
 
   const getTableDisplayName = (tableName: string) => {
     switch (tableName) {
-      case 'ep_data':
+      case TABLE_NAMES.EP_DATA:
         return 'EP 데이터'
-      case 'delete':
+      case TABLE_NAMES.DELETED_ITEMS:
         return '삭제된 아이템'
-      case 'api_keys':
+      case TABLE_NAMES.API_KEYS:
         return 'API 키'
+      case TABLE_NAMES.CITY_IMAGES:
+        return '도시 이미지'
+      case TABLE_NAMES.TITLES:
+        return '제목'
       default:
         return tableName
     }
@@ -261,67 +276,107 @@ export function DatabaseStatus({ onRefresh }: DatabaseStatusProps) {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="flex items-center justify-between p-4 border rounded-lg hover:shadow-md transition-shadow">
-              <div className="flex-1">
-                <p className="text-sm font-medium text-gray-600">EP 데이터</p>
-                <p className="text-2xl font-bold text-blue-600">
-                  {dbStatus.tableCounts.ep_data.toLocaleString()}
-                </p>
-              </div>
-              <div className="flex items-center gap-2">
-                <Database className="h-8 w-8 text-blue-400" />
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => fetchTableData('ep_data')}
-                  disabled={isTableLoading}
-                >
-                  <Settings className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
+                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                   <div className="flex items-center justify-between p-4 border rounded-lg hover:shadow-md transition-shadow">
+                     <div className="flex-1">
+                       <p className="text-sm font-medium text-gray-600">EP 데이터</p>
+                       <p className="text-2xl font-bold text-blue-600">
+                         {dbStatus.tableCounts.ep_data.toLocaleString()}
+                       </p>
+                     </div>
+                     <div className="flex items-center gap-2">
+                       <Database className="h-8 w-8 text-blue-400" />
+                       <Button
+                         variant="outline"
+                         size="sm"
+                         onClick={() => fetchTableData(TABLE_NAMES.EP_DATA)}
+                         disabled={isTableLoading}
+                       >
+                         <Settings className="h-4 w-4" />
+                       </Button>
+                     </div>
+                   </div>
 
-            <div className="flex items-center justify-between p-4 border rounded-lg hover:shadow-md transition-shadow">
-              <div className="flex-1">
-                <p className="text-sm font-medium text-gray-600">삭제된 아이템</p>
-                <p className="text-2xl font-bold text-red-600">
-                  {dbStatus.tableCounts.delete.toLocaleString()}
-                </p>
-              </div>
-              <div className="flex items-center gap-2">
-                <XCircle className="h-8 w-8 text-red-400" />
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => fetchTableData('delete')}
-                  disabled={isTableLoading}
-                >
-                  <Settings className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
+                   <div className="flex items-center justify-between p-4 border rounded-lg hover:shadow-md transition-shadow">
+                     <div className="flex-1">
+                       <p className="text-sm font-medium text-gray-600">삭제된 아이템</p>
+                       <p className="text-2xl font-bold text-red-600">
+                         {dbStatus.tableCounts.deleted_items.toLocaleString()}
+                       </p>
+                     </div>
+                     <div className="flex items-center gap-2">
+                       <XCircle className="h-8 w-8 text-red-400" />
+                       <Button
+                         variant="outline"
+                         size="sm"
+                         onClick={() => fetchTableData(TABLE_NAMES.DELETED_ITEMS)}
+                         disabled={isTableLoading}
+                       >
+                         <Settings className="h-4 w-4" />
+                       </Button>
+                     </div>
+                   </div>
 
-            <div className="flex items-center justify-between p-4 border rounded-lg hover:shadow-md transition-shadow">
-              <div className="flex-1">
-                <p className="text-sm font-medium text-gray-600">API 키</p>
-                <p className="text-2xl font-bold text-green-600">
-                  {dbStatus.tableCounts.api_keys.toLocaleString()}
-                </p>
-              </div>
-              <div className="flex items-center gap-2">
-                <AlertTriangle className="h-8 w-8 text-green-400" />
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => fetchTableData('api_keys')}
-                  disabled={isTableLoading}
-                >
-                  <Settings className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-          </div>
+                   <div className="flex items-center justify-between p-4 border rounded-lg hover:shadow-md transition-shadow">
+                     <div className="flex-1">
+                       <p className="text-sm font-medium text-gray-600">API 키</p>
+                       <p className="text-2xl font-bold text-green-600">
+                         {dbStatus.tableCounts.api_keys.toLocaleString()}
+                       </p>
+                     </div>
+                     <div className="flex items-center gap-2">
+                       <AlertTriangle className="h-8 w-8 text-green-400" />
+                       <Button
+                         variant="outline"
+                         size="sm"
+                         onClick={() => fetchTableData(TABLE_NAMES.API_KEYS)}
+                         disabled={isTableLoading}
+                       >
+                         <Settings className="h-4 w-4" />
+                       </Button>
+                     </div>
+                   </div>
+
+                   <div className="flex items-center justify-between p-4 border rounded-lg hover:shadow-md transition-shadow">
+                     <div className="flex-1">
+                       <p className="text-sm font-medium text-gray-600">도시 이미지</p>
+                       <p className="text-2xl font-bold text-purple-600">
+                         {dbStatus.tableCounts.city_images.toLocaleString()}
+                       </p>
+                     </div>
+                     <div className="flex items-center gap-2">
+                       <Database className="h-8 w-8 text-purple-400" />
+                       <Button
+                         variant="outline"
+                         size="sm"
+                         onClick={() => fetchTableData(TABLE_NAMES.CITY_IMAGES)}
+                         disabled={isTableLoading}
+                       >
+                         <Settings className="h-4 w-4" />
+                       </Button>
+                     </div>
+                   </div>
+
+                   <div className="flex items-center justify-between p-4 border rounded-lg hover:shadow-md transition-shadow">
+                     <div className="flex-1">
+                       <p className="text-sm font-medium text-gray-600">제목</p>
+                       <p className="text-2xl font-bold text-orange-600">
+                         {dbStatus.tableCounts.titles.toLocaleString()}
+                       </p>
+                     </div>
+                     <div className="flex items-center gap-2">
+                       <CheckCircle className="h-8 w-8 text-orange-400" />
+                       <Button
+                         variant="outline"
+                         size="sm"
+                         onClick={() => fetchTableData(TABLE_NAMES.TITLES)}
+                         disabled={isTableLoading}
+                       >
+                         <Settings className="h-4 w-4" />
+                       </Button>
+                     </div>
+                   </div>
+                 </div>
         </CardContent>
       </Card>
 
@@ -376,7 +431,7 @@ export function DatabaseStatus({ onRefresh }: DatabaseStatusProps) {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {dbStatus.recentData.delete.length > 0 ? (
+          {dbStatus.recentData.deleted_items.length > 0 ? (
             <div className="border rounded-lg overflow-hidden">
               <Table>
                 <TableHeader>
@@ -388,14 +443,14 @@ export function DatabaseStatus({ onRefresh }: DatabaseStatusProps) {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {dbStatus.recentData.delete.map((item) => (
+                  {dbStatus.recentData.deleted_items.map((item) => (
                     <TableRow key={item.id}>
-                      <TableCell className="font-mono text-sm">{item.product_id}</TableCell>
-                      <TableCell title={item.title}>
-                        {truncateText(item.title)}
+                      <TableCell className="font-mono text-sm">{item.original_id}</TableCell>
+                      <TableCell title={item.original_data?.title || 'N/A'}>
+                        {truncateText(item.original_data?.title || 'N/A')}
                       </TableCell>
                       <TableCell>
-                        <Badge variant="destructive">{item.reason}</Badge>
+                        <Badge variant="destructive">{item.reason || 'N/A'}</Badge>
                       </TableCell>
                       <TableCell className="text-sm text-gray-600">
                         {formatDate(item.created_at)}

@@ -4,12 +4,6 @@ import React, { useState } from 'react'
 import Link from 'next/link'
 import { Menu, X, Database, BarChart3, Settings, HelpCircle, Github } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import {
-  NavigationMenu,
-  NavigationMenuItem,
-  NavigationMenuLink,
-  NavigationMenuList,
-} from '@/components/ui/navigation-menu'
 import { Badge } from '@/components/ui/badge'
 import { ThemeToggle } from '@/components/features/ThemeToggle'
 
@@ -55,21 +49,20 @@ export function Header() {
           </div>
         </Link>
 
-        {/* Desktop Navigation */}
-        <NavigationMenu className="hidden md:flex">
-          <NavigationMenuList>
-            {navigationItems.map((item) => (
-              <NavigationMenuItem key={item.title}>
-                <Link href={item.href} legacyBehavior passHref>
-                  <NavigationMenuLink className="group inline-flex h-10 w-max items-center justify-center rounded-md bg-background px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50 data-[active]:bg-accent/50 data-[state=open]:bg-accent/50">
-                    <item.icon className="mr-2 h-4 w-4" />
-                    {item.title}
-                  </NavigationMenuLink>
-                </Link>
-              </NavigationMenuItem>
-            ))}
-          </NavigationMenuList>
-        </NavigationMenu>
+               {/* Desktop Navigation */}
+               <div className="hidden md:flex items-center space-x-4">
+                 {navigationItems.map((item) => (
+                   <Link 
+                     key={item.title}
+                     href={item.href} 
+                     prefetch={false}
+                     className="group inline-flex h-10 w-max items-center justify-center rounded-md bg-background px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50"
+                   >
+                     <item.icon className="mr-2 h-4 w-4" />
+                     {item.title}
+                   </Link>
+                 ))}
+               </div>
 
         {/* Right side actions */}
         <div className="flex items-center space-x-2">

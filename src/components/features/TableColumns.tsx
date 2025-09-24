@@ -8,35 +8,10 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 import { MoreHorizontal, Edit, Trash2, Eye, Copy } from 'lucide-react'
 import { toast } from 'sonner'
 
-// 타입 정의
-interface EpDataRow {
-  id: string
-  title: string
-  category?: string
-  created_at: string
-  [key: string]: unknown
-}
-
-interface DeleteDataRow {
-  id: number
-  product_id: string
-  title: string
-  reason: string
-  created_at: string
-  [key: string]: unknown
-}
-
-interface ApiKeyRow {
-  id: number
-  provider: string
-  name: string
-  is_active: boolean
-  created_at: string
-  [key: string]: unknown
-}
+import { EpData, DeletedItem, ApiKey, CityImage, Title } from '@/types/database'
 
 // EP 데이터 컬럼 정의
-export const epDataColumns: ColumnDef<EpDataRow>[] = [
+export const epDataColumns: ColumnDef<EpData>[] = [
   {
     id: 'select',
     header: ({ table }) => (
@@ -150,7 +125,7 @@ export const epDataColumns: ColumnDef<EpDataRow>[] = [
 ]
 
 // 삭제된 아이템 컬럼 정의
-export const deleteDataColumns: ColumnDef<DeleteDataRow>[] = [
+export const deletedItemsColumns: ColumnDef<DeletedItem>[] = [
   {
     id: 'select',
     header: ({ table }) => (
@@ -244,7 +219,7 @@ export const deleteDataColumns: ColumnDef<DeleteDataRow>[] = [
             <DropdownMenuLabel>작업</DropdownMenuLabel>
             <DropdownMenuItem
               onClick={() => {
-                navigator.clipboard.writeText(item.product_id)
+                navigator.clipboard.writeText(item.original_id)
                 toast.success('상품 ID가 복사되었습니다')
               }}
             >
@@ -269,7 +244,7 @@ export const deleteDataColumns: ColumnDef<DeleteDataRow>[] = [
 ]
 
 // API 키 컬럼 정의
-export const apiKeyColumns: ColumnDef<ApiKeyRow>[] = [
+export const apiKeyColumns: ColumnDef<ApiKey>[] = [
   {
     id: 'select',
     header: ({ table }) => (
