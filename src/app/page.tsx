@@ -3,8 +3,10 @@
 import React, { useState } from 'react'
 import { DatabaseStatus } from '@/components/features/DatabaseStatus'
 import { DuplicateSearch } from '@/components/features/DuplicateSearch'
+import { KeywordTitleGenerator } from '@/components/features/KeywordTitleGenerator'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { ApiKeyManager } from '@/components/features/ApiKeyManager'
 import { ClickDataProcessor } from '@/components/features/ClickDataProcessor'
 import { EPDataProcessor } from '@/components/features/EPDataProcessor'
 import { ImageLinkGenerator } from '@/components/features/ImageLinkGenerator'
@@ -28,11 +30,13 @@ export default function Home() {
   return (
     <div className="container mx-auto px-4 py-8 space-y-6">
       <Tabs defaultValue="process" value={activeTab} onValueChange={handleTabChange} className="w-full">
-        <TabsList className="grid grid-cols-5 w-full sm:w-auto">
+        <TabsList className="grid grid-cols-7 w-full sm:w-auto">
           <TabsTrigger value="process">클릭수 데이터 처리</TabsTrigger>
           <TabsTrigger value="ep-data">EP데이터 처리</TabsTrigger>
           <TabsTrigger value="duplicate">중복 검색기</TabsTrigger>
           <TabsTrigger value="image-links">이미지 링크</TabsTrigger>
+          <TabsTrigger value="keywords">키워드 제목</TabsTrigger>
+          <TabsTrigger value="settings">설정</TabsTrigger>
           <TabsTrigger value="database">데이터베이스</TabsTrigger>
         </TabsList>
 
@@ -56,6 +60,20 @@ export default function Home() {
                 <ImageLinkGenerator />
               </TabsContent>
 
+              <TabsContent value="keywords">
+                <KeywordTitleGenerator />
+              </TabsContent>
+
+              <TabsContent value="settings">
+          <Card>
+            <CardHeader>
+              <CardTitle>설정</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ApiKeyManager />
+            </CardContent>
+          </Card>
+        </TabsContent>
 
               <TabsContent value="database">
                 <DatabaseStatus onRefresh={dbRefreshTrigger} />
