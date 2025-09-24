@@ -30,11 +30,24 @@ function EpDataActions({ row }: { row: Row<EpData> }) {
 
   const handleSaveEdit = async () => {
     try {
-      // TODO: API 호출로 데이터 수정
+      const res = await fetch('/api/admin/update-data', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          table: 'ep_data',
+          id: row.getValue('id') as string,
+          values: { title: editData.title },
+        }),
+      })
+      if (!res.ok) throw new Error('업데이트 실패')
       toast.success('데이터가 성공적으로 수정되었습니다.')
       setIsEditing(false)
-    } catch {
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('admin-table-refresh'))
+      }
+    } catch (e) {
       toast.error('데이터 수정 중 오류가 발생했습니다.')
+      console.error(e)
     }
   }
 
@@ -47,11 +60,21 @@ function EpDataActions({ row }: { row: Row<EpData> }) {
 
   const handleDelete = async () => {
     try {
-      // TODO: API 호출로 데이터 삭제
+      const id = String(row.getValue('id'))
+      const res = await fetch('/api/admin/delete-data', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ table: 'ep_data', ids: [id] }),
+      })
+      if (!res.ok) throw new Error('삭제 실패')
       toast.success('데이터가 성공적으로 삭제되었습니다.')
       setIsDeleteOpen(false)
-    } catch {
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('admin-table-refresh'))
+      }
+    } catch (e) {
       toast.error('데이터 삭제 중 오류가 발생했습니다.')
+      console.error(e)
     }
   }
 
@@ -133,16 +156,68 @@ function EpDataActions({ row }: { row: Row<EpData> }) {
 
 // 삭제된 아이템 액션 컴포넌트
 function DeletedItemActions({ row }: { row: Row<DeletedItem> }) {
+  const [isEditing, setIsEditing] = useState(false)
   const [isDeleteOpen, setIsDeleteOpen] = useState(false)
+  const [editData, setEditData] = useState({
+    title: (row.getValue('title') as string) || '',
+  })
+
+  const handleSaveEdit = async () => {
+    try {
+      const res = await fetch('/api/admin/update-data', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          table: 'delect',
+          id: row.getValue('id') as number,
+          values: { title: editData.title },
+        }),
+      })
+      if (!res.ok) throw new Error('업데이트 실패')
+      toast.success('데이터가 성공적으로 수정되었습니다.')
+      setIsEditing(false)
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('admin-table-refresh'))
+      }
+    } catch (e) {
+      toast.error('데이터 수정 중 오류가 발생했습니다.')
+      console.error(e)
+    }
+  }
 
   const handleDelete = async () => {
     try {
-      // TODO: API 호출로 데이터 삭제
+      const id = String(row.getValue('id'))
+      const res = await fetch('/api/admin/delete-data', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ table: 'delect', ids: [id] }),
+      })
+      if (!res.ok) throw new Error('삭제 실패')
       toast.success('데이터가 성공적으로 삭제되었습니다.')
       setIsDeleteOpen(false)
-    } catch {
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('admin-table-refresh'))
+      }
+    } catch (e) {
       toast.error('데이터 삭제 중 오류가 발생했습니다.')
+      console.error(e)
     }
+  }
+
+  if (isEditing) {
+    return (
+      <div className="flex items-center space-x-2">
+        <Input
+          value={editData.title}
+          onChange={(e) => setEditData({ ...editData, title: e.target.value })}
+          className="h-8"
+          placeholder="제목을 입력하세요"
+        />
+        <Button size="sm" onClick={handleSaveEdit}>저장</Button>
+        <Button size="sm" variant="outline" onClick={() => setIsEditing(false)}>취소</Button>
+      </div>
+    )
   }
 
   return (
@@ -156,9 +231,14 @@ function DeletedItemActions({ row }: { row: Row<DeletedItem> }) {
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
           <DropdownMenuLabel>액션</DropdownMenuLabel>
-          <DropdownMenuItem onClick={() => navigator.clipboard.writeText(row.getValue('title'))}>
+          <DropdownMenuItem onClick={() => navigator.clipboard.writeText(String(row.getValue('title') || ''))}>
             <Copy className="mr-2 h-4 w-4" />
             제목 복사
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem onClick={() => setIsEditing(true)}>
+            <Edit className="h-4 w-4 mr-2" />
+            수정
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem 
@@ -179,7 +259,7 @@ function DeletedItemActions({ row }: { row: Row<DeletedItem> }) {
             <AlertDialogDescription>
               이 작업은 되돌릴 수 없습니다. 이 데이터를 영구적으로 삭제하시겠습니까?
               <br />
-              <strong>제목: {row.getValue('title')}</strong>
+              <strong>제목: {String(row.getValue('title') || '')}</strong>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -215,11 +295,29 @@ function ApiKeyActions({ row }: { row: Row<ApiKey> }) {
 
   const handleSaveEdit = async () => {
     try {
-      // TODO: API 호출로 데이터 수정
+      const res = await fetch('/api/admin/update-data', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          table: 'api',
+          id: row.getValue('id') as number,
+          values: {
+            name: editData.name,
+            api_key: editData.api_key,
+            is_active: editData.is_active,
+            is_default: editData.is_default,
+          },
+        }),
+      })
+      if (!res.ok) throw new Error('업데이트 실패')
       toast.success('API 키가 성공적으로 수정되었습니다.')
       setIsEditing(false)
-    } catch {
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('admin-table-refresh'))
+      }
+    } catch (e) {
       toast.error('API 키 수정 중 오류가 발생했습니다.')
+      console.error(e)
     }
   }
 
@@ -236,11 +334,21 @@ function ApiKeyActions({ row }: { row: Row<ApiKey> }) {
 
   const handleDelete = async () => {
     try {
-      // TODO: API 호출로 데이터 삭제
+      const id = String(row.getValue('id'))
+      const res = await fetch('/api/admin/delete-data', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ table: 'api', ids: [id] }),
+      })
+      if (!res.ok) throw new Error('삭제 실패')
       toast.success('API 키가 성공적으로 삭제되었습니다.')
       setIsDeleteOpen(false)
-    } catch {
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('admin-table-refresh'))
+      }
+    } catch (e) {
       toast.error('API 키 삭제 중 오류가 발생했습니다.')
+      console.error(e)
     }
   }
 

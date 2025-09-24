@@ -41,6 +41,8 @@ export default function ClickDataProcessor({}: ClickDataProcessorProps) {
   const [previewData, setPreviewData] = useState<PreviewData | null>(null)
   const [processingResult, setProcessingResult] = useState<ClickDataResponse | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [zeroVisibleCount, setZeroVisibleCount] = useState(10)
+  const [newVisibleCount, setNewVisibleCount] = useState(10)
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     const selectedFile = acceptedFiles[0]
@@ -364,7 +366,7 @@ export default function ClickDataProcessor({}: ClickDataProcessorProps) {
 
         {/* 미리보기 다이얼로그 */}
         <Dialog open={!!previewData} onOpenChange={() => setPreviewData(null)}>
-          <DialogContent className="max-w-[90vw] w-[900px] md:w-[1100px] lg:w-[1280px] max-h-[85vh] overflow-y-auto">
+          <DialogContent className="w-[90vw] max-w-[1280px] max-h-[85vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>데이터 미리보기</DialogTitle>
               <DialogDescription>
@@ -373,7 +375,7 @@ export default function ClickDataProcessor({}: ClickDataProcessorProps) {
             </DialogHeader>
             
             {previewData && (
-              <div className="space-y-6">
+          <div className="space-y-6">
                 {/* 통계 요약 */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <Card>
@@ -427,18 +429,18 @@ export default function ClickDataProcessor({}: ClickDataProcessorProps) {
                           </TableRow>
                         </TableHeader>
                         <TableBody>
-                          {previewData.zeroClickItems.slice(0, 10).map((item, index) => (
+                          {previewData.zeroClickItems.slice(0, zeroVisibleCount).map((item, index) => (
                             <TableRow key={index}>
-                              <TableCell className="font-mono text-sm">{item.id}</TableCell>
-                              <TableCell className="max-w-xs truncate">{item.title}</TableCell>
+                              <TableCell className="font-mono text-sm break-all">{item.id}</TableCell>
+                              <TableCell className="whitespace-normal break-words">{item.title}</TableCell>
                               <TableCell className="text-red-600 font-bold">{item.clicks}</TableCell>
                             </TableRow>
                           ))}
                         </TableBody>
                       </Table>
-                      {previewData.zeroClickItems.length > 10 && (
-                        <div className="p-3 text-sm text-gray-500 text-center">
-                          ... 및 {previewData.zeroClickItems.length - 10}개 더
+                      {previewData.zeroClickItems.length > zeroVisibleCount && (
+                        <div className="p-3 text-sm text-center">
+                          <Button variant="outline" size="sm" onClick={() => setZeroVisibleCount(c => c + 10)}>더보기 (+10)</Button>
                         </div>
                       )}
                     </div>
@@ -459,18 +461,18 @@ export default function ClickDataProcessor({}: ClickDataProcessorProps) {
                           </TableRow>
                         </TableHeader>
                         <TableBody>
-                          {previewData.newItems.slice(0, 10).map((item, index) => (
+                          {previewData.newItems.slice(0, newVisibleCount).map((item, index) => (
                             <TableRow key={index}>
-                              <TableCell className="font-mono text-sm">{item.id}</TableCell>
-                              <TableCell className="max-w-xs truncate">{item.title}</TableCell>
+                              <TableCell className="font-mono text-sm break-all">{item.id}</TableCell>
+                              <TableCell className="whitespace-normal break-words">{item.title}</TableCell>
                               <TableCell>{item.clicks}</TableCell>
                             </TableRow>
                           ))}
                         </TableBody>
                       </Table>
-                      {previewData.newItems.length > 10 && (
-                        <div className="p-3 text-sm text-gray-500 text-center">
-                          ... 및 {previewData.newItems.length - 10}개 더
+                      {previewData.newItems.length > newVisibleCount && (
+                        <div className="p-3 text-sm text-center">
+                          <Button variant="outline" size="sm" onClick={() => setNewVisibleCount(c => c + 10)}>더보기 (+10)</Button>
                         </div>
                       )}
                     </div>

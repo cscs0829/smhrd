@@ -57,6 +57,9 @@ export function DatabaseStatus({ onRefresh }: DatabaseStatusProps) {
     }
   }, [])
 
+  // 저장/삭제 후 테이블 새로고침을 위한 글로벌 이벤트 리스너는
+  // fetchTableData 선언 이후에 등록한다.
+
   useEffect(() => {
     fetchDbStatus()
   }, [fetchDbStatus])
@@ -75,27 +78,36 @@ export function DatabaseStatus({ onRefresh }: DatabaseStatusProps) {
   const fetchTableData = async (tableName: string) => {
     try {
       setIsTableLoading(true)
-      const response = await fetch(`/api/admin/table-data?table=${tableName}`)
-      
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}))
-        const errorMessage = errorData.error || '테이블 데이터 조회 실패'
-        throw new Error(errorMessage)
+      // Supabase 1000개 제한 우회: API를 페이지네이션으로 반복 호출
+      const limit = 1000
+      let page = 1
+      let allRows: TableRowData[] = []
+      while (true) {
+        const url = `/api/admin/table-data?table=${tableName}&page=${page}&limit=${limit}`
+        const response = await fetch(url)
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}))
+          const errorMessage = (errorData as any).error || '테이블 데이터 조회 실패'
+          throw new Error(errorMessage)
+        }
+        const result = await response.json()
+        const chunk: TableRowData[] = result.data || []
+        allRows = allRows.concat(chunk)
+        if (chunk.length < limit) break
+        page += 1
       }
       
-      const result = await response.json()
-      
       // 데이터가 없는 경우
-      if (!result.data || result.data.length === 0) {
+      if (!allRows || allRows.length === 0) {
         toast.info(`${getTableDisplayName(tableName)} 테이블에 데이터가 없습니다`)
         setTableData([])
         setActiveTable(tableName)
         return
       }
       
-      setTableData(result.data)
+      setTableData(allRows)
       setActiveTable(tableName)
-      toast.success(`${getTableDisplayName(tableName)} 데이터를 불러왔습니다 (${result.total}개)`)
+      toast.success(`${getTableDisplayName(tableName)} 데이터를 불러왔습니다 (${allRows.length}개)`)
     } catch (error) {
       console.error('테이블 데이터 조회 오류:', error)
       const errorMessage = error instanceof Error ? error.message : '알 수 없는 오류가 발생했습니다'
@@ -132,6 +144,24 @@ export function DatabaseStatus({ onRefresh }: DatabaseStatusProps) {
       toast.error('데이터 삭제에 실패했습니다')
     }
   }
+
+  // 저장/삭제 후 테이블 새로고침을 위한 글로벌 이벤트 리스너
+  useEffect(() => {
+    const handler = () => {
+      if (activeTable) {
+        fetchTableData(activeTable)
+      }
+      fetchDbStatus()
+    }
+    if (typeof window !== 'undefined') {
+      window.addEventListener('admin-table-refresh', handler as EventListener)
+    }
+    return () => {
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('admin-table-refresh', handler as EventListener)
+      }
+    }
+  }, [activeTable, fetchTableData, fetchDbStatus])
 
   const handleExportData = (data: TableRowData[]) => {
     const csvContent = [

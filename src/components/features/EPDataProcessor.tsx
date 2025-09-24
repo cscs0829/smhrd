@@ -31,6 +31,8 @@ export function EPDataProcessor({}: EPDataProcessorProps) {
   const [previewData, setPreviewData] = useState<PreviewData | null>(null)
   const [processingResult, setProcessingResult] = useState<EPDataResponse | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [newVisibleCount, setNewVisibleCount] = useState(10)
+  const [dupVisibleCount, setDupVisibleCount] = useState(10)
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     const selectedFile = acceptedFiles[0]
@@ -191,7 +193,7 @@ export function EPDataProcessor({}: EPDataProcessorProps) {
             <p>• Excel에 있지만 DB에 없는 데이터: {processingResult.addedCount}개 추가</p>
             <p>• DB에 있지만 Excel에 없는 데이터: {processingResult.deletedCount}개 삭제 (delect 테이블로 이동)</p>
             <p>• 중복된 데이터: {processingResult.skippedCount}개 건너뜀</p>
-          </div>
+      </div>
         </motion.div>
       </motion.div>
     )
@@ -199,16 +201,16 @@ export function EPDataProcessor({}: EPDataProcessorProps) {
 
   return (
     <Card className="w-full">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <FileSpreadsheet className="h-5 w-5" />
-          EP 데이터 처리
-        </CardTitle>
-        <CardDescription>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <FileSpreadsheet className="h-5 w-5" />
+            EP 데이터 처리
+          </CardTitle>
+          <CardDescription>
           EP 데이터 엑셀 파일을 업로드하여 데이터베이스와 동기화합니다. 
           Excel에 있지만 DB에 없는 데이터는 추가하고, DB에 있지만 Excel에 없는 데이터는 delect 테이블로 이동합니다.
-        </CardDescription>
-      </CardHeader>
+          </CardDescription>
+        </CardHeader>
       <CardContent className="space-y-6">
         {/* 드래그 앤 드롭 영역 */}
         <div
@@ -358,7 +360,7 @@ export function EPDataProcessor({}: EPDataProcessorProps) {
 
         {/* 미리보기 다이얼로그 */}
         <Dialog open={!!previewData} onOpenChange={() => setPreviewData(null)}>
-          <DialogContent className="max-w-[90vw] w-[900px] md:w-[1100px] lg:w-[1280px] max-h-[85vh] overflow-y-auto">
+          <DialogContent className="w-[90vw] max-w-[1280px] max-h-[85vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>데이터 미리보기</DialogTitle>
               <DialogDescription>
@@ -390,10 +392,10 @@ export function EPDataProcessor({}: EPDataProcessorProps) {
                           <p className="text-sm font-medium text-gray-600">새로 추가될 데이터</p>
                           <p className="text-2xl font-bold text-green-600">{previewData.newItems.length}</p>
                         </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                  
+          </div>
+        </CardContent>
+      </Card>
+
                   <Card>
                     <CardContent className="p-4">
                       <div className="flex items-center gap-2">
@@ -420,17 +422,17 @@ export function EPDataProcessor({}: EPDataProcessorProps) {
                           </TableRow>
                         </TableHeader>
                         <TableBody>
-                          {previewData.newItems.slice(0, 10).map((item, index) => (
+                          {previewData.newItems.slice(0, newVisibleCount).map((item, index) => (
                             <TableRow key={index}>
-                              <TableCell className="font-mono text-sm">{item.id}</TableCell>
-                              <TableCell className="max-w-xs truncate">{item.title}</TableCell>
+                              <TableCell className="font-mono text-sm break-all">{item.id}</TableCell>
+                              <TableCell className="whitespace-normal break-words">{item.title}</TableCell>
                             </TableRow>
                           ))}
                         </TableBody>
                       </Table>
-                      {previewData.newItems.length > 10 && (
-                        <div className="p-3 text-sm text-gray-500 text-center">
-                          ... 및 {previewData.newItems.length - 10}개 더
+                      {previewData.newItems.length > newVisibleCount && (
+                        <div className="p-3 text-sm text-center">
+                          <Button variant="outline" size="sm" onClick={() => setNewVisibleCount(c => c + 10)}>더보기 (+10)</Button>
                         </div>
                       )}
                     </div>
@@ -450,17 +452,17 @@ export function EPDataProcessor({}: EPDataProcessorProps) {
                           </TableRow>
                         </TableHeader>
                         <TableBody>
-                          {previewData.duplicates.slice(0, 10).map((item, index) => (
+                          {previewData.duplicates.slice(0, dupVisibleCount).map((item, index) => (
                             <TableRow key={index}>
-                              <TableCell className="font-mono text-sm">{item.id}</TableCell>
-                              <TableCell className="max-w-xs truncate">{item.title}</TableCell>
+                              <TableCell className="font-mono text-sm break-all">{item.id}</TableCell>
+                              <TableCell className="whitespace-normal break-words">{item.title}</TableCell>
                             </TableRow>
                           ))}
                         </TableBody>
                       </Table>
-                      {previewData.duplicates.length > 10 && (
-                        <div className="p-3 text-sm text-gray-500 text-center">
-                          ... 및 {previewData.duplicates.length - 10}개 더
+                      {previewData.duplicates.length > dupVisibleCount && (
+                        <div className="p-3 text-sm text-center">
+                          <Button variant="outline" size="sm" onClick={() => setDupVisibleCount(c => c + 10)}>더보기 (+10)</Button>
                         </div>
                       )}
                     </div>
@@ -471,8 +473,8 @@ export function EPDataProcessor({}: EPDataProcessorProps) {
 
             <DialogFooter className="gap-2">
               <Button variant="outline" onClick={() => setPreviewData(null)}>
-                취소
-              </Button>
+              취소
+            </Button>
               <Button 
                 onClick={handleProcessData}
                 disabled={isProcessing}
@@ -489,10 +491,10 @@ export function EPDataProcessor({}: EPDataProcessorProps) {
                     데이터베이스에 적용
                   </>
                 )}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
       </CardContent>
     </Card>
   )
