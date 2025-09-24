@@ -375,7 +375,7 @@ export default function ClickDataProcessor({}: ClickDataProcessorProps) {
             </DialogHeader>
             
             {previewData && (
-          <div className="space-y-6">
+          <div className="space-y-6 w-full max-w-none">
                 {/* 통계 요약 */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <Card>
@@ -417,9 +417,9 @@ export default function ClickDataProcessor({}: ClickDataProcessorProps) {
 
                 {/* 0클릭 상품 테이블 */}
                 {previewData.zeroClickItems.length > 0 && (
-                  <div>
+                  <div className="w-full">
                     <h3 className="text-lg font-semibold mb-3 text-red-700">0클릭 상품 ({previewData.zeroClickItems.length}개)</h3>
-                    <div className="border rounded-lg overflow-hidden">
+                    <div className="border rounded-lg overflow-hidden w-full">
                       <Table>
                         <TableHeader>
                           <TableRow>
@@ -449,9 +449,9 @@ export default function ClickDataProcessor({}: ClickDataProcessorProps) {
 
                 {/* 새로 추가될 데이터 테이블 */}
                 {previewData.newItems.length > 0 && (
-                  <div>
+                  <div className="w-full">
                     <h3 className="text-lg font-semibold mb-3 text-green-700">새로 추가될 데이터 ({previewData.newItems.length}개)</h3>
-                    <div className="border rounded-lg overflow-hidden">
+                    <div className="border rounded-lg overflow-hidden w-full">
                       <Table>
                         <TableHeader>
                           <TableRow>
