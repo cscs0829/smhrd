@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase'
+import { getSupabaseClient } from '@/lib/supabase'
 
 export async function POST(request: NextRequest) {
   try {
@@ -12,7 +12,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const supabase = createClient()
+    const supabase = getSupabaseClient()
 
     // 새로운 아이템들만 필터링 (중복 제거)
     const newItems = []
@@ -72,7 +72,7 @@ export async function POST(request: NextRequest) {
 
 export async function GET() {
   try {
-    const supabase = createClient()
+    const supabase = getSupabaseClient()
 
     const { data, error } = await supabase
       .from('ep_data')
