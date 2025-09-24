@@ -35,6 +35,7 @@ function shuffleArray<T>(array: T[]): T[] {
 export function ImageLinkGenerator() {
   const [entries, setEntries] = useState<ImageEntry[]>([{ url: '', isMain: false }])
   const [numRows, setNumRows] = useState<number>(10)
+  const [excludeDuplicates, setExcludeDuplicates] = useState<boolean>(false)
 
   const uniqueEntries = useMemo(() => {
     const seen = new Set<string>()
@@ -64,12 +65,19 @@ export function ImageLinkGenerator() {
     
     for (let i = 0; i < maxPreviewRows; i++) {
       const imageLink = mainCandidates[getRandomInt(0, mainCandidates.length - 1)].url
-      const addList = shuffleArray(uniqueEntries)
+      
+      let addEntries = uniqueEntries
+      // 중복 제외 옵션이 체크되어 있으면 현재 image_link 제외
+      if (excludeDuplicates) {
+        addEntries = uniqueEntries.filter(e => e.url !== imageLink)
+      }
+      
+      const addList = shuffleArray(addEntries)
       const addImageLink = addList.map(e => e.url).join('|')
       rows.push({ image_link: imageLink, add_image_link: addImageLink })
     }
     return rows
-  }, [uniqueEntries, mainCandidates])
+  }, [uniqueEntries, mainCandidates, excludeDuplicates])
 
   const handleAddEntry = () => {
     if (uniqueEntries.length >= 11) {
@@ -111,11 +119,17 @@ export function ImageLinkGenerator() {
   const handleReset = () => {
     setEntries([{ url: '', isMain: false }])
     setNumRows(10)
+    setExcludeDuplicates(false)
   }
 
   const handleGenerateXlsx = async () => {
-    if (uniqueEntries.length === 0) {
-      toast.error('이미지 링크를 최소 1개 이상 입력해주세요')
+    // 최소 5개, 최대 11개 검증
+    if (uniqueEntries.length < 5) {
+      toast.error('이미지 링크를 최소 5개 이상 입력해주세요')
+      return
+    }
+    if (uniqueEntries.length > 11) {
+      toast.error('이미지 링크는 최대 11개까지 입력할 수 있습니다')
       return
     }
     if (numRows <= 0) {
@@ -133,8 +147,25 @@ export function ImageLinkGenerator() {
     const rows: { image_link: string; add_image_link: string }[] = []
     for (let i = 0; i < numRows; i++) {
       const imageLink = mainPool[getRandomInt(0, mainPool.length - 1)]
-      const addList = shuffleArray(allUrls)
-      const addImageLink = addList.join('|')
+      
+      let addUrls = allUrls
+      // 중복 제외 옵션이 체크되어 있으면 현재 image_link 제외
+      if (excludeDuplicates) {
+        addUrls = allUrls.filter(url => url !== imageLink)
+      }
+      
+      // add_image_link 개수 검증 (최소 5개, 최대 10개)
+      if (addUrls.length < 5) {
+        toast.error('중복 제외 옵션을 사용할 때 add_image_link가 최소 5개 이상이어야 합니다')
+        return
+      }
+      if (addUrls.length > 10) {
+        toast.error('add_image_link는 최대 10개까지 사용할 수 있습니다')
+        return
+      }
+      
+      const addList = shuffleArray(addUrls.map(url => ({ url, isMain: false })))
+      const addImageLink = addList.map(e => e.url).join('|')
       rows.push({ image_link: imageLink, add_image_link: addImageLink })
     }
 
@@ -191,7 +222,21 @@ export function ImageLinkGenerator() {
                       onChange={(e) => setNumRows(Number(e.target.value))}
                     />
                   </div>
-                  {/* add_image_link 최대 입력 제거 */}
+                  <div className="space-y-2">
+                    <Label>중복 제외 옵션</Label>
+                    <div className="flex items-center space-x-2">
+                      <input
+                        type="checkbox"
+                        id="exclude-duplicates"
+                        checked={excludeDuplicates}
+                        onChange={(e) => setExcludeDuplicates(e.target.checked)}
+                        className="h-4 w-4"
+                      />
+                      <Label htmlFor="exclude-duplicates" className="text-sm">
+                        같은 행의 image_link는 add_image_link에서 제외
+                      </Label>
+                    </div>
+                  </div>
                 </div>
 
                 {/* 벌크 붙여넣기 제거. 초기화 버튼만 유지할 수 있도록 간단 버튼 제공 */}
@@ -256,7 +301,11 @@ export function ImageLinkGenerator() {
                     </TableBody>
                   </Table>
                   <div className="p-2 text-xs text-muted-foreground">
-                    아무 것도 체크하지 않으면 모든 링크가 메인 후보로 사용됩니다. 최대 11개까지 추가할 수 있어요.<br/>
+                    <div className="mb-2">
+                      • 최소 5개, 최대 11개까지 이미지링크 입력 가능<br/>
+                      • 아무 것도 체크하지 않으면 모든 링크가 메인 후보로 사용됩니다<br/>
+                      • 중복 제외 옵션 사용 시 add_image_link는 최소 5개, 최대 10개까지
+                    </div>
                     <span className="text-blue-600 font-medium">💡 팁: 이미지링크를 입력한 후 엔터키를 누르면 자동으로 다음 입력창이 생성됩니다!</span>
                   </div>
                 </div>
@@ -267,42 +316,73 @@ export function ImageLinkGenerator() {
                 <div className="space-y-2">
                   <Label>상태 요약</Label>
                   <div className="flex items-center gap-2 flex-wrap">
-                    <Badge variant="outline">고유 링크: {uniqueEntries.length} / 11</Badge>
+                    <Badge variant={uniqueEntries.length >= 5 && uniqueEntries.length <= 11 ? "default" : "destructive"}>
+                      고유 링크: {uniqueEntries.length} / 11
+                    </Badge>
                     <Badge variant="outline">메인 후보: {mainCandidates.length}</Badge>
-                    {/* add 최대 배지 */}
+                    {excludeDuplicates && (
+                      <Badge variant="secondary">중복 제외 활성</Badge>
+                    )}
                   </div>
+                  {/* 검증 에러 메시지 */}
+                  {uniqueEntries.length < 5 && (
+                    <div className="text-red-500 text-sm">
+                      ⚠️ 이미지 링크를 최소 5개 이상 입력해주세요
+                    </div>
+                  )}
+                  {uniqueEntries.length > 11 && (
+                    <div className="text-red-500 text-sm">
+                      ⚠️ 이미지 링크는 최대 11개까지 입력할 수 있습니다
+                    </div>
+                  )}
+                  {excludeDuplicates && uniqueEntries.length < 6 && (
+                    <div className="text-red-500 text-sm">
+                      ⚠️ 중복 제외 옵션 사용 시 최소 6개 이상 입력해야 합니다
+                    </div>
+                  )}
+                  {excludeDuplicates && uniqueEntries.length > 11 && (
+                    <div className="text-red-500 text-sm">
+                      ⚠️ add_image_link는 최대 10개까지 사용할 수 있습니다
+                    </div>
+                  )}
                 </div>
 
-                <div className="relative w-full overflow-x-auto border rounded-lg">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>예시 image_link</TableHead>
-                        <TableHead>예시 add_image_link</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {/* 미리보기 행들 */}
-                      {previewRows.length > 0 ? (
-                        previewRows.map((row, index) => (
-                          <TableRow key={index}>
-                            <TableCell className="truncate max-w-xs" title={row.image_link}>
-                              {row.image_link}
-                            </TableCell>
-                            <TableCell className="truncate max-w-xs" title={row.add_image_link}>
-                              {row.add_image_link}
+                <div className="relative w-full border rounded-lg">
+                  <div className="overflow-x-auto max-h-96 overflow-y-auto">
+                    <Table>
+                      <TableHeader className="sticky top-0 bg-background">
+                        <TableRow>
+                          <TableHead className="w-1/3">예시 image_link</TableHead>
+                          <TableHead className="w-2/3">예시 add_image_link</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {/* 미리보기 행들 */}
+                        {previewRows.length > 0 ? (
+                          previewRows.map((row, index) => (
+                            <TableRow key={index}>
+                              <TableCell className="align-top">
+                                <div className="break-all text-xs p-1 bg-gray-50 rounded min-h-[40px] flex items-center">
+                                  {row.image_link}
+                                </div>
+                              </TableCell>
+                              <TableCell className="align-top">
+                                <div className="break-all text-xs p-1 bg-gray-50 rounded min-h-[40px]">
+                                  {row.add_image_link}
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          ))
+                        ) : (
+                          <TableRow>
+                            <TableCell colSpan={2} className="text-center text-gray-500">
+                              이미지링크를 입력하면 예시가 표시됩니다
                             </TableCell>
                           </TableRow>
-                        ))
-                      ) : (
-                        <TableRow>
-                          <TableCell colSpan={2} className="text-center text-gray-500">
-                            이미지링크를 입력하면 예시가 표시됩니다
-                          </TableCell>
-                        </TableRow>
-                      )}
-                    </TableBody>
-                  </Table>
+                        )}
+                      </TableBody>
+                    </Table>
+                  </div>
                 </div>
               </div>
             </div>
