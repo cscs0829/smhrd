@@ -1,68 +1,44 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useCallback } from 'react'
 import { useDropzone } from 'react-dropzone'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Upload, FileSpreadsheet, CheckCircle, AlertCircle } from 'lucide-react'
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { Progress } from '@/components/ui/progress'
+import { Upload, FileSpreadsheet, AlertCircle, Loader2, X, CheckCircle, Database } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { EPDataResponse } from '@/types'
 
-import { useApi } from '@/hooks/useApi'
-import { useFileProcessor } from '@/hooks/useFileProcessor'
-import { 
-  FileProcessorProps, 
-  ExcelDataItem, 
-  EPDataResponse,
-  FILE_CONFIG,
-  DROPZONE_MESSAGES,
-  MESSAGES,
-  UI_CONFIG,
-  FileType
-} from '@/types'
-import { handleError } from '@/utils/errorHandler'
+interface EPDataProcessorProps {
+  onFileSelect?: () => void
+}
 
-export function EPDataProcessor({ onFileSelect }: FileProcessorProps) {
-  const [excelItems, setExcelItems] = useState<ExcelDataItem[]>([])
-  const [showConfirmDialog, setShowConfirmDialog] = useState(false)
-  const [processingResult, setProcessingResult] = useState<{
-    addedCount: number
-    deletedCount: number
-    totalExcelItems: number
-    totalDbItems: number
-    skippedCount: number
-  } | null>(null)
+export function EPDataProcessor({}: EPDataProcessorProps) {
+  const [file, setFile] = useState<File | null>(null)
+  const [isProcessing, setIsProcessing] = useState(false)
+  const [processingResult, setProcessingResult] = useState<EPDataResponse | null>(null)
+  const [error, setError] = useState<string | null>(null)
 
-  // API 훅 사용
-  const { execute: saveToDatabase, isLoading: isSaving } = useApi<EPDataResponse>({
-    showSuccessToast: true,
-    successMessage: MESSAGES.SUCCESS.DATA_SAVED
-  })
-
-  // 파일 처리 훅 사용
-  const { state: fileState, processFile, reset: resetFile } = useFileProcessor<ExcelDataItem[]>({
-    acceptedTypes: FILE_CONFIG.ALLOWED_EXCEL_TYPES as readonly FileType[],
-    maxFileSize: FILE_CONFIG.MAX_SIZE_MB,
-    onSuccess: (data) => {
-      setExcelItems(data as ExcelDataItem[])
-      setProcessingResult(null) // 이전 결과 초기화
-    },
-    onError: (error) => {
-      handleError(error, { component: 'EPDataProcessor', action: 'processFile' })
-    }
-  })
-
-  const onDrop = React.useCallback((acceptedFiles: File[]) => {
+  const onDrop = useCallback((acceptedFiles: File[]) => {
     const selectedFile = acceptedFiles[0]
     if (selectedFile) {
-      onFileSelect(selectedFile)
-      processFile(selectedFile)
+      if (selectedFile.type === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' || 
+          selectedFile.type === 'application/vnd.ms-excel' ||
+          selectedFile.name.endsWith('.xlsx') || 
+          selectedFile.name.endsWith('.xls')) {
+        setFile(selectedFile)
+        setError(null)
+        setProcessingResult(null)
+      } else {
+        setError('Excel 파일만 업로드 가능합니다.')
+        setFile(null)
+      }
     }
-  }, [onFileSelect, processFile])
+  }, [])
 
-  const { getRootProps, getInputProps, isDragActive, isDragAccept, isDragReject, fileRejections } = useDropzone({
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
     accept: {
       'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': ['.xlsx'],
@@ -71,253 +47,251 @@ export function EPDataProcessor({ onFileSelect }: FileProcessorProps) {
     multiple: false
   })
 
-  const handleSaveToDatabase = async () => {
-    if (excelItems.length === 0) return
+  const handleRemoveFile = () => {
+    setFile(null)
+    setError(null)
+    setProcessingResult(null)
+  }
+
+  const handleProcessEPData = async () => {
+    if (!file) {
+      setError('파일을 선택해주세요.')
+      return
+    }
+
+    setIsProcessing(true)
+    setError(null)
+    setProcessingResult(null)
 
     try {
-      const result = await saveToDatabase('/api/admin/ep-data', {
+      const formData = new FormData()
+      formData.append('file', file)
+
+      const response = await fetch('/api/admin/ep-data', {
         method: 'POST',
-        body: JSON.stringify({ items: excelItems })
+        body: formData,
       })
 
-      if (result) {
-        // 처리 결과 저장
-        setProcessingResult({
-          addedCount: result.addedCount || 0,
-          deletedCount: result.deletedCount || 0,
-          totalExcelItems: result.totalExcelItems || 0,
-          totalDbItems: result.totalDbItems || 0,
-          skippedCount: result.skippedCount || 0
-        })
+      const result = await response.json()
+
+      if (result.success) {
+        setProcessingResult(result)
+      } else {
+        setError(result.error || 'EP 데이터 처리 중 오류가 발생했습니다.')
       }
     } catch (error) {
-      handleError(error, { component: 'EPDataProcessor', action: 'saveToDatabase' })
+      console.error('EP 데이터 처리 오류:', error)
+      setError('EP 데이터 처리 중 오류가 발생했습니다.')
     } finally {
-      setShowConfirmDialog(false)
+      setIsProcessing(false)
     }
-  }
-
-  const handleReset = () => {
-    setExcelItems([])
-    setProcessingResult(null)
-    resetFile()
-  }
-
-  const getDropzoneClassName = () => {
-    let className = "border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors "
-    if (isDragActive) {
-      className += "border-blue-400 bg-blue-50"
-    } else if (isDragAccept) {
-      className += "border-green-400 bg-green-50"
-    } else if (isDragReject) {
-      className += "border-red-400 bg-red-50"
-    } else {
-      className += "border-gray-300 hover:border-gray-400"
-    }
-    return className
-  }
-
-  const renderDropzone = () => (
-    <div {...getRootProps()} className={getDropzoneClassName()}>
-      <input {...getInputProps()} />
-      <Upload className="h-12 w-12 mx-auto mb-4 text-gray-400" />
-      {isDragActive ? (
-        <p className="text-lg">{DROPZONE_MESSAGES.EXCEL.DRAG_ACTIVE}</p>
-      ) : (
-        <div>
-          <p className="text-lg mb-2">{DROPZONE_MESSAGES.EXCEL.DRAG_INACTIVE}</p>
-          <p className="text-sm text-gray-500">{DROPZONE_MESSAGES.EXCEL.FILE_TYPE_HINT}</p>
-        </div>
-      )}
-    </div>
-  )
-
-  const renderFileInfo = () => {
-    if (!fileState.file) return null
-
-    return (
-      <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg">
-        <FileSpreadsheet className="h-8 w-8 text-blue-600" />
-        <div className="flex-1">
-          <p className="font-medium">{fileState.file.name}</p>
-          <p className="text-sm text-gray-500">
-            {(fileState.file.size / 1024 / 1024).toFixed(2)} MB
-          </p>
-        </div>
-        {fileState.isProcessing && (
-          <Badge variant="secondary">{MESSAGES.INFO.PROCESSING}</Badge>
-        )}
-      </div>
-    )
-  }
-
-  const renderProcessingResults = () => {
-    if (excelItems.length === 0) return null
-
-    return (
-      <div className="space-y-4">
-        <div className="flex items-center gap-2">
-          <CheckCircle className="h-5 w-5 text-green-600" />
-          <h3 className="text-lg font-medium">Excel 파일 데이터</h3>
-          <Badge variant="default">{excelItems.length}개</Badge>
-        </div>
-
-        <div className="border rounded-lg max-h-96 overflow-auto">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>ID</TableHead>
-                <TableHead>제목</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {excelItems.slice(0, UI_CONFIG.MAX_PREVIEW_ROWS).map((item, index) => (
-                <TableRow key={index}>
-                  <TableCell className="font-mono text-sm">{item.id}</TableCell>
-                  <TableCell className="max-w-md truncate" title={item.title}>
-                    {item.title}
-                  </TableCell>
-                </TableRow>
-              ))}
-              {excelItems.length > UI_CONFIG.MAX_PREVIEW_ROWS && (
-                <TableRow>
-                  <TableCell colSpan={2} className="text-center text-gray-500">
-                    ... 및 {excelItems.length - UI_CONFIG.MAX_PREVIEW_ROWS}개 더
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </div>
-
-        <div className="flex gap-2">
-          <Button 
-            onClick={() => setShowConfirmDialog(true)}
-            disabled={isSaving}
-          >
-            {isSaving ? MESSAGES.INFO.SAVING : '데이터베이스 동기화'}
-          </Button>
-          <Button variant="outline" onClick={handleReset}>
-            초기화
-          </Button>
-        </div>
-      </div>
-    )
   }
 
   const renderProcessingResult = () => {
     if (!processingResult) return null
 
     return (
-      <div className="space-y-4">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
+        className="space-y-4"
+      >
         <div className="flex items-center gap-2">
           <CheckCircle className="h-5 w-5 text-green-600" />
           <h3 className="text-lg font-medium">처리 완료</h3>
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="bg-green-50 p-4 rounded-lg">
+          <motion.div
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ delay: 0.1, duration: 0.2 }}
+            className="bg-green-50 p-4 rounded-lg"
+          >
             <div className="text-2xl font-bold text-green-600">{processingResult.addedCount}</div>
             <div className="text-sm text-green-700">새로 추가</div>
-          </div>
-          <div className="bg-red-50 p-4 rounded-lg">
+          </motion.div>
+          <motion.div
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ delay: 0.2, duration: 0.2 }}
+            className="bg-red-50 p-4 rounded-lg"
+          >
             <div className="text-2xl font-bold text-red-600">{processingResult.deletedCount}</div>
             <div className="text-sm text-red-700">삭제됨</div>
-          </div>
-          <div className="bg-blue-50 p-4 rounded-lg">
+          </motion.div>
+          <motion.div
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ delay: 0.3, duration: 0.2 }}
+            className="bg-blue-50 p-4 rounded-lg"
+          >
             <div className="text-2xl font-bold text-blue-600">{processingResult.totalExcelItems}</div>
             <div className="text-sm text-blue-700">Excel 총 개수</div>
-          </div>
-          <div className="bg-gray-50 p-4 rounded-lg">
+          </motion.div>
+          <motion.div
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ delay: 0.4, duration: 0.2 }}
+            className="bg-gray-50 p-4 rounded-lg"
+          >
             <div className="text-2xl font-bold text-gray-600">{processingResult.totalDbItems}</div>
             <div className="text-sm text-gray-700">DB 총 개수</div>
-          </div>
+          </motion.div>
         </div>
 
-        <div className="text-sm text-gray-600">
-          <p>• Excel에 있지만 DB에 없는 데이터: {processingResult.addedCount}개 추가</p>
-          <p>• DB에 있지만 Excel에 없는 데이터: {processingResult.deletedCount}개 삭제 (delect 테이블로 이동)</p>
-          <p>• 중복된 데이터: {processingResult.skippedCount}개 건너뜀</p>
-        </div>
-      </div>
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.5, duration: 0.3 }}
+          className="bg-gray-50 p-4 rounded-lg"
+        >
+          <div className="flex items-center gap-2 mb-2">
+            <Database className="h-4 w-4 text-gray-600" />
+            <span className="font-medium text-gray-700">처리 결과</span>
+          </div>
+          <div className="text-sm text-gray-600 space-y-1">
+            <p>• Excel에 있지만 DB에 없는 데이터: {processingResult.addedCount}개 추가</p>
+            <p>• DB에 있지만 Excel에 없는 데이터: {processingResult.deletedCount}개 삭제 (delect 테이블로 이동)</p>
+            <p>• 중복된 데이터: {processingResult.skippedCount}개 건너뜀</p>
+          </div>
+        </motion.div>
+      </motion.div>
     )
   }
 
-  const renderErrorMessages = () => {
-    if (fileRejections.length > 0) {
-      return (
-        <Alert>
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>
-            {MESSAGES.ERROR.INVALID_FILE_TYPE}
-          </AlertDescription>
-        </Alert>
-      )
-    }
-
-    if (fileState.error) {
-      return (
-        <Alert>
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>
-            {fileState.error}
-          </AlertDescription>
-        </Alert>
-      )
-    }
-
-    return null
-  }
-
   return (
-    <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <FileSpreadsheet className="h-5 w-5" />
-            EP 데이터 처리
-          </CardTitle>
-          <CardDescription>
-            EP 데이터 엑셀 파일을 업로드하여 데이터베이스와 동기화합니다. 
-            Excel에 있지만 DB에 없는 데이터는 추가하고, DB에 있지만 Excel에 없는 데이터는 delect 테이블로 이동합니다.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-6">
-            {renderDropzone()}
-            {renderErrorMessages()}
-            {renderFileInfo()}
-            {renderProcessingResults()}
-            {renderProcessingResult()}
-          </div>
-        </CardContent>
-      </Card>
+    <Card className="w-full">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <FileSpreadsheet className="h-5 w-5" />
+          EP 데이터 처리
+        </CardTitle>
+        <CardDescription>
+          EP 데이터 엑셀 파일을 업로드하여 데이터베이스와 동기화합니다. 
+          Excel에 있지만 DB에 없는 데이터는 추가하고, DB에 있지만 Excel에 없는 데이터는 delect 테이블로 이동합니다.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-6">
+        {/* 드래그 앤 드롭 영역 */}
+        <div
+          {...getRootProps()}
+          className={`
+            border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors
+            ${isDragActive 
+              ? 'border-blue-500 bg-blue-50' 
+              : 'border-gray-300 hover:border-gray-400'
+            }
+            ${isProcessing ? 'pointer-events-none opacity-50' : ''}
+          `}
+        >
+          <input {...getInputProps()} />
+          <motion.div
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            className="space-y-4"
+          >
+            <div className="mx-auto w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center">
+              <Upload className="h-8 w-8 text-gray-400" />
+            </div>
+            <div>
+              <p className="text-lg font-medium text-gray-900">
+                {isDragActive ? 'Excel 파일을 여기에 놓으세요' : 'Excel 파일을 드래그하거나 클릭하여 선택하세요'}
+              </p>
+              <p className="text-sm text-gray-500 mt-2">
+                ID와 제목 컬럼이 포함된 Excel 파일을 업로드하세요.
+              </p>
+            </div>
+            <Badge variant="outline" className="text-xs">
+              Excel 파일만 지원 (.xlsx, .xls)
+            </Badge>
+          </motion.div>
+        </div>
 
-      <Dialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>데이터베이스 동기화</DialogTitle>
-            <DialogDescription>
-              Excel 파일과 데이터베이스를 동기화하시겠습니까?
-              <br />
-              <span className="text-sm text-gray-500">
-                • Excel에 있지만 DB에 없는 데이터: 추가<br />
-                • DB에 있지만 Excel에 없는 데이터: delect 테이블로 이동<br />
-                • 중복된 데이터: 건너뜀
-              </span>
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowConfirmDialog(false)}>
-              취소
-            </Button>
-            <Button onClick={handleSaveToDatabase} disabled={isSaving}>
-              {isSaving ? MESSAGES.INFO.SAVING : '저장'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </div>
+        {/* 선택된 파일 표시 */}
+        <AnimatePresence>
+          {file && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ duration: 0.2 }}
+              className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border"
+            >
+              <div className="flex items-center gap-3">
+                <FileSpreadsheet className="h-5 w-5 text-blue-600" />
+                <div>
+                  <p className="font-medium text-gray-900">{file.name}</p>
+                  <p className="text-sm text-gray-500">
+                    {(file.size / 1024 / 1024).toFixed(2)} MB
+                  </p>
+                </div>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleRemoveFile}
+                disabled={isProcessing}
+                className="text-gray-400 hover:text-red-500"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {error && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.2 }}
+          >
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          </motion.div>
+        )}
+
+        <motion.div
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
+        >
+          <Button 
+            onClick={handleProcessEPData}
+            disabled={!file || isProcessing}
+            className="w-full"
+          >
+            {isProcessing ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                처리 중...
+              </>
+            ) : (
+              <>
+                <Upload className="mr-2 h-4 w-4" />
+                EP 데이터 처리
+              </>
+            )}
+          </Button>
+        </motion.div>
+
+        {isProcessing && (
+          <div className="space-y-2">
+            <div className="flex items-center justify-between text-sm">
+              <span>EP 데이터 처리 중...</span>
+              <span>잠시만 기다려주세요</span>
+            </div>
+            <Progress value={undefined} className="w-full" />
+          </div>
+        )}
+
+        <AnimatePresence>
+          {processingResult && renderProcessingResult()}
+        </AnimatePresence>
+      </CardContent>
+    </Card>
   )
 }
 

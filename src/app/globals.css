@@ -156,9 +156,21 @@
   * {
     @apply border-border outline-ring/50;
   }
+  
+  html {
+    @apply bg-background text-foreground;
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+  
   body {
     @apply bg-background text-foreground;
     transition: background-color 0.3s ease, color 0.3s ease;
+  }
+  
+  /* 다크모드에서 전체 배경 통일 */
+  .dark html,
+  .dark body {
+    @apply bg-background text-foreground;
   }
   
   /* 테마 전환 시 부드러운 애니메이션 */

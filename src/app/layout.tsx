@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import "../styles/mui-pagination-fix.css";
-import { Header } from '@/components/layout/Header'
 import { Footer } from '@/components/layout/Footer'
 import { Toaster } from '@/components/ui/sonner'
 import { ApiKeyProvider } from '@/contexts/ApiKeyContext'
@@ -40,8 +39,7 @@ export default function RootLayout({
         >
           <MuiThemeProviderWrapper>
             <ApiKeyProvider>
-              <Header />
-              <main className="flex-1 container mx-auto px-4 py-6">
+              <main className="flex-1 container mx-auto px-4 py-6 bg-background dark:bg-background">
                 {children}
               </main>
               <Footer />

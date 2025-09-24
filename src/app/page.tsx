@@ -6,10 +6,14 @@ import { DuplicateSearch } from '@/components/features/DuplicateSearch'
 import { KeywordTitleGenerator } from '@/components/features/KeywordTitleGenerator'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
 import { ApiKeyManager } from '@/components/features/ApiKeyManager'
 import ClickDataProcessor from '@/components/features/ClickDataProcessor'
 import { EPDataProcessor } from '@/components/features/EPDataProcessor'
 import { ImageLinkGenerator } from '@/components/features/ImageLinkGenerator'
+import { ThemeToggle } from '@/components/features/ThemeToggle'
+import { Database, HelpCircle, Github } from 'lucide-react'
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState<string>('process')
@@ -28,57 +32,133 @@ export default function Home() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8 space-y-6">
-      <Tabs defaultValue="process" value={activeTab} onValueChange={handleTabChange} className="w-full">
-        <TabsList className="grid grid-cols-7 w-full sm:w-auto">
-          <TabsTrigger value="process">클릭수 데이터 처리</TabsTrigger>
-          <TabsTrigger value="ep-data">EP데이터 처리</TabsTrigger>
-          <TabsTrigger value="duplicate">중복 검색기</TabsTrigger>
-          <TabsTrigger value="image-links">이미지 링크</TabsTrigger>
-          <TabsTrigger value="keywords">키워드 제목</TabsTrigger>
-          <TabsTrigger value="settings">설정</TabsTrigger>
-          <TabsTrigger value="database">데이터베이스</TabsTrigger>
-        </TabsList>
+    <div className="space-y-6 bg-background dark:bg-background">
+      {/* 상단 헤더 영역 */}
+      <div className="sticky top-0 z-50 w-full border-b bg-background/95 dark:bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 shadow-sm">
+        <div className="container flex h-16 max-w-screen-2xl items-center justify-between px-4">
+          {/* 로고 */}
+          <div className="flex items-center space-x-3 group">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground group-hover:bg-primary/90 transition-colors">
+              <Database className="h-5 w-5" />
+            </div>
+            <div className="flex flex-col">
+              <span className="text-lg font-bold tracking-tight">
+                EP 데이터 관리
+              </span>
+              <span className="text-xs text-muted-foreground hidden sm:block">
+                데이터 처리 및 분석 플랫폼
+              </span>
+            </div>
+          </div>
 
-        <TabsContent value="process" className="space-y-4">
-          <ClickDataProcessor 
-            onFileSelect={handleFileSelect}
-          />
-              </TabsContent>
+          {/* 오른쪽 액션 버튼들 */}
+          <div className="flex items-center space-x-2">
+            <Badge variant="secondary" className="hidden sm:inline-flex">
+              v2.0
+            </Badge>
+            
+            <ThemeToggle />
+            
+            <Button variant="ghost" size="icon" className="hidden sm:inline-flex">
+              <HelpCircle className="h-4 w-4" />
+              <span className="sr-only">도움말</span>
+            </Button>
+            
+            <Button variant="ghost" size="icon" className="hidden sm:inline-flex">
+              <Github className="h-4 w-4" />
+              <span className="sr-only">GitHub</span>
+            </Button>
+          </div>
+        </div>
+      </div>
 
-              <TabsContent value="ep-data" className="space-y-4">
-                <EPDataProcessor 
-                  onFileSelect={handleFileSelect}
-                />
-              </TabsContent>
+      <div className="container mx-auto px-4 py-8 space-y-6">
+        <Tabs defaultValue="process" value={activeTab} onValueChange={handleTabChange} className="w-full">
+          <TabsList className="bg-muted text-muted-foreground h-9 items-center justify-center rounded-lg p-[3px] grid grid-cols-7 w-full sm:w-auto">
+            <TabsTrigger 
+              value="process"
+              className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50 size-9"
+            >
+              클릭수 데이터 처리
+            </TabsTrigger>
+            <TabsTrigger 
+              value="ep-data"
+              className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50 size-9"
+            >
+              EP데이터 처리
+            </TabsTrigger>
+            <TabsTrigger 
+              value="duplicate"
+              className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50 size-9"
+            >
+              중복 검색기
+            </TabsTrigger>
+            <TabsTrigger 
+              value="image-links"
+              className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50 size-9"
+            >
+              이미지 링크
+            </TabsTrigger>
+            <TabsTrigger 
+              value="keywords"
+              className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50 size-9"
+            >
+              키워드 제목
+            </TabsTrigger>
+            <TabsTrigger 
+              value="settings"
+              className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50 size-9"
+            >
+              설정
+            </TabsTrigger>
+            <TabsTrigger 
+              value="database"
+              className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50 size-9"
+            >
+              데이터베이스
+            </TabsTrigger>
+          </TabsList>
 
-              <TabsContent value="duplicate">
-                <DuplicateSearch />
-              </TabsContent>
+          <TabsContent value="process" className="space-y-4">
+            <ClickDataProcessor 
+              onFileSelect={handleFileSelect}
+            />
+          </TabsContent>
 
-              <TabsContent value="image-links">
-                <ImageLinkGenerator />
-              </TabsContent>
+          <TabsContent value="ep-data" className="space-y-4">
+            <EPDataProcessor 
+              onFileSelect={handleFileSelect}
+            />
+          </TabsContent>
 
-              <TabsContent value="keywords">
-                <KeywordTitleGenerator />
-              </TabsContent>
+          <TabsContent value="duplicate">
+            <DuplicateSearch />
+          </TabsContent>
 
-              <TabsContent value="settings">
-          <Card>
-            <CardHeader>
-              <CardTitle>설정</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ApiKeyManager />
-            </CardContent>
-          </Card>
-        </TabsContent>
+          <TabsContent value="image-links">
+            <ImageLinkGenerator />
+          </TabsContent>
 
-              <TabsContent value="database">
-                <DatabaseStatus onRefresh={dbRefreshTrigger} />
-              </TabsContent>
-      </Tabs>
+          <TabsContent value="keywords">
+            <KeywordTitleGenerator />
+          </TabsContent>
+
+          <TabsContent value="settings">
+            <Card>
+              <CardHeader>
+                <CardTitle>설정</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ApiKeyManager />
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="database">
+            <DatabaseStatus onRefresh={dbRefreshTrigger} />
+          </TabsContent>
+        </Tabs>
+      </div>
     </div>
   );
 }

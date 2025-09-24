@@ -404,45 +404,47 @@ export function DatabaseStatus({ onRefresh }: DatabaseStatusProps) {
 
       {/* 테이블 데이터 관리 모달 */}
       {activeTable && (
-        <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <div>
-                <CardTitle className="flex items-center gap-2">
-                  <Eye className="h-5 w-5" />
-                  {getTableDisplayName(activeTable)} 관리
-                </CardTitle>
-                <CardDescription>
-                  {getTableDisplayName(activeTable)} 데이터를 검색, 필터링, 수정, 삭제할 수 있습니다.
-                </CardDescription>
+        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+          <Card className="w-full max-w-7xl max-h-[90vh] overflow-hidden">
+            <CardHeader className="sticky top-0 bg-background border-b">
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="flex items-center gap-2">
+                    <Eye className="h-5 w-5" />
+                    {getTableDisplayName(activeTable)} 관리
+                  </CardTitle>
+                  <CardDescription>
+                    {getTableDisplayName(activeTable)} 데이터를 검색, 필터링, 수정, 삭제할 수 있습니다.
+                  </CardDescription>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setActiveTable(null)}
+                >
+                  닫기
+                </Button>
               </div>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setActiveTable(null)}
-              >
-                닫기
-              </Button>
-            </div>
-          </CardHeader>
-          <CardContent>
-            {isTableLoading ? (
-              <div className="flex items-center justify-center py-8">
-                <RefreshCw className="h-6 w-6 animate-spin mr-2" />
-                <span>데이터를 불러오는 중...</span>
-              </div>
-            ) : (
-              <TableDataManager
-                tableName={activeTable}
-                data={tableData}
-                columns={getTableColumns(activeTable)}
-                onRefresh={() => fetchTableData(activeTable)}
-                onDelete={handleDeleteData}
-                onExport={handleExportData}
-              />
-            )}
-          </CardContent>
-        </Card>
+            </CardHeader>
+            <CardContent className="overflow-auto max-h-[calc(90vh-120px)]">
+              {isTableLoading ? (
+                <div className="flex items-center justify-center py-8">
+                  <RefreshCw className="h-6 w-6 animate-spin mr-2" />
+                  <span>데이터를 불러오는 중...</span>
+                </div>
+              ) : (
+                <TableDataManager
+                  tableName={activeTable}
+                  data={tableData}
+                  columns={getTableColumns(activeTable)}
+                  onRefresh={() => fetchTableData(activeTable)}
+                  onDelete={handleDeleteData}
+                  onExport={handleExportData}
+                />
+              )}
+            </CardContent>
+          </Card>
+        </div>
       )}
     </div>
   )

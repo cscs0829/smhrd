@@ -1,13 +1,38 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSupabaseClient } from '@/lib/supabase'
+import * as XLSX from 'xlsx'
 
 export async function POST(request: NextRequest) {
   try {
-    const { items } = await request.json()
+    const formData = await request.formData()
+    const file = formData.get('file') as File
 
-    if (!items || !Array.isArray(items)) {
+    if (!file) {
       return NextResponse.json(
-        { error: '잘못된 데이터 형식입니다' },
+        { error: '파일이 필요합니다' },
+        { status: 400 }
+      )
+    }
+
+    // Excel 파일 읽기
+    const arrayBuffer = await file.arrayBuffer()
+    const workbook = XLSX.read(arrayBuffer, { type: 'array' })
+    const sheetName = workbook.SheetNames[0]
+    const worksheet = workbook.Sheets[sheetName]
+    const jsonData = XLSX.utils.sheet_to_json(worksheet)
+
+    // id와 title 컬럼 추출
+    const items = jsonData.map((row: unknown) => {
+      const record = row as Record<string, unknown>
+      return {
+        id: String(record.id || record.ID || ''),
+        title: String(record.title || record.제목 || '')
+      }
+    }).filter(item => item.id && item.title)
+
+    if (items.length === 0) {
+      return NextResponse.json(
+        { error: 'Excel 파일에서 유효한 데이터를 찾을 수 없습니다. id와 title 컬럼을 확인해주세요.' },
         { status: 400 }
       )
     }
