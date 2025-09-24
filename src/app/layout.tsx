@@ -7,7 +7,7 @@ import { Footer } from '@/components/layout/Footer'
 import { Toaster } from '@/components/ui/sonner'
 import { ApiKeyProvider } from '@/contexts/ApiKeyContext'
 import { ThemeProvider } from 'next-themes'
-import { MuiThemeProvider } from '@/components/providers/MuiThemeProvider'
+import { MuiThemeProviderWrapper } from '@/components/providers/MuiThemeProvider'
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -38,7 +38,7 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <MuiThemeProvider>
+          <MuiThemeProviderWrapper>
             <ApiKeyProvider>
               <Header />
               <main className="flex-1 container mx-auto px-4 py-6">
@@ -47,7 +47,7 @@ export default function RootLayout({
               <Footer />
               <Toaster richColors position="top-right" />
             </ApiKeyProvider>
-          </MuiThemeProvider>
+          </MuiThemeProviderWrapper>
         </ThemeProvider>
       </body>
     </html>
