@@ -90,8 +90,8 @@ export interface DatabaseStatus {
 // 테이블 이름 상수
 export const TABLE_NAMES = {
   EP_DATA: 'ep_data',
-  DELETED_ITEMS: 'deleted_items',
-  API_KEYS: 'api_keys',
+  DELETED_ITEMS: 'delect',
+  API_KEYS: 'api',
   CITY_IMAGES: 'city_images',
   TITLES: 'titles'
 } as const

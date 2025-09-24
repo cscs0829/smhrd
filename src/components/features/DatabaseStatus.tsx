@@ -11,9 +11,7 @@ import { TableDataManager } from './TableDataManager'
 import { 
   epDataColumns, 
   deletedItemsColumns, 
-  apiKeyColumns, 
-  cityImagesColumns, 
-  titlesColumns 
+  apiKeyColumns
 } from './TableColumnsNew'
 import { ColumnDef } from '@tanstack/react-table'
 import { TABLE_NAMES, type DatabaseStatus as DbStatusType } from '@/types/database'
@@ -78,15 +76,30 @@ export function DatabaseStatus({ onRefresh }: DatabaseStatusProps) {
     try {
       setIsTableLoading(true)
       const response = await fetch(`/api/admin/table-data?table=${tableName}`)
+      
       if (!response.ok) {
-        throw new Error('테이블 데이터 조회 실패')
+        const errorData = await response.json().catch(() => ({}))
+        const errorMessage = errorData.error || '테이블 데이터 조회 실패'
+        throw new Error(errorMessage)
       }
-      const data = await response.json()
-      setTableData(data)
+      
+      const result = await response.json()
+      
+      // 데이터가 없는 경우
+      if (!result.data || result.data.length === 0) {
+        toast.info(`${getTableDisplayName(tableName)} 테이블에 데이터가 없습니다`)
+        setTableData([])
+        setActiveTable(tableName)
+        return
+      }
+      
+      setTableData(result.data)
       setActiveTable(tableName)
+      toast.success(`${getTableDisplayName(tableName)} 데이터를 불러왔습니다 (${result.total}개)`)
     } catch (error) {
       console.error('테이블 데이터 조회 오류:', error)
-      toast.error('테이블 데이터 조회에 실패했습니다')
+      const errorMessage = error instanceof Error ? error.message : '알 수 없는 오류가 발생했습니다'
+      toast.error(`${getTableDisplayName(tableName)} 데이터 조회 실패: ${errorMessage}`)
     } finally {
       setIsTableLoading(false)
     }
@@ -143,10 +156,6 @@ export function DatabaseStatus({ onRefresh }: DatabaseStatusProps) {
         return deletedItemsColumns as ColumnDef<TableRowData>[]
       case TABLE_NAMES.API_KEYS:
         return apiKeyColumns as ColumnDef<TableRowData>[]
-      case TABLE_NAMES.CITY_IMAGES:
-        return cityImagesColumns as ColumnDef<TableRowData>[]
-      case TABLE_NAMES.TITLES:
-        return titlesColumns as ColumnDef<TableRowData>[]
       default:
         return []
     }
@@ -160,10 +169,6 @@ export function DatabaseStatus({ onRefresh }: DatabaseStatusProps) {
         return '삭제된 아이템'
       case TABLE_NAMES.API_KEYS:
         return 'API 키'
-      case TABLE_NAMES.CITY_IMAGES:
-        return '도시 이미지'
-      case TABLE_NAMES.TITLES:
-        return '제목'
       default:
         return tableName
     }
@@ -305,45 +310,6 @@ export function DatabaseStatus({ onRefresh }: DatabaseStatusProps) {
                      </div>
                    </div>
 
-                   <div className="flex items-center justify-between p-4 border rounded-lg hover:shadow-md transition-shadow">
-                     <div className="flex-1">
-                       <p className="text-sm font-medium text-gray-600">도시 이미지</p>
-                       <p className="text-2xl font-bold text-purple-600">
-                         {dbStatus.tableCounts.city_images.toLocaleString()}
-                       </p>
-                     </div>
-                     <div className="flex items-center gap-2">
-                       <Database className="h-8 w-8 text-purple-400" />
-                       <Button
-                         variant="outline"
-                         size="sm"
-                         onClick={() => fetchTableData(TABLE_NAMES.CITY_IMAGES)}
-                         disabled={isTableLoading}
-                       >
-                         <Settings className="h-4 w-4" />
-                       </Button>
-                     </div>
-                   </div>
-
-                   <div className="flex items-center justify-between p-4 border rounded-lg hover:shadow-md transition-shadow">
-                     <div className="flex-1">
-                       <p className="text-sm font-medium text-gray-600">제목</p>
-                       <p className="text-2xl font-bold text-orange-600">
-                         {dbStatus.tableCounts.titles.toLocaleString()}
-                       </p>
-                     </div>
-                     <div className="flex items-center gap-2">
-                       <CheckCircle className="h-8 w-8 text-orange-400" />
-                       <Button
-                         variant="outline"
-                         size="sm"
-                         onClick={() => fetchTableData(TABLE_NAMES.TITLES)}
-                         disabled={isTableLoading}
-                       >
-                         <Settings className="h-4 w-4" />
-                       </Button>
-                     </div>
-                   </div>
                  </div>
         </CardContent>
       </Card>

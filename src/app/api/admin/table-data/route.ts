@@ -65,18 +65,24 @@ export async function GET(request: NextRequest) {
     if (error) {
       console.error('테이블 데이터 조회 오류:', error)
       return NextResponse.json(
-        { error: '데이터 조회에 실패했습니다' },
+        { 
+          error: '데이터 조회에 실패했습니다',
+          details: error.message 
+        },
         { status: 500 }
       )
     }
 
-    return NextResponse.json({
+    // 빈 테이블인 경우도 정상적으로 처리
+    const result = {
       data: data || [],
       total: count || 0,
       page,
       limit,
       totalPages: Math.ceil((count || 0) / limit)
-    })
+    }
+
+    return NextResponse.json(result)
 
   } catch (error) {
     console.error('테이블 데이터 API 오류:', error)

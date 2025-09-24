@@ -8,7 +8,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 import { MoreHorizontal, Edit, Trash2, Eye, Copy } from 'lucide-react'
 import { toast } from 'sonner'
 
-import { EpData, DeletedItem, ApiKey, CityImage, Title } from '@/types/database'
+import { EpData, DeletedItem, ApiKey } from '@/types/database'
 
 // EP 데이터 컬럼 정의
 export const epDataColumns: ColumnDef<EpData>[] = [

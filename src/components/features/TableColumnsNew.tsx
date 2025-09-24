@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge'
 import { Checkbox } from '@/components/ui/checkbox'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { MoreHorizontal, Edit, Trash2, Eye, Copy } from 'lucide-react'
-import { toast } from 'sonner'
+// import { toast } from 'sonner'
 import { format } from 'date-fns'
 
 import { EpData, DeletedItem, ApiKey, CityImage, Title } from '@/types/database'
@@ -162,7 +162,7 @@ export const deletedItemsColumns: ColumnDef<DeletedItem>[] = [
   {
     id: 'actions',
     header: '액션',
-    cell: ({ row }) => (
+    cell: () => (
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" className="h-8 w-8 p-0">
@@ -264,7 +264,7 @@ export const apiKeyColumns: ColumnDef<ApiKey>[] = [
   {
     id: 'actions',
     header: '액션',
-    cell: ({ row }) => (
+    cell: () => (
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" className="h-8 w-8 p-0">
