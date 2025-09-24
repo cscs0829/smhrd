@@ -61,28 +61,50 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: '유효한 데이터가 없습니다. ID와 제목 컬럼을 확인해주세요.' }, { status: 400 })
     }
 
-    // 기존 데이터 조회
-    const { data: existingData, error: fetchError } = await supabase
-      .from('ep_data')
-      .select('id, title')
+    // 전체 DB 데이터 페이지네이션으로 수집 (1000개 배치)
+    const batchSize = 1000
+    const allDbRows: Array<{ id: string; title: string }> = []
 
-    if (fetchError) {
-      console.error('기존 데이터 조회 오류:', fetchError)
-      return NextResponse.json({ error: '기존 데이터 조회 중 오류가 발생했습니다.' }, { status: 500 })
+    // 총 개수 조회
+    const { count: totalCount, error: countError } = await supabase
+      .from('ep_data')
+      .select('*', { count: 'exact', head: true })
+
+    if (countError) {
+      console.error('Count error:', countError)
+      return NextResponse.json({ error: '기존 데이터 개수 조회 중 오류가 발생했습니다.' }, { status: 500 })
+    }
+
+    const total = totalCount ?? 0
+    const totalBatches = Math.max(1, Math.ceil(total / batchSize))
+
+    for (let batch = 0; batch < totalBatches; batch++) {
+      const from = batch * batchSize
+      const to = Math.min(from + batchSize - 1, total - 1)
+      const { data: pageRows, error: pageError } = await supabase
+        .from('ep_data')
+        .select('id, title')
+        .range(from, to)
+
+      if (pageError) {
+        console.error('Page fetch error:', pageError)
+        return NextResponse.json({ error: '기존 데이터 조회 중 오류가 발생했습니다.' }, { status: 500 })
+      }
+      if (pageRows && pageRows.length > 0) {
+        allDbRows.push(...pageRows)
+      }
     }
 
     // 중복 및 새 데이터 분류
-    const existingIds = new Set(existingData?.map(item => item.id) || [])
-    const existingTitles = new Set(existingData?.map(item => item.title) || [])
+    const existingIds = new Set(allDbRows.map(item => item.id))
+    const existingTitles = new Set(allDbRows.map(item => item.title))
 
     const duplicates: Array<{id: string, title: string}> = []
     const newItems: Array<{id: string, title: string}> = []
     const existingItems: Array<{id: string, title: string}> = []
 
     excelItems.forEach(item => {
-      if (existingIds.has(item.id)) {
-        duplicates.push(item)
-      } else if (existingTitles.has(item.title)) {
+      if (existingIds.has(item.id) || existingTitles.has(item.title)) {
         duplicates.push(item)
       } else {
         newItems.push(item)
@@ -93,7 +115,7 @@ export async function POST(request: NextRequest) {
     const excelIds = new Set(excelItems.map(item => item.id))
     const excelTitles = new Set(excelItems.map(item => item.title))
     
-    existingData?.forEach(item => {
+    allDbRows.forEach(item => {
       if (!excelIds.has(item.id) && !excelTitles.has(item.title)) {
         existingItems.push(item)
       }
@@ -107,7 +129,7 @@ export async function POST(request: NextRequest) {
       existingItems,
       summary: {
         totalExcelItems: excelItems.length,
-        totalDbItems: existingData?.length || 0,
+        totalDbItems: total,
         newItemsCount: newItems.length,
         duplicatesCount: duplicates.length,
         existingItemsCount: existingItems.length

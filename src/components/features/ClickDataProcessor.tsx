@@ -364,7 +364,7 @@ export default function ClickDataProcessor({}: ClickDataProcessorProps) {
 
         {/* 미리보기 다이얼로그 */}
         <Dialog open={!!previewData} onOpenChange={() => setPreviewData(null)}>
-          <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+          <DialogContent className="max-w-[90vw] w-[900px] md:w-[1100px] lg:w-[1280px] max-h-[85vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>데이터 미리보기</DialogTitle>
               <DialogDescription>

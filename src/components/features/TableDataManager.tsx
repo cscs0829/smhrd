@@ -259,13 +259,13 @@ export function TableDataManager({
 
       {/* 테이블 */}
       <div className="rounded-md border">
-        <Table>
+        <Table className="w-full table-auto">
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header) => {
                   return (
-                    <TableHead key={header.id}>
+                    <TableHead key={header.id} className="text-left px-4 py-2 whitespace-nowrap">
                       {header.isPlaceholder
                         ? null
                         : flexRender(
@@ -286,7 +286,7 @@ export function TableDataManager({
                   data-state={row.getIsSelected() && "selected"}
                 >
                   {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
+                    <TableCell key={cell.id} className="text-left px-4 py-2 align-middle">
                       {flexRender(cell.column.columnDef.cell, cell.getContext())}
                     </TableCell>
                   ))}
