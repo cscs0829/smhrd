@@ -9,6 +9,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Upload, FileSpreadsheet, CheckCircle, AlertCircle } from 'lucide-react'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { motion, AnimatePresence } from 'framer-motion'
 
 import { useApi } from '@/hooks/useApi'
 import { useFileProcessor } from '@/hooks/useFileProcessor'
@@ -25,8 +26,15 @@ import {
 import { handleError } from '@/utils/errorHandler'
 
 export function EPDataProcessor({ onFileSelect }: FileProcessorProps) {
-  const [newItems, setNewItems] = useState<ExcelDataItem[]>([])
+  const [excelItems, setExcelItems] = useState<ExcelDataItem[]>([])
   const [showConfirmDialog, setShowConfirmDialog] = useState(false)
+  const [processingResult, setProcessingResult] = useState<{
+    addedCount: number
+    deletedCount: number
+    totalExcelItems: number
+    totalDbItems: number
+    skippedCount: number
+  } | null>(null)
 
   // API 훅 사용
   const { execute: saveToDatabase, isLoading: isSaving } = useApi<EPDataResponse>({
@@ -39,7 +47,8 @@ export function EPDataProcessor({ onFileSelect }: FileProcessorProps) {
     acceptedTypes: FILE_CONFIG.ALLOWED_EXCEL_TYPES as readonly FileType[],
     maxFileSize: FILE_CONFIG.MAX_SIZE_MB,
     onSuccess: (data) => {
-      setNewItems(data as ExcelDataItem[])
+      setExcelItems(data as ExcelDataItem[])
+      setProcessingResult(null) // 이전 결과 초기화
     },
     onError: (error) => {
       handleError(error, { component: 'EPDataProcessor', action: 'processFile' })
@@ -64,18 +73,23 @@ export function EPDataProcessor({ onFileSelect }: FileProcessorProps) {
   })
 
   const handleSaveToDatabase = async () => {
-    if (newItems.length === 0) return
+    if (excelItems.length === 0) return
 
     try {
       const result = await saveToDatabase('/api/admin/ep-data', {
         method: 'POST',
-        body: JSON.stringify({ items: newItems })
+        body: JSON.stringify({ items: excelItems })
       })
 
       if (result) {
-        // 성공 후 상태 초기화
-        setNewItems([])
-        resetFile()
+        // 처리 결과 저장
+        setProcessingResult({
+          addedCount: result.addedCount || 0,
+          deletedCount: result.deletedCount || 0,
+          totalExcelItems: result.totalExcelItems || 0,
+          totalDbItems: result.totalDbItems || 0,
+          skippedCount: result.skippedCount || 0
+        })
       }
     } catch (error) {
       handleError(error, { component: 'EPDataProcessor', action: 'saveToDatabase' })
@@ -85,7 +99,8 @@ export function EPDataProcessor({ onFileSelect }: FileProcessorProps) {
   }
 
   const handleReset = () => {
-    setNewItems([])
+    setExcelItems([])
+    setProcessingResult(null)
     resetFile()
   }
 
@@ -138,14 +153,14 @@ export function EPDataProcessor({ onFileSelect }: FileProcessorProps) {
   }
 
   const renderProcessingResults = () => {
-    if (newItems.length === 0) return null
+    if (excelItems.length === 0) return null
 
     return (
       <div className="space-y-4">
         <div className="flex items-center gap-2">
           <CheckCircle className="h-5 w-5 text-green-600" />
-          <h3 className="text-lg font-medium">새로운 아이템 발견</h3>
-          <Badge variant="default">{newItems.length}개</Badge>
+          <h3 className="text-lg font-medium">Excel 파일 데이터</h3>
+          <Badge variant="default">{excelItems.length}개</Badge>
         </div>
 
         <div className="border rounded-lg max-h-96 overflow-auto">
@@ -157,7 +172,7 @@ export function EPDataProcessor({ onFileSelect }: FileProcessorProps) {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {newItems.slice(0, UI_CONFIG.MAX_PREVIEW_ROWS).map((item, index) => (
+              {excelItems.slice(0, UI_CONFIG.MAX_PREVIEW_ROWS).map((item, index) => (
                 <TableRow key={index}>
                   <TableCell className="font-mono text-sm">{item.id}</TableCell>
                   <TableCell className="max-w-md truncate" title={item.title}>
@@ -165,10 +180,10 @@ export function EPDataProcessor({ onFileSelect }: FileProcessorProps) {
                   </TableCell>
                 </TableRow>
               ))}
-              {newItems.length > UI_CONFIG.MAX_PREVIEW_ROWS && (
+              {excelItems.length > UI_CONFIG.MAX_PREVIEW_ROWS && (
                 <TableRow>
                   <TableCell colSpan={2} className="text-center text-gray-500">
-                    ... 및 {newItems.length - UI_CONFIG.MAX_PREVIEW_ROWS}개 더
+                    ... 및 {excelItems.length - UI_CONFIG.MAX_PREVIEW_ROWS}개 더
                   </TableCell>
                 </TableRow>
               )}
@@ -181,11 +196,49 @@ export function EPDataProcessor({ onFileSelect }: FileProcessorProps) {
             onClick={() => setShowConfirmDialog(true)}
             disabled={isSaving}
           >
-            {isSaving ? MESSAGES.INFO.SAVING : '데이터베이스에 저장'}
+            {isSaving ? MESSAGES.INFO.SAVING : '데이터베이스 동기화'}
           </Button>
           <Button variant="outline" onClick={handleReset}>
             초기화
           </Button>
+        </div>
+      </div>
+    )
+  }
+
+  const renderProcessingResult = () => {
+    if (!processingResult) return null
+
+    return (
+      <div className="space-y-4">
+        <div className="flex items-center gap-2">
+          <CheckCircle className="h-5 w-5 text-green-600" />
+          <h3 className="text-lg font-medium">처리 완료</h3>
+        </div>
+
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="bg-green-50 p-4 rounded-lg">
+            <div className="text-2xl font-bold text-green-600">{processingResult.addedCount}</div>
+            <div className="text-sm text-green-700">새로 추가</div>
+          </div>
+          <div className="bg-red-50 p-4 rounded-lg">
+            <div className="text-2xl font-bold text-red-600">{processingResult.deletedCount}</div>
+            <div className="text-sm text-red-700">삭제됨</div>
+          </div>
+          <div className="bg-blue-50 p-4 rounded-lg">
+            <div className="text-2xl font-bold text-blue-600">{processingResult.totalExcelItems}</div>
+            <div className="text-sm text-blue-700">Excel 총 개수</div>
+          </div>
+          <div className="bg-gray-50 p-4 rounded-lg">
+            <div className="text-2xl font-bold text-gray-600">{processingResult.totalDbItems}</div>
+            <div className="text-sm text-gray-700">DB 총 개수</div>
+          </div>
+        </div>
+
+        <div className="text-sm text-gray-600">
+          <p>• Excel에 있지만 DB에 없는 데이터: {processingResult.addedCount}개 추가</p>
+          <p>• DB에 있지만 Excel에 없는 데이터: {processingResult.deletedCount}개 삭제 (delect 테이블로 이동)</p>
+          <p>• 중복된 데이터: {processingResult.skippedCount}개 건너뜀</p>
         </div>
       </div>
     )
@@ -226,7 +279,8 @@ export function EPDataProcessor({ onFileSelect }: FileProcessorProps) {
             EP 데이터 처리
           </CardTitle>
           <CardDescription>
-            EP 데이터 엑셀 파일을 업로드하여 새로운 ID와 제목을 데이터베이스에 추가합니다.
+            EP 데이터 엑셀 파일을 업로드하여 데이터베이스와 동기화합니다. 
+            Excel에 있지만 DB에 없는 데이터는 추가하고, DB에 있지만 Excel에 없는 데이터는 delect 테이블로 이동합니다.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -235,6 +289,7 @@ export function EPDataProcessor({ onFileSelect }: FileProcessorProps) {
             {renderErrorMessages()}
             {renderFileInfo()}
             {renderProcessingResults()}
+            {renderProcessingResult()}
           </div>
         </CardContent>
       </Card>
@@ -242,12 +297,14 @@ export function EPDataProcessor({ onFileSelect }: FileProcessorProps) {
       <Dialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>데이터베이스에 저장</DialogTitle>
+            <DialogTitle>데이터베이스 동기화</DialogTitle>
             <DialogDescription>
-              {newItems.length}개의 새로운 아이템을 데이터베이스에 저장하시겠습니까?
+              Excel 파일과 데이터베이스를 동기화하시겠습니까?
               <br />
               <span className="text-sm text-gray-500">
-                기존에 있는 ID는 건너뛰고 새로운 ID만 추가됩니다.
+                • Excel에 있지만 DB에 없는 데이터: 추가<br />
+                • DB에 있지만 Excel에 없는 데이터: delect 테이블로 이동<br />
+                • 중복된 데이터: 건너뜀
               </span>
             </DialogDescription>
           </DialogHeader>

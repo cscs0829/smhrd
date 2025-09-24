@@ -7,7 +7,7 @@ import { KeywordTitleGenerator } from '@/components/features/KeywordTitleGenerat
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { ApiKeyManager } from '@/components/features/ApiKeyManager'
-import { ClickDataProcessor } from '@/components/features/ClickDataProcessor'
+import ClickDataProcessor from '@/components/features/ClickDataProcessor'
 import { EPDataProcessor } from '@/components/features/EPDataProcessor'
 import { ImageLinkGenerator } from '@/components/features/ImageLinkGenerator'
 

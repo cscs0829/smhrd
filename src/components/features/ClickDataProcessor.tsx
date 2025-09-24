@@ -1,286 +1,250 @@
 'use client'
 
-import React, { useState } from 'react'
-import { useDropzone } from 'react-dropzone'
+import { useState } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Upload, FileSpreadsheet, AlertCircle, Trash2 } from 'lucide-react'
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-
-import { useApi } from '@/hooks/useApi'
-import { useFileProcessor } from '@/hooks/useFileProcessor'
+import { Progress } from '@/components/ui/progress'
 import { 
-  FileProcessorProps, 
-  CSVDataItem, 
-  MoveToDeleteResponse,
-  FILE_CONFIG,
-  DROPZONE_MESSAGES,
-  MESSAGES,
-  UI_CONFIG,
-  TABLE_HEADERS,
-  FileType
-} from '@/types'
-import { handleError } from '@/utils/errorHandler'
+  Upload, 
+  FileText, 
+  CheckCircle, 
+  AlertCircle, 
+  Loader2,
+  Database
+} from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { ClickDataResponse } from '@/types'
 
-export function ClickDataProcessor({ onFileSelect }: FileProcessorProps) {
-  const [zeroClickItems, setZeroClickItems] = useState<CSVDataItem[]>([])
-  const [showConfirmDialog, setShowConfirmDialog] = useState(false)
+interface ClickDataProcessorProps {
+  onFileSelect?: () => void
+}
 
-  // API 훅 사용
-  const { execute: moveToDelete, isLoading: isMoving } = useApi<MoveToDeleteResponse>({
-    showSuccessToast: true,
-    successMessage: MESSAGES.SUCCESS.DATA_DELETED
-  })
+export default function ClickDataProcessor({}: ClickDataProcessorProps) {
+  const [file, setFile] = useState<File | null>(null)
+  const [isProcessing, setIsProcessing] = useState(false)
+  const [processingResult, setProcessingResult] = useState<ClickDataResponse | null>(null)
+  const [error, setError] = useState<string | null>(null)
 
-  // 파일 처리 훅 사용
-  const { state: fileState, processFile, reset: resetFile } = useFileProcessor<CSVDataItem[]>({
-    acceptedTypes: FILE_CONFIG.ALLOWED_CSV_TYPES as readonly FileType[],
-    maxFileSize: FILE_CONFIG.MAX_SIZE_MB,
-    onSuccess: (data) => {
-      // 클릭수가 0인 아이템만 필터링
-      const csvData = data as CSVDataItem[]
-      const zeroClicks = csvData.filter((item: CSVDataItem) => item.clicks === 0)
-      setZeroClickItems(zeroClicks)
-    },
-    onError: (error) => {
-      handleError(error, { component: 'ClickDataProcessor', action: 'processFile' })
-    }
-  })
-
-  const onDrop = React.useCallback((acceptedFiles: File[]) => {
-    const selectedFile = acceptedFiles[0]
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFile = e.target.files?.[0]
     if (selectedFile) {
-      onFileSelect(selectedFile)
-      processFile(selectedFile)
+      if (selectedFile.type === 'text/csv' || selectedFile.name.endsWith('.csv')) {
+        setFile(selectedFile)
+        setError(null)
+        setProcessingResult(null)
+      } else {
+        setError('CSV 파일만 업로드 가능합니다.')
+        setFile(null)
+      }
     }
-  }, [onFileSelect, processFile])
+  }
 
-  const { getRootProps, getInputProps, isDragActive, isDragAccept, isDragReject, fileRejections } = useDropzone({
-    onDrop,
-    accept: {
-      'text/csv': ['.csv'],
-      'application/vnd.ms-excel': ['.csv']
-    },
-    multiple: false
-  })
+  const handleProcessClickData = async () => {
+    if (!file) {
+      setError('파일을 선택해주세요.')
+      return
+    }
 
-  const handleMoveToDelete = async () => {
-    if (zeroClickItems.length === 0) return
+    setIsProcessing(true)
+    setError(null)
+    setProcessingResult(null)
 
     try {
-      const result = await moveToDelete('/api/admin/move-to-delete', {
+      const formData = new FormData()
+      formData.append('file', file)
+
+      const response = await fetch('/api/admin/click-data', {
         method: 'POST',
-        body: JSON.stringify({ items: zeroClickItems })
+        body: formData,
       })
 
-      if (result) {
-        // 성공 후 상태 초기화
-        setZeroClickItems([])
-        resetFile()
+      const result = await response.json()
+
+      if (result.success) {
+        setProcessingResult(result)
+      } else {
+        setError(result.error || '클릭수 데이터 처리 중 오류가 발생했습니다.')
       }
     } catch (error) {
-      handleError(error, { component: 'ClickDataProcessor', action: 'moveToDelete' })
+      console.error('클릭수 데이터 처리 오류:', error)
+      setError('클릭수 데이터 처리 중 오류가 발생했습니다.')
     } finally {
-      setShowConfirmDialog(false)
+      setIsProcessing(false)
     }
   }
 
-  const handleReset = () => {
-    setZeroClickItems([])
-    resetFile()
-  }
-
-  const getDropzoneClassName = () => {
-    let className = "border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors "
-    if (isDragActive) {
-      className += "border-blue-400 bg-blue-50"
-    } else if (isDragAccept) {
-      className += "border-green-400 bg-green-50"
-    } else if (isDragReject) {
-      className += "border-red-400 bg-red-50"
-    } else {
-      className += "border-gray-300 hover:border-gray-400"
-    }
-    return className
-  }
-
-  const renderDropzone = () => (
-    <div {...getRootProps()} className={getDropzoneClassName()}>
-      <input {...getInputProps()} />
-      <Upload className="h-12 w-12 mx-auto mb-4 text-gray-400" />
-      {isDragActive ? (
-        <p className="text-lg">{DROPZONE_MESSAGES.CSV.DRAG_ACTIVE}</p>
-      ) : (
-        <div>
-          <p className="text-lg mb-2">{DROPZONE_MESSAGES.CSV.DRAG_INACTIVE}</p>
-          <p className="text-sm text-gray-500">{DROPZONE_MESSAGES.CSV.FILE_TYPE_HINT}</p>
-        </div>
-      )}
-    </div>
-  )
-
-  const renderFileInfo = () => {
-    if (!fileState.file) return null
+  const renderProcessingResult = () => {
+    if (!processingResult) return null
 
     return (
-      <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg">
-        <FileSpreadsheet className="h-8 w-8 text-blue-600" />
-        <div className="flex-1">
-          <p className="font-medium">{fileState.file.name}</p>
-          <p className="text-sm text-gray-500">
-            {(fileState.file.size / 1024 / 1024).toFixed(2)} MB
-          </p>
-        </div>
-        {fileState.isProcessing && (
-          <Badge variant="secondary">{MESSAGES.INFO.PROCESSING}</Badge>
-        )}
-      </div>
-    )
-  }
-
-  const renderProcessingResults = () => {
-    if (zeroClickItems.length === 0) return null
-
-    return (
-      <div className="space-y-4">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
+        className="space-y-4"
+      >
         <div className="flex items-center gap-2">
-          <AlertCircle className="h-5 w-5 text-red-600" />
-          <h3 className="text-lg font-medium">클릭수 0인 아이템</h3>
-          <Badge variant="destructive">{zeroClickItems.length}개</Badge>
+          <CheckCircle className="h-5 w-5 text-green-600" />
+          <h3 className="text-lg font-medium">처리 완료</h3>
         </div>
 
-        <Alert>
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>
-            이 아이템들은 EP 데이터 테이블에서 삭제 테이블로 이동됩니다.
-          </AlertDescription>
-        </Alert>
-
-        <div className="border rounded-lg max-h-96 overflow-auto">
-          <Table>
-            <TableHeader>
-            {TABLE_HEADERS.CLICK_DATA.map((header: { key: string; label: string }) => (
-              <TableHead key={header.key}>{header.label}</TableHead>
-            ))}
-            </TableHeader>
-            <TableBody>
-              {zeroClickItems.slice(0, UI_CONFIG.MAX_PREVIEW_ROWS).map((item, index) => (
-                <TableRow key={index}>
-                  <TableCell className="font-mono text-sm">{item.productId}</TableCell>
-                  <TableCell className="max-w-md truncate" title={item.productName}>
-                    {item.productName}
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant="destructive">{item.clicks}</Badge>
-                  </TableCell>
-                </TableRow>
-              ))}
-              {zeroClickItems.length > UI_CONFIG.MAX_PREVIEW_ROWS && (
-                <TableRow>
-                  <TableCell colSpan={3} className="text-center text-gray-500">
-                    ... 및 {zeroClickItems.length - UI_CONFIG.MAX_PREVIEW_ROWS}개 더
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </div>
-
-        <div className="flex gap-2">
-          <Button 
-            onClick={() => setShowConfirmDialog(true)}
-            disabled={isMoving}
-            variant="destructive"
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <motion.div
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ delay: 0.1, duration: 0.2 }}
+            className="bg-blue-50 p-4 rounded-lg"
           >
-            {isMoving ? MESSAGES.INFO.PROCESSING : '삭제 테이블로 이동'}
-          </Button>
-          <Button variant="outline" onClick={handleReset}>
-            초기화
-          </Button>
+            <div className="text-2xl font-bold text-blue-600">{processingResult.totalCsvItems}</div>
+            <div className="text-sm text-blue-700">CSV 총 개수</div>
+          </motion.div>
+          <motion.div
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ delay: 0.2, duration: 0.2 }}
+            className="bg-orange-50 p-4 rounded-lg"
+          >
+            <div className="text-2xl font-bold text-orange-600">{processingResult.zeroClickItems}</div>
+            <div className="text-sm text-orange-700">클릭수 0개</div>
+          </motion.div>
+          <motion.div
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ delay: 0.3, duration: 0.2 }}
+            className="bg-green-50 p-4 rounded-lg"
+          >
+            <div className="text-2xl font-bold text-green-600">{processingResult.movedToDelect}</div>
+            <div className="text-sm text-green-700">ep_data에서 이동</div>
+          </motion.div>
+          <motion.div
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ delay: 0.4, duration: 0.2 }}
+            className="bg-red-50 p-4 rounded-lg"
+          >
+            <div className="text-2xl font-bold text-red-600">{processingResult.notFoundInEpData}</div>
+            <div className="text-sm text-red-700">ep_data에 없음</div>
+          </motion.div>
         </div>
-      </div>
+
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.5, duration: 0.3 }}
+          className="bg-gray-50 p-4 rounded-lg"
+        >
+          <div className="flex items-center gap-2 mb-2">
+            <Database className="h-4 w-4 text-gray-600" />
+            <span className="font-medium text-gray-700">처리 결과</span>
+          </div>
+          <div className="text-sm text-gray-600 space-y-1">
+            <p>• CSV 파일 총 {processingResult.totalCsvItems}개 상품 중 클릭수 0개: {processingResult.zeroClickItems}개</p>
+            <p>• ep_data에 있던 데이터: {processingResult.movedToDelect}개 → delect 테이블로 이동</p>
+            <p>• ep_data에 없던 데이터: {processingResult.notFoundInEpData}개 → delect 테이블에 추가</p>
+            <p>• 총 {processingResult.totalMovedToDelect}개 데이터가 delect 테이블로 이동되었습니다.</p>
+          </div>
+        </motion.div>
+      </motion.div>
     )
-  }
-
-  const renderErrorMessages = () => {
-    if (fileRejections.length > 0) {
-      return (
-        <Alert>
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>
-            {MESSAGES.ERROR.INVALID_FILE_TYPE}
-          </AlertDescription>
-        </Alert>
-      )
-    }
-
-    if (fileState.error) {
-      return (
-        <Alert>
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>
-            {fileState.error}
-          </AlertDescription>
-        </Alert>
-      )
-    }
-
-    return null
   }
 
   return (
-    <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Trash2 className="h-5 w-5" />
-            클릭수 데이터 처리
-          </CardTitle>
-          <CardDescription>
-            클릭수 CSV 파일을 업로드하여 클릭수가 0인 상품들을 삭제 테이블로 이동합니다.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-6">
-            {renderDropzone()}
-            {renderErrorMessages()}
-            {renderFileInfo()}
-            {renderProcessingResults()}
-          </div>
-        </CardContent>
-      </Card>
+    <Card className="w-full">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <FileText className="h-5 w-5" />
+          클릭수 데이터 처리
+        </CardTitle>
+        <CardDescription>
+          CSV 파일에서 클릭수가 0인 상품들을 찾아서 delect 테이블로 이동시킵니다.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-6">
+        <div className="space-y-2">
+          <Label htmlFor="csv-file">CSV 파일 선택</Label>
+          <Input
+            id="csv-file"
+            type="file"
+            accept=".csv"
+            onChange={handleFileChange}
+            disabled={isProcessing}
+          />
+          <p className="text-sm text-gray-500">
+            상품ID, 상품명, 클릭수 컬럼이 포함된 CSV 파일을 업로드하세요.
+          </p>
+        </div>
 
-      <Dialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>삭제 테이블로 이동</DialogTitle>
-            <DialogDescription>
-              {zeroClickItems.length}개의 클릭수 0인 아이템을 삭제 테이블로 이동하시겠습니까?
-              <br />
-              <span className="text-sm text-red-500">
-                {MESSAGES.WARNING.DATA_LOSS}
-              </span>
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowConfirmDialog(false)}>
-              취소
-            </Button>
-            <Button 
-              onClick={handleMoveToDelete} 
-              disabled={isMoving}
-              variant="destructive"
+        <AnimatePresence>
+          {file && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ duration: 0.2 }}
+              className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg"
             >
-              {isMoving ? MESSAGES.INFO.PROCESSING : '이동'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </div>
+              <FileText className="h-4 w-4 text-gray-600" />
+              <span className="text-sm font-medium">{file.name}</span>
+              <span className="text-sm text-gray-500">
+                ({(file.size / 1024).toFixed(1)} KB)
+              </span>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {error && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.2 }}
+          >
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          </motion.div>
+        )}
+
+        <motion.div
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
+        >
+          <Button 
+            onClick={handleProcessClickData}
+            disabled={!file || isProcessing}
+            className="w-full"
+          >
+            {isProcessing ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                처리 중...
+              </>
+            ) : (
+              <>
+                <Upload className="mr-2 h-4 w-4" />
+                클릭수 데이터 처리
+              </>
+            )}
+          </Button>
+        </motion.div>
+
+        {isProcessing && (
+          <div className="space-y-2">
+            <div className="flex items-center justify-between text-sm">
+              <span>클릭수 데이터 처리 중...</span>
+              <span>잠시만 기다려주세요</span>
+            </div>
+            <Progress value={undefined} className="w-full" />
+          </div>
+        )}
+
+        <AnimatePresence>
+          {processingResult && renderProcessingResult()}
+        </AnimatePresence>
+      </CardContent>
+    </Card>
   )
 }
-
-export default ClickDataProcessor

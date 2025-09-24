@@ -1,232 +1,96 @@
 'use client'
 
-import React from 'react'
+import React, { useState } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Search, CheckCircle, XCircle, AlertCircle } from 'lucide-react'
+import { Progress } from '@/components/ui/progress'
+import { Search, CheckCircle, XCircle, AlertCircle, Loader2, Database, Trash2 } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
 
-import { useApi } from '@/hooks/useApi'
-import { useForm } from '@/hooks/useForm'
-import { 
-  DuplicateCheckResponse,
-  MESSAGES,
-  VALIDATION_CONFIG
-} from '@/types'
-import { handleError } from '@/utils/errorHandler'
-import { validators } from '@/utils/validation'
-
-interface SearchFormData extends Record<string, unknown> {
-  title: string
+interface DuplicateCheckResponse {
+  success: boolean
+  exactMatch: boolean
+  match?: {
+    id: string
+    title: string
+    source: 'ep_data' | 'delect'
+  }
+  similarMatches: Array<{
+    id: string
+    title: string
+    source: 'ep_data' | 'delect'
+    similarity: number
+    score: number
+  }>
+  message: string
 }
 
 export function DuplicateSearch() {
-  // API 훅 사용
-  const { data: searchResult, isLoading, execute: searchDuplicates, reset: resetSearch } = useApi<DuplicateCheckResponse>({
-    showSuccessToast: false, // 성공/실패에 따른 토스트는 별도
-    showErrorToast: true
-  })
+  const [title, setTitle] = useState('')
+  const [isLoading, setIsLoading] = useState(false)
+  const [result, setResult] = useState<DuplicateCheckResponse | null>(null)
+  const [error, setError] = useState<string | null>(null)
 
-  // 폼 훅 사용
-  const {
-    values,
-    errors,
-    isValid,
-    setValue,
-    handleSubmit,
-    reset: resetForm
-  } = useForm<SearchFormData>({
-    initialValues: { title: '' },
-    validate: (values) => ({
-      title: validators.required(values.title) || 
-             validators.minLength(values.title, VALIDATION_CONFIG.MIN_TITLE_LENGTH) ||
-             validators.maxLength(values.title, VALIDATION_CONFIG.MAX_TITLE_LENGTH)
-    }),
-    onSubmit: async (values) => {
-      try {
-        const result = await searchDuplicates('/api/admin/check-duplicates', {
-          method: 'POST',
-          body: JSON.stringify({ title: values.title.trim() })
-        })
-
-        if (result) {
-          // 검색 결과에 따른 토스트 메시지
-          if (result.foundInEpData || result.foundInDelete) {
-            // 토스트는 useApi에서 자동으로 표시됨
-          } else {
-            // 중복되지 않은 경우 성공 메시지 표시
-            console.log('중복되지 않은 제목입니다')
-          }
-        }
-      } catch (error) {
-        handleError(error, { component: 'DuplicateSearch', action: 'searchDuplicates' })
-      }
+  const handleSearch = async () => {
+    if (!title.trim()) {
+      setError('제목을 입력해주세요.')
+      return
     }
-  })
+
+    setIsLoading(true)
+    setError(null)
+    setResult(null)
+
+    try {
+      const response = await fetch('/api/admin/duplicate-check', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ title: title.trim() }),
+      })
+
+      const data = await response.json()
+
+      if (data.success) {
+        setResult(data)
+      } else {
+        setError(data.error || '검색 중 오류가 발생했습니다.')
+      }
+    } catch (error) {
+      console.error('중복 검사 오류:', error)
+      setError('검색 중 오류가 발생했습니다.')
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
   const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
-      handleSubmit(e)
+      handleSearch()
     }
   }
 
   const handleReset = () => {
-    resetForm()
-    resetSearch()
+    setTitle('')
+    setResult(null)
+    setError(null)
   }
 
-  const getStatusBadge = (found: boolean) => {
-    return found ? (
-      <Badge variant="destructive" className="flex items-center gap-1">
-        <XCircle className="h-3 w-3" />
-        중복
-      </Badge>
-    ) : (
-      <Badge variant="default" className="flex items-center gap-1">
-        <CheckCircle className="h-3 w-3" />
-        없음
-      </Badge>
-    )
+  const getSourceIcon = (source: 'ep_data' | 'delect') => {
+    return source === 'ep_data' ? <Database className="h-4 w-4" /> : <Trash2 className="h-4 w-4" />
   }
 
-  const renderSearchForm = () => (
-    <div className="space-y-2">
-      <Label htmlFor="search-title">검색할 제목</Label>
-      <div className="flex gap-2">
-        <Input
-          id="search-title"
-          placeholder="중복을 확인할 제목을 입력하세요"
-          value={values.title}
-          onChange={(e) => setValue('title', e.target.value)}
-          onKeyPress={handleKeyPress}
-          className={errors.title ? 'border-red-500' : ''}
-        />
-        <Button 
-          onClick={handleSubmit}
-          disabled={isLoading || !isValid || !values.title.trim()}
-        >
-          {isLoading ? MESSAGES.INFO.SEARCHING : '검색'}
-        </Button>
-      </div>
-      {errors.title && (
-        <p className="text-sm text-red-500">{errors.title}</p>
-      )}
-    </div>
-  )
+  const getSourceLabel = (source: 'ep_data' | 'delect') => {
+    return source === 'ep_data' ? 'EP 데이터' : '삭제 테이블'
+  }
 
-  const renderSearchResults = () => {
-    if (!searchResult) return null
-
-    return (
-      <div className="space-y-4">
-        <div className="flex items-center gap-2">
-          <h3 className="text-lg font-medium">검색 결과</h3>
-          <Badge variant="outline">{searchResult.title}</Badge>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {/* EP 데이터 테이블 결과 */}
-          <Card className="border-l-4 border-l-blue-500">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base flex items-center gap-2">
-                EP 데이터 테이블
-                {getStatusBadge(searchResult.foundInEpData)}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {searchResult.foundInEpData ? (
-                <div className="space-y-2">
-                  <Alert>
-                    <AlertCircle className="h-4 w-4" />
-                    <AlertDescription>
-                      중복된 제목이 발견되었습니다.
-                    </AlertDescription>
-                  </Alert>
-                  {searchResult.epDataId && (
-                    <div className="text-sm">
-                      <strong>ID:</strong> 
-                      <span className="font-mono ml-2">{searchResult.epDataId}</span>
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <div className="text-sm text-gray-600">
-                  중복된 제목이 없습니다.
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* 삭제 테이블 결과 */}
-          <Card className="border-l-4 border-l-red-500">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base flex items-center gap-2">
-                삭제 테이블
-                {getStatusBadge(searchResult.foundInDelete)}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {searchResult.foundInDelete ? (
-                <div className="space-y-2">
-                  <Alert>
-                    <AlertCircle className="h-4 w-4" />
-                    <AlertDescription>
-                      삭제된 제목이 발견되었습니다.
-                    </AlertDescription>
-                  </Alert>
-                  {searchResult.deleteId && (
-                    <div className="text-sm">
-                      <strong>ID:</strong> 
-                      <span className="font-mono ml-2">{searchResult.deleteId}</span>
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <div className="text-sm text-gray-600">
-                  삭제된 제목이 없습니다.
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* 전체 상태 요약 */}
-        <Card className={
-          searchResult.foundInEpData || searchResult.foundInDelete 
-            ? "border-red-200 bg-red-50" 
-            : "border-green-200 bg-green-50"
-        }>
-          <CardContent className="pt-4">
-            <div className="flex items-center gap-2">
-              {searchResult.foundInEpData || searchResult.foundInDelete ? (
-                <>
-                  <XCircle className="h-5 w-5 text-red-600" />
-                  <span className="font-medium text-red-800">
-                    중복된 제목입니다. 다른 제목을 사용하세요.
-                  </span>
-                </>
-              ) : (
-                <>
-                  <CheckCircle className="h-5 w-5 text-green-600" />
-                  <span className="font-medium text-green-800">
-                    중복되지 않은 제목입니다. 사용 가능합니다.
-                  </span>
-                </>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={handleReset}>
-            새로 검색
-          </Button>
-        </div>
-      </div>
-    )
+  const getSourceColor = (source: 'ep_data' | 'delect') => {
+    return source === 'ep_data' ? 'text-blue-600' : 'text-red-600'
   }
 
   return (
@@ -238,13 +102,200 @@ export function DuplicateSearch() {
             제목 중복 검색
           </CardTitle>
           <CardDescription>
-            입력한 제목이 EP 데이터 테이블과 삭제 테이블에 중복되는지 확인합니다.
+            입력한 제목이 EP 데이터 테이블과 삭제 테이블에 중복되는지 확인하고, 유사한 제목도 찾아드립니다.
           </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-6">
-            {renderSearchForm()}
-            {renderSearchResults()}
+            {/* 검색 폼 */}
+            <div className="space-y-2">
+              <Label htmlFor="search-title">검색할 제목</Label>
+              <div className="flex gap-2">
+                <Input
+                  id="search-title"
+                  placeholder="중복을 확인할 제목을 입력하세요"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  onKeyPress={handleKeyPress}
+                  disabled={isLoading}
+                />
+                <Button 
+                  onClick={handleSearch}
+                  disabled={isLoading || !title.trim()}
+                >
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      검색 중...
+                    </>
+                  ) : (
+                    <>
+                      <Search className="mr-2 h-4 w-4" />
+                      검색
+                    </>
+                  )}
+                </Button>
+              </div>
+            </div>
+
+            {/* 로딩 상태 */}
+            {isLoading && (
+              <div className="space-y-2">
+                <div className="flex items-center justify-between text-sm">
+                  <span>데이터베이스에서 검색 중...</span>
+                  <span>잠시만 기다려주세요</span>
+                </div>
+                <Progress value={undefined} className="w-full" />
+              </div>
+            )}
+
+            {/* 오류 메시지 */}
+            {error && (
+              <Alert variant="destructive">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
+
+            {/* 검색 결과 */}
+            <AnimatePresence>
+              {result && (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  transition={{ duration: 0.3 }}
+                  className="space-y-4"
+                >
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-lg font-medium">검색 결과</h3>
+                    <Badge variant="outline">{title}</Badge>
+                  </div>
+
+                  {/* 정확한 일치 */}
+                  {result.exactMatch && result.match && (
+                    <motion.div
+                      initial={{ scale: 0.95 }}
+                      animate={{ scale: 1 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      <Alert className="border-red-200 bg-red-50">
+                        <XCircle className="h-4 w-4 text-red-600" />
+                        <AlertDescription className="text-red-800">
+                          <div className="font-medium mb-2">정확히 일치하는 제목을 찾았습니다!</div>
+                          <div className="flex items-center gap-2 text-sm">
+                            {getSourceIcon(result.match.source)}
+                            <span className={getSourceColor(result.match.source)}>
+                              {getSourceLabel(result.match.source)}
+                            </span>
+                            <span className="text-gray-600">ID: {result.match.id}</span>
+                          </div>
+                        </AlertDescription>
+                      </Alert>
+                    </motion.div>
+                  )}
+
+                  {/* 유사한 제목들 */}
+                  {result.similarMatches.length > 0 && (
+                    <motion.div
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ delay: 0.1, duration: 0.3 }}
+                    >
+                      <Card>
+                        <CardHeader>
+                          <CardTitle className="text-base">
+                            유사한 제목 ({result.similarMatches.length}개)
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="space-y-3">
+                            {result.similarMatches.map((match, index) => (
+                              <motion.div
+                                key={match.id}
+                                initial={{ opacity: 0, x: -20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                transition={{ delay: index * 0.1, duration: 0.2 }}
+                                className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50 transition-colors"
+                              >
+                                <div className="flex items-center gap-3">
+                                  {getSourceIcon(match.source)}
+                                  <div>
+                                    <div className="font-medium">{match.title}</div>
+                                    <div className="flex items-center gap-2 text-sm text-gray-500">
+                                      <span className={getSourceColor(match.source)}>
+                                        {getSourceLabel(match.source)}
+                                      </span>
+                                      <span>•</span>
+                                      <span>ID: {match.id}</span>
+                                    </div>
+                                  </div>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <Badge 
+                                    variant={match.similarity >= 80 ? "destructive" : match.similarity >= 60 ? "default" : "secondary"}
+                                  >
+                                    {match.similarity}% 유사
+                                  </Badge>
+                                </div>
+                              </motion.div>
+                            ))}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </motion.div>
+                  )}
+
+                  {/* 전체 상태 요약 */}
+                  <motion.div
+                    initial={{ scale: 0.95 }}
+                    animate={{ scale: 1 }}
+                    transition={{ delay: 0.2, duration: 0.2 }}
+                  >
+                    <Card className={
+                      result.exactMatch 
+                        ? "border-red-200 bg-red-50" 
+                        : result.similarMatches.length > 0
+                        ? "border-yellow-200 bg-yellow-50"
+                        : "border-green-200 bg-green-50"
+                    }>
+                      <CardContent className="pt-4">
+                        <div className="flex items-center gap-2">
+                          {result.exactMatch ? (
+                            <>
+                              <XCircle className="h-5 w-5 text-red-600" />
+                              <span className="font-medium text-red-800">
+                                정확히 일치하는 제목이 있습니다. 다른 제목을 사용하세요.
+                              </span>
+                            </>
+                          ) : result.similarMatches.length > 0 ? (
+                            <>
+                              <AlertCircle className="h-5 w-5 text-yellow-600" />
+                              <span className="font-medium text-yellow-800">
+                                유사한 제목이 {result.similarMatches.length}개 있습니다. 참고하세요.
+                              </span>
+                            </>
+                          ) : (
+                            <>
+                              <CheckCircle className="h-5 w-5 text-green-600" />
+                              <span className="font-medium text-green-800">
+                                중복되지 않은 제목입니다. 사용 가능합니다.
+                              </span>
+                            </>
+                          )}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </motion.div>
+
+                  <div className="flex gap-2">
+                    <Button variant="outline" onClick={handleReset}>
+                      새로 검색
+                    </Button>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         </CardContent>
       </Card>

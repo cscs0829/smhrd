@@ -43,8 +43,20 @@ export interface ApiResponse<T = unknown> {
 export interface EPDataResponse {
   success: boolean;
   addedCount: number;
-  totalItems: number;
+  deletedCount: number;
+  totalExcelItems: number;
+  totalDbItems: number;
   skippedCount: number;
+}
+
+export interface ClickDataResponse {
+  success: boolean;
+  message: string;
+  totalCsvItems: number;
+  zeroClickItems: number;
+  movedToDelect: number;
+  notFoundInEpData: number;
+  totalMovedToDelect: number;
 }
 
 export interface MoveToDeleteResponse {
