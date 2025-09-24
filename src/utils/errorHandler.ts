@@ -34,7 +34,7 @@ export class ErrorHandler {
    * 에러를 처리하고 사용자에게 적절한 메시지를 표시
    */
   handleError(error: unknown, context?: ErrorContext): AppError {
-    const appError = this.createAppError(error, context);
+    const appError = this.createAppError(error);
     
     // 콘솔에 에러 로깅
     this.logError(appError, context);
@@ -48,7 +48,7 @@ export class ErrorHandler {
   /**
    * 에러를 AppError 형태로 변환
    */
-  private createAppError(error: unknown, _context?: ErrorContext): AppError {
+  private createAppError(error: unknown): AppError {
     if (error instanceof Error) {
       return {
         code: this.getErrorCode(error),
