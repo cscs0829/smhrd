@@ -39,7 +39,7 @@ export default function RootLayout({
         >
           <MuiThemeProviderWrapper>
             <ApiKeyProvider>
-              <main className="flex-1 container mx-auto px-4 py-6 bg-background dark:bg-background">
+              <main className="flex-1 bg-background dark:bg-background">
                 {children}
               </main>
               <Footer />

@@ -32,7 +32,7 @@ export default function Home() {
   }
 
   return (
-    <div className="space-y-6 bg-background dark:bg-background min-h-screen">
+    <div className="flex flex-col min-h-screen bg-background dark:bg-background">
       {/* 상단 헤더 영역 */}
       <div className="sticky top-0 z-50 w-full border-b bg-background/95 dark:bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 shadow-sm">
         <div className="container flex h-16 max-w-screen-2xl items-center justify-between px-4">
@@ -72,7 +72,7 @@ export default function Home() {
         </div>
       </div>
 
-      <div className="container mx-auto px-4 py-8 space-y-6">
+      <div className="flex-1 container mx-auto px-4 py-4 sm:py-6 space-y-4 sm:space-y-6">
         <Tabs defaultValue="process" value={activeTab} onValueChange={handleTabChange} className="w-full">
           <TabsList className="bg-muted text-muted-foreground h-9 items-center justify-center rounded-lg p-[3px] flex flex-wrap gap-1 w-full sm:w-auto">
             <TabsTrigger 

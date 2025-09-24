@@ -194,6 +194,26 @@
     background-color: inherit;
   }
   
+  /* 반응형 뷰포트 설정 */
+  @media (max-height: 600px) {
+    .min-h-screen {
+      min-height: 100vh;
+    }
+  }
+  
+  @media (min-height: 800px) {
+    .min-h-screen {
+      min-height: 100vh;
+    }
+  }
+  
+  /* 모바일에서 푸터가 잘 보이도록 조정 */
+  @media (max-width: 640px) {
+    .min-h-screen {
+      min-height: calc(100vh - 1rem);
+    }
+  }
+  
   /* 다크모드에서 뷰포트 전체 배경 설정 */
   .dark {
     background-color: var(--background) !important;

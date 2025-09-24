@@ -57,10 +57,10 @@ export function Footer() {
   }
 
   return (
-    <footer className="border-t bg-background dark:bg-background backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container mx-auto px-4 py-8">
+    <footer className="border-t bg-background dark:bg-background backdrop-blur supports-[backdrop-filter]:bg-background/60 mt-auto">
+      <div className="container mx-auto px-4 py-4 sm:py-6 lg:py-8">
         {/* Main Footer Content */}
-        <div className="flex flex-col items-center space-y-6">
+        <div className="flex flex-col items-center space-y-4 sm:space-y-6">
           {/* Brand Section */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
