@@ -11,7 +11,7 @@ interface UseFormOptions<T> {
  * 폼 상태 관리를 위한 커스텀 훅
  * 유효성 검사, 에러 처리, 제출 기능 포함
  */
-export function useForm<T extends Record<string, any>>(options: UseFormOptions<T>) {
+export function useForm<T extends Record<string, unknown>>(options: UseFormOptions<T>) {
   const { initialValues, validate, onSubmit } = options;
 
   const [state, setState] = useState<FormState<T>>({
@@ -22,7 +22,7 @@ export function useForm<T extends Record<string, any>>(options: UseFormOptions<T
     isSubmitting: false
   });
 
-  const setValue = useCallback((name: keyof T, value: any) => {
+  const setValue = useCallback((name: keyof T, value: unknown) => {
     setState(prev => {
       const newValues = { ...prev.values, [name]: value };
       const errors = validate ? validate(newValues) : {};

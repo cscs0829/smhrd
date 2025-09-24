@@ -20,7 +20,7 @@ interface UseApiReturn<T> {
  * API 호출을 위한 커스텀 훅
  * 공통 에러 처리, 로딩 상태 관리, 토스트 알림 포함
  */
-export function useApi<T = any>(
+export function useApi<T = unknown>(
   options: UseApiOptions = {}
 ): UseApiReturn<T> {
   const {

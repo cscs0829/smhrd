@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Upload, FileSpreadsheet, CheckCircle, AlertCircle, Trash2 } from 'lucide-react'
+import { Upload, FileSpreadsheet, AlertCircle, Trash2 } from 'lucide-react'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 
@@ -161,7 +161,7 @@ export function ClickDataProcessor({ onFileSelect }: FileProcessorProps) {
         <div className="border rounded-lg max-h-96 overflow-auto">
           <Table>
             <TableHeader>
-            {TABLE_HEADERS.CLICK_DATA.map((header: any) => (
+            {TABLE_HEADERS.CLICK_DATA.map((header: { key: string; label: string }) => (
               <TableHead key={header.key}>{header.label}</TableHead>
             ))}
             </TableHeader>

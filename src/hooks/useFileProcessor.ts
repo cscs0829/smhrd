@@ -1,11 +1,10 @@
 import { useState, useCallback } from 'react';
-import { toast } from 'sonner';
 import { FileUploadState, CSVDataItem, ExcelDataItem, FileType } from '@/types';
 
 interface UseFileProcessorOptions {
   acceptedTypes: readonly FileType[];
   maxFileSize?: number; // MB
-  onSuccess?: (data: any) => void;
+  onSuccess?: (data: unknown) => void;
   onError?: (error: Error) => void;
 }
 
@@ -13,7 +12,7 @@ interface UseFileProcessorOptions {
  * 파일 처리 로직을 담당하는 커스텀 훅
  * 파일 업로드, 검증, 파싱 기능 제공
  */
-export function useFileProcessor<T = any>(options: UseFileProcessorOptions) {
+export function useFileProcessor<T = unknown>(options: UseFileProcessorOptions) {
   const {
     acceptedTypes,
     maxFileSize = 10,
@@ -110,7 +109,7 @@ export function useFileProcessor<T = any>(options: UseFileProcessorOptions) {
 
     // 헤더에서 컬럼 인덱스 찾기
     const headers = jsonData[0] as string[];
-    const dataRows = jsonData.slice(1) as any[][];
+    const dataRows = jsonData.slice(1) as unknown[][];
 
     const idIndex = headers.findIndex(h => h && h.toLowerCase().includes('id'));
     const titleIndex = headers.findIndex(h => 

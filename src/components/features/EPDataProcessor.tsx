@@ -23,7 +23,6 @@ import {
   FileType
 } from '@/types'
 import { handleError } from '@/utils/errorHandler'
-import { epDataValidators } from '@/utils/validation'
 
 export function EPDataProcessor({ onFileSelect }: FileProcessorProps) {
   const [newItems, setNewItems] = useState<ExcelDataItem[]>([])
