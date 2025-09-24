@@ -35,6 +35,7 @@ export function ImageLinkGenerator() {
   const [entries, setEntries] = useState<ImageEntry[]>([{ url: '', isMain: false }])
   const [numRows, setNumRows] = useState<number>(10)
   const [excludeDuplicates, setExcludeDuplicates] = useState<boolean>(false)
+  const [results, setResults] = useState<{ image_link: string; add_image_link: string }[]>([])
 
   const uniqueEntries = useMemo(() => {
     const seen = new Set<string>()
@@ -119,54 +120,80 @@ export function ImageLinkGenerator() {
     setEntries([{ url: '', isMain: false }])
     setNumRows(10)
     setExcludeDuplicates(false)
+    setResults([])
   }
 
-  const handleGenerateXlsx = async () => {
-    // 최소 5개, 최대 11개 검증
+  const validateAndBuildRows = (): { image_link: string; add_image_link: string }[] | null => {
     if (uniqueEntries.length < 5) {
       toast.error('이미지 링크를 최소 5개 이상 입력해주세요')
-      return
+      return null
     }
     if (uniqueEntries.length > 11) {
       toast.error('이미지 링크는 최대 11개까지 입력할 수 있습니다')
-      return
+      return null
     }
     if (numRows <= 0) {
       toast.error('생성할 행 수를 1 이상으로 입력해주세요')
-      return
+      return null
     }
 
     const allUrls = uniqueEntries.map(e => e.url)
     const mainPool = mainCandidates.map(e => e.url)
     if (mainPool.length === 0) {
       toast.error('메인 후보가 없습니다. 링크를 확인해주세요')
-      return
+      return null
     }
 
-    const rows: { image_link: string; add_image_link: string }[] = []
+    const built: { image_link: string; add_image_link: string }[] = []
     for (let i = 0; i < numRows; i++) {
       const imageLink = mainPool[getRandomInt(0, mainPool.length - 1)]
-      
+
       let addUrls = allUrls
-      // 중복 제외 옵션이 체크되어 있으면 현재 image_link 제외
       if (excludeDuplicates) {
         addUrls = allUrls.filter(url => url !== imageLink)
       }
-      
-      // add_image_link 개수 검증 (최소 5개, 최대 10개)
+
       if (addUrls.length < 5) {
         toast.error('중복 제외 옵션을 사용할 때 add_image_link가 최소 5개 이상이어야 합니다')
-        return
+        return null
       }
       if (addUrls.length > 10) {
         toast.error('add_image_link는 최대 10개까지 사용할 수 있습니다')
-        return
+        return null
       }
-      
+
       const addList = shuffleArray(addUrls.map(url => ({ url, isMain: false })))
       const addImageLink = addList.map(e => e.url).join('|')
-      rows.push({ image_link: imageLink, add_image_link: addImageLink })
+      built.push({ image_link: imageLink, add_image_link: addImageLink })
     }
+    return built
+  }
+
+  const handleExecute = () => {
+    const built = validateAndBuildRows()
+    if (!built) return
+    setResults(built)
+    toast.success(`${built.length}개 행을 생성했어요`)
+  }
+
+  const handleCopyResults = async () => {
+    if (results.length === 0) {
+      toast.error('복사할 결과가 없습니다. 먼저 실행해주세요')
+      return
+    }
+    const header = ['image_link', 'add_image_link']
+    const lines = [header.join('\t'), ...results.map(r => [r.image_link, r.add_image_link].join('\t'))]
+    try {
+      await navigator.clipboard.writeText(lines.join('\n'))
+      toast.success('결과를 클립보드에 복사했어요 (엑셀에 바로 붙여넣기)')
+    } catch (e) {
+      toast.error('클립보드 복사에 실패했습니다')
+    }
+  }
+
+  const handleGenerateXlsx = async () => {
+    const rows = results.length > 0 ? results : validateAndBuildRows()
+    if (!rows || rows.length === 0) return
 
     try {
       const XLSX = await import('xlsx')
@@ -344,6 +371,51 @@ export function ImageLinkGenerator() {
                       ⚠️ add_image_link는 최대 10개까지 사용할 수 있습니다
                     </div>
                   )}
+                  {/* 실행 및 결과 영역 */}
+                  <div className="mt-3 border rounded-lg">
+                    <div className="flex items-center justify-between p-3 gap-2 flex-wrap">
+                      <div className="text-sm font-medium">
+                        결과 {results.length > 0 ? `(${results.length}행)` : ''}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Button type="button" onClick={handleExecute}>
+                          실행
+                        </Button>
+                        <Button type="button" variant="outline" onClick={handleCopyResults} disabled={results.length === 0}>
+                          복사
+                        </Button>
+                        <Button type="button" variant="secondary" onClick={handleGenerateXlsx} disabled={results.length === 0}>
+                          <Download className="h-4 w-4" /> 엑셀
+                        </Button>
+                      </div>
+                    </div>
+                    <div className="max-h-64 overflow-auto">
+                      {results.length > 0 ? (
+                        <Table>
+                          <TableHeader className="sticky top-0 bg-background">
+                            <TableRow>
+                              <TableHead className="w-1/3">image_link</TableHead>
+                              <TableHead className="w-2/3">add_image_link</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {results.map((row, idx) => (
+                              <TableRow key={idx}>
+                                <TableCell className="align-top">
+                                  <div className="break-all text-xs p-1 bg-gray-50 rounded min-h-[40px] flex items-center">{row.image_link}</div>
+                                </TableCell>
+                                <TableCell className="align-top">
+                                  <div className="break-all text-xs p-1 bg-gray-50 rounded min-h-[40px]">{row.add_image_link}</div>
+                                </TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      ) : (
+                        <div className="p-3 text-sm text-muted-foreground">실행을 클릭하면 결과가 표시됩니다</div>
+                      )}
+                    </div>
+                  </div>
                 </div>
 
                 <div className="relative w-full border rounded-lg">

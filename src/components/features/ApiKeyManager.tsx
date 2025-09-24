@@ -80,6 +80,9 @@ export function ApiKeyManager() {
     try {
       if (editingKey) {
         // 수정
+        // 마스킹된 값이면 실제 변경 없음으로 처리
+        const apiKeyToSend = formData.apiKey === '••••••••••••••••' ? undefined : formData.apiKey
+
         const response = await fetch('/api/api-keys', {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
@@ -87,7 +90,7 @@ export function ApiKeyManager() {
             id: editingKey.id,
             name: formData.name,
             description: formData.description,
-            apiKey: formData.apiKey,
+            apiKey: apiKeyToSend,
             isActive: editingKey.isActive
           })
         })
@@ -100,6 +103,8 @@ export function ApiKeyManager() {
         
         // 전역 상태 업데이트
         updateApiKey({ ...editingKey, ...result.data })
+        // 최신 목록 동기화
+        await loadApiKeys(true)
         toast.success('API 키가 수정되었습니다')
       } else {
         // 추가
@@ -122,6 +127,8 @@ export function ApiKeyManager() {
         
         // 전역 상태 업데이트
         addApiKey(result.data)
+        // 최신 목록 동기화
+        await loadApiKeys(true)
         toast.success('API 키가 추가되었습니다')
       }
 
@@ -154,6 +161,8 @@ export function ApiKeyManager() {
       
       // 전역 상태에서 제거
       deleteApiKey(id)
+      // 최신 목록 동기화
+      await loadApiKeys(true)
       toast.success('API 키가 삭제되었습니다')
     } catch (error) {
       console.error('API 키 삭제 오류:', error)

@@ -11,7 +11,7 @@ import { Loader2, Copy, Download, RefreshCw } from 'lucide-react'
 import { toast } from 'sonner'
 import { AIModelSelector } from '@/components/features/AIModelSelector'
 import { DuplicateChecker } from '@/components/features/DuplicateChecker'
-import { getRecommendedModel } from '@/lib/ai-models'
+import { getRecommendedModel, getModelById } from '@/lib/ai-models'
 import { useApiKeys } from '@/contexts/ApiKeyContext'
 
 interface GeneratedTitle {
@@ -56,6 +56,43 @@ export function KeywordTitleGenerator() {
       }
     }
   }, [apiKeys, selectedApiKeyId])
+
+  // 모델의 제공업체에 맞춰 기본 API 키 자동 선택 (GPT -> OpenAI 키, Gemini -> Gemini 키)
+  useEffect(() => {
+    if (apiKeys.length === 0 || !selectedModel) return
+    const model = getModelById(selectedModel)
+    if (!model) return
+
+    // 이미 같은 provider의 활성 키가 선택되어 있으면 유지
+    const currentlySelected = apiKeys.find(k => k.id === selectedApiKeyId)
+    if (currentlySelected && currentlySelected.provider === model.provider && currentlySelected.isActive) {
+      return
+    }
+
+    // 1) 모델 provider와 일치 + 활성화된 키 우선
+    const providerActive = apiKeys.find(k => k.provider === model.provider && k.isActive)
+    if (providerActive) {
+      setSelectedApiKeyId(providerActive.id)
+      return
+    }
+
+    // 2) 모델 provider와 일치하는 키 중 임의 선택
+    const providerAny = apiKeys.find(k => k.provider === model.provider)
+    if (providerAny) {
+      setSelectedApiKeyId(providerAny.id)
+      return
+    }
+
+    // 3) 그 외 활성화된 아무 키
+    const anyActive = apiKeys.find(k => k.isActive)
+    if (anyActive) {
+      setSelectedApiKeyId(anyActive.id)
+      return
+    }
+
+    // 4) 최후: 첫 번째 키
+    setSelectedApiKeyId(apiKeys[0].id)
+  }, [apiKeys, selectedModel, selectedApiKeyId])
 
   const productTypes = [
     '패키지 여행',
