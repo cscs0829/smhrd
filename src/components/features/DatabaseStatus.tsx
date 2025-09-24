@@ -24,39 +24,7 @@ interface TableRowData {
   [key: string]: unknown
 }
 
-interface TableCounts {
-  ep_data: number
-  delete: number
-  api_keys: number
-}
 
-interface RecentData {
-  ep_data: Array<{
-    id: string
-    title: string
-    created_at: string
-  }>
-  delete: Array<{
-    id: number
-    product_id: string
-    title: string
-    reason: string
-    created_at: string
-  }>
-  api_keys: Array<{
-    id: number
-    provider: string
-    name: string
-    is_active: boolean
-    created_at: string
-  }>
-}
-
-interface DbStatus {
-  tableCounts: TableCounts
-  recentData: RecentData
-  connectionStatus: 'connected' | 'error'
-}
 
 interface DatabaseStatusProps {
   onRefresh?: number

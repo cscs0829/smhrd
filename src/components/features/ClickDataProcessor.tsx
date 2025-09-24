@@ -1,10 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
+import { useDropzone } from 'react-dropzone'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
+import { Badge } from '@/components/ui/badge'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Progress } from '@/components/ui/progress'
 import { 
@@ -13,7 +13,8 @@ import {
   CheckCircle, 
   AlertCircle, 
   Loader2,
-  Database
+  Database,
+  X
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ClickDataResponse } from '@/types'
@@ -28,8 +29,8 @@ export default function ClickDataProcessor({}: ClickDataProcessorProps) {
   const [processingResult, setProcessingResult] = useState<ClickDataResponse | null>(null)
   const [error, setError] = useState<string | null>(null)
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedFile = e.target.files?.[0]
+  const onDrop = useCallback((acceptedFiles: File[]) => {
+    const selectedFile = acceptedFiles[0]
     if (selectedFile) {
       if (selectedFile.type === 'text/csv' || selectedFile.name.endsWith('.csv')) {
         setFile(selectedFile)
@@ -40,6 +41,20 @@ export default function ClickDataProcessor({}: ClickDataProcessorProps) {
         setFile(null)
       }
     }
+  }, [])
+
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+    onDrop,
+    accept: {
+      'text/csv': ['.csv']
+    },
+    multiple: false
+  })
+
+  const handleRemoveFile = () => {
+    setFile(null)
+    setError(null)
+    setProcessingResult(null)
   }
 
   const handleProcessClickData = async () => {
@@ -163,20 +178,42 @@ export default function ClickDataProcessor({}: ClickDataProcessorProps) {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
-        <div className="space-y-2">
-          <Label htmlFor="csv-file">CSV 파일 선택</Label>
-          <Input
-            id="csv-file"
-            type="file"
-            accept=".csv"
-            onChange={handleFileChange}
-            disabled={isProcessing}
-          />
-          <p className="text-sm text-gray-500">
-            상품ID, 상품명, 클릭수 컬럼이 포함된 CSV 파일을 업로드하세요.
-          </p>
+        {/* 드래그 앤 드롭 영역 */}
+        <div
+          {...getRootProps()}
+          className={`
+            border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors
+            ${isDragActive 
+              ? 'border-blue-500 bg-blue-50' 
+              : 'border-gray-300 hover:border-gray-400'
+            }
+            ${isProcessing ? 'pointer-events-none opacity-50' : ''}
+          `}
+        >
+          <input {...getInputProps()} />
+          <motion.div
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            className="space-y-4"
+          >
+            <div className="mx-auto w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center">
+              <Upload className="h-8 w-8 text-gray-400" />
+            </div>
+            <div>
+              <p className="text-lg font-medium text-gray-900">
+                {isDragActive ? 'CSV 파일을 여기에 놓으세요' : 'CSV 파일을 드래그하거나 클릭하여 선택하세요'}
+              </p>
+              <p className="text-sm text-gray-500 mt-2">
+                상품ID, 상품명, 클릭수 컬럼이 포함된 CSV 파일을 업로드하세요.
+              </p>
+            </div>
+            <Badge variant="outline" className="text-xs">
+              CSV 파일만 지원
+            </Badge>
+          </motion.div>
         </div>
 
+        {/* 선택된 파일 표시 */}
         <AnimatePresence>
           {file && (
             <motion.div
@@ -184,13 +221,26 @@ export default function ClickDataProcessor({}: ClickDataProcessorProps) {
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
               transition={{ duration: 0.2 }}
-              className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg"
+              className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border"
             >
-              <FileText className="h-4 w-4 text-gray-600" />
-              <span className="text-sm font-medium">{file.name}</span>
-              <span className="text-sm text-gray-500">
-                ({(file.size / 1024).toFixed(1)} KB)
-              </span>
+              <div className="flex items-center gap-3">
+                <FileText className="h-5 w-5 text-blue-600" />
+                <div>
+                  <p className="font-medium text-gray-900">{file.name}</p>
+                  <p className="text-sm text-gray-500">
+                    {(file.size / 1024).toFixed(1)} KB
+                  </p>
+                </div>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleRemoveFile}
+                disabled={isProcessing}
+                className="text-gray-400 hover:text-red-500"
+              >
+                <X className="h-4 w-4" />
+              </Button>
             </motion.div>
           )}
         </AnimatePresence>
