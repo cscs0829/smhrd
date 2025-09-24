@@ -52,7 +52,7 @@ export default function Home() {
           </div>
 
           {/* 오른쪽 액션 버튼들 */}
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-2 ml-auto">
             <Badge variant="secondary" className="hidden sm:inline-flex">
               v2.0
             </Badge>
