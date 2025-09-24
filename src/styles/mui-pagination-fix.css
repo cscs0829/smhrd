@@ -1,0 +1,75 @@
+/* MUI Pagination Fix Styles */
+
+.MuiPagination-root {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.MuiPagination-ul {
+  display: flex;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  gap: 4px;
+}
+
+.MuiPaginationItem-root {
+  min-width: 32px;
+  height: 32px;
+  border-radius: 4px;
+  border: 1px solid #e0e0e0;
+  background-color: #fff;
+  color: #1976d2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+}
+
+.MuiPaginationItem-root:hover {
+  background-color: #f5f5f5;
+}
+
+.MuiPaginationItem-root.Mui-selected {
+  background-color: #1976d2;
+  color: #fff;
+  border-color: #1976d2;
+}
+
+.MuiPaginationItem-root.Mui-selected:hover {
+  background-color: #1565c0;
+}
+
+.MuiPaginationItem-root:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.MuiPaginationItem-root:disabled:hover {
+  background-color: #fff;
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .MuiPaginationItem-root {
+    background-color: #2d2d2d;
+    border-color: #404040;
+    color: #90caf9;
+  }
+  
+  .MuiPaginationItem-root:hover {
+    background-color: #404040;
+  }
+  
+  .MuiPaginationItem-root.Mui-selected {
+    background-color: #1976d2;
+    color: #fff;
+    border-color: #1976d2;
+  }
+  
+  .MuiPaginationItem-root:disabled {
+    background-color: #2d2d2d;
+  }
+}
