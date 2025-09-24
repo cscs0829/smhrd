@@ -4,6 +4,11 @@ import React from 'react'
 import { ThemeProvider as MuiThemeProvider } from '@mui/material/styles'
 import { CssBaseline } from '@mui/material'
 import { createTheme } from '@mui/material/styles'
+import { CacheProvider } from '@emotion/react'
+import createCache from '@emotion/cache'
+
+// Emotion cache 생성
+const cache = createCache({ key: 'css', prepend: true })
 
 const theme = createTheme({
   palette: {
@@ -34,9 +39,11 @@ interface MuiThemeProviderProps {
 
 export function MuiThemeProviderWrapper({ children }: MuiThemeProviderProps) {
   return (
-    <MuiThemeProvider theme={theme}>
-      <CssBaseline />
-      {children}
-    </MuiThemeProvider>
+    <CacheProvider value={cache}>
+      <MuiThemeProvider theme={theme}>
+        <CssBaseline />
+        {children}
+      </MuiThemeProvider>
+    </CacheProvider>
   )
 }
