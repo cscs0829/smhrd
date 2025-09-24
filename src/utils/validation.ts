@@ -6,7 +6,7 @@ import { VALIDATION_RULES } from '@/types';
  */
 
 export const validators = {
-  required: (value: any, message = '필수 입력 항목입니다'): string | null => {
+  required: (value: unknown, message = '필수 입력 항목입니다'): string | null => {
     if (value === null || value === undefined || value === '') {
       return message;
     }
@@ -126,7 +126,7 @@ export const epDataValidators = {
 /**
  * 복합 검증 함수
  */
-export const validateAll = (value: any, rules: Array<(value: any) => string | null>): string | null => {
+export const validateAll = (value: unknown, rules: Array<(value: unknown) => string | null>): string | null => {
   for (const rule of rules) {
     const error = rule(value);
     if (error) return error;
@@ -139,7 +139,7 @@ export const validateAll = (value: any, rules: Array<(value: any) => string | nu
  */
 export const validateIf = (
   condition: boolean,
-  validator: (value: any) => string | null
+  validator: (value: unknown) => string | null
 ) => {
-  return (value: any) => condition ? validator(value) : null;
+  return (value: unknown) => condition ? validator(value) : null;
 };

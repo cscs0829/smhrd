@@ -6,7 +6,7 @@ import { toast } from 'sonner';
 export interface AppError {
   code: string;
   message: string;
-  details?: any;
+  details?: unknown;
   timestamp: string;
 }
 
@@ -14,7 +14,7 @@ export interface ErrorContext {
   component?: string;
   action?: string;
   userId?: string;
-  additionalData?: Record<string, any>;
+  additionalData?: Record<string, unknown>;
 }
 
 /**
@@ -48,7 +48,7 @@ export class ErrorHandler {
   /**
    * 에러를 AppError 형태로 변환
    */
-  private createAppError(error: unknown, context?: ErrorContext): AppError {
+  private createAppError(error: unknown, _context?: ErrorContext): AppError {
     if (error instanceof Error) {
       return {
         code: this.getErrorCode(error),

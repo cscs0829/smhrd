@@ -33,7 +33,7 @@ export interface ApiKey {
 
 // ===== API 응답 타입 =====
 
-export interface ApiResponse<T = any> {
+export interface ApiResponse<T = unknown> {
   success: boolean;
   data?: T;
   error?: string;
@@ -122,7 +122,7 @@ export interface ValidationResult {
 
 export interface FileProcessorProps {
   onFileSelect: (file: File) => void;
-  onProcessComplete?: (result: any) => void;
+  onProcessComplete?: (result: unknown) => void;
   onError?: (error: Error) => void;
 }
 
@@ -136,7 +136,7 @@ export interface TableDisplayProps<T> {
 export interface TableColumn<T> {
   key: keyof T | string;
   label: string;
-  render?: (value: any, item: T) => React.ReactNode;
+  render?: (value: unknown, item: T) => React.ReactNode;
   sortable?: boolean;
   width?: string;
 }
@@ -158,7 +158,7 @@ export interface FormField {
   };
 }
 
-export interface FormState<T = Record<string, any>> {
+export interface FormState<T = Record<string, unknown>> {
   values: T;
   errors: Partial<Record<keyof T, string>>;
   touched: Partial<Record<keyof T, boolean>>;
@@ -200,7 +200,7 @@ export interface FileDropEvent {
   type: 'csv' | 'xlsx' | 'xls';
 }
 
-export interface ProcessCompleteEvent<T = any> {
+export interface ProcessCompleteEvent<T = unknown> {
   type: 'success' | 'error';
   data?: T;
   error?: Error;
