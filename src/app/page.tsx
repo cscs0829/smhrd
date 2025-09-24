@@ -32,7 +32,7 @@ export default function Home() {
   }
 
   return (
-    <div className="space-y-6 bg-background dark:bg-background">
+    <div className="space-y-6 bg-background dark:bg-background min-h-screen">
       {/* 상단 헤더 영역 */}
       <div className="sticky top-0 z-50 w-full border-b bg-background/95 dark:bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 shadow-sm">
         <div className="container flex h-16 max-w-screen-2xl items-center justify-between px-4">
@@ -74,46 +74,46 @@ export default function Home() {
 
       <div className="container mx-auto px-4 py-8 space-y-6">
         <Tabs defaultValue="process" value={activeTab} onValueChange={handleTabChange} className="w-full">
-          <TabsList className="bg-muted text-muted-foreground h-9 items-center justify-center rounded-lg p-[3px] grid grid-cols-7 w-full sm:w-auto">
+          <TabsList className="bg-muted text-muted-foreground h-9 items-center justify-center rounded-lg p-[3px] flex flex-wrap gap-1 w-full sm:w-auto">
             <TabsTrigger 
               value="process"
-              className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50 size-9"
+              className="flex-1 min-w-0 px-3 py-1 text-xs sm:text-sm"
             >
               클릭수 데이터 처리
             </TabsTrigger>
             <TabsTrigger 
               value="ep-data"
-              className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50 size-9"
+              className="flex-1 min-w-0 px-3 py-1 text-xs sm:text-sm"
             >
               EP데이터 처리
             </TabsTrigger>
             <TabsTrigger 
               value="duplicate"
-              className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50 size-9"
+              className="flex-1 min-w-0 px-3 py-1 text-xs sm:text-sm"
             >
               중복 검색기
             </TabsTrigger>
             <TabsTrigger 
               value="image-links"
-              className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50 size-9"
+              className="flex-1 min-w-0 px-3 py-1 text-xs sm:text-sm"
             >
               이미지 링크
             </TabsTrigger>
             <TabsTrigger 
               value="keywords"
-              className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50 size-9"
+              className="flex-1 min-w-0 px-3 py-1 text-xs sm:text-sm"
             >
               키워드 제목
             </TabsTrigger>
             <TabsTrigger 
               value="settings"
-              className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50 size-9"
+              className="flex-1 min-w-0 px-3 py-1 text-xs sm:text-sm"
             >
               설정
             </TabsTrigger>
             <TabsTrigger 
               value="database"
-              className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50 size-9"
+              className="flex-1 min-w-0 px-3 py-1 text-xs sm:text-sm"
             >
               데이터베이스
             </TabsTrigger>

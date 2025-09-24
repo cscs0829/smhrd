@@ -167,10 +167,49 @@
     transition: background-color 0.3s ease, color 0.3s ease;
   }
   
-  /* 다크모드에서 전체 배경 통일 */
+  /* 다크모드에서 전체 배경 통일 - next-themes data-theme 속성 사용 */
+  [data-theme='dark'] html,
+  [data-theme='dark'] body {
+    @apply bg-background text-foreground;
+    background-color: var(--background) !important;
+    color: var(--foreground) !important;
+  }
+  
+  /* 클래스 기반 다크모드도 지원 */
   .dark html,
   .dark body {
     @apply bg-background text-foreground;
+    background-color: var(--background) !important;
+    color: var(--foreground) !important;
+  }
+  
+  /* 전체 페이지 배경 강제 설정 */
+  html, body {
+    background-color: var(--background) !important;
+    color: var(--foreground) !important;
+  }
+  
+  /* 다크모드에서 모든 요소 배경 통일 */
+  .dark * {
+    background-color: inherit;
+  }
+  
+  /* 다크모드에서 뷰포트 전체 배경 설정 */
+  .dark {
+    background-color: var(--background) !important;
+  }
+  
+  .dark #__next {
+    background-color: var(--background) !important;
+  }
+  
+  /* 스크롤바도 다크모드에 맞게 설정 */
+  .dark ::-webkit-scrollbar {
+    background-color: var(--background);
+  }
+  
+  .dark ::-webkit-scrollbar-thumb {
+    background-color: var(--muted);
   }
   
   /* 테마 전환 시 부드러운 애니메이션 */
