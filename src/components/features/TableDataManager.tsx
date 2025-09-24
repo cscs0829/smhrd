@@ -9,6 +9,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Search, Trash2, Download, Upload, RefreshCw, Settings } from 'lucide-react'
 import { toast } from 'sonner'
+import { TableEditingContext } from './TableEditingContext'
 
 // 타입 정의
 interface TableRowData {
@@ -47,6 +48,9 @@ export function TableDataManager({
   const [selectedRows, setSelectedRows] = useState<TableRowData[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [totalCount, setTotalCount] = useState<number | null>(null)
+  // 행 단위 인라인 편집 상태
+  const [editingRowId, setEditingRowId] = useState<string | number | null>(null)
+  const [editingValues, setEditingValues] = useState<Record<string, unknown>>({})
 
   // 테이블 총 개수 가져오기
   React.useEffect(() => {
@@ -259,6 +263,7 @@ export function TableDataManager({
 
       {/* 테이블 */}
       <div className="rounded-md border">
+        <TableEditingContext.Provider value={{ editingRowId, setEditingRowId, editingValues, setEditingValues }}>
         <Table className="w-full table-auto">
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
@@ -286,7 +291,7 @@ export function TableDataManager({
                   data-state={row.getIsSelected() && "selected"}
                 >
                   {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id} className="text-left px-4 py-2 align-middle">
+                    <TableCell key={cell.id} className="p-2 whitespace-nowrap [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px] text-left px-4 py-2 align-middle">
                       {flexRender(cell.column.columnDef.cell, cell.getContext())}
                     </TableCell>
                   ))}
@@ -301,6 +306,7 @@ export function TableDataManager({
             )}
           </TableBody>
         </Table>
+        </TableEditingContext.Provider>
       </div>
 
       {/* 페이지네이션 */}

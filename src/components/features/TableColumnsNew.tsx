@@ -12,20 +12,24 @@ import { MoreHorizontal, Edit, Trash2, Copy } from 'lucide-react'
 import { toast } from 'sonner'
 import { format } from 'date-fns'
 import { useState } from 'react'
+import { useTableEditing } from './TableEditingContext'
 
 import { EpData, DeletedItem, ApiKey } from '@/types/database'
 import { Row } from '@tanstack/react-table'
 
 // EP 데이터 액션 컴포넌트
 function EpDataActions({ row }: { row: Row<EpData> }) {
-  const [isEditing, setIsEditing] = useState(false)
+  const { editingRowId, setEditingRowId, editingValues, setEditingValues } = useTableEditing()
   const [isDeleteOpen, setIsDeleteOpen] = useState(false)
-  const [editData, setEditData] = useState({
-    title: row.getValue('title') as string,
-  })
 
   const handleEdit = () => {
-    setIsEditing(true)
+    setEditingRowId(row.getValue('id') as string)
+    setEditingValues({
+      id: row.getValue('id') as string,
+      title: row.getValue('title') as string,
+      created_at: row.getValue('created_at') as string,
+      updated_at: row.getValue('updated_at') as string,
+    })
   }
 
   const handleSaveEdit = async () => {
@@ -33,15 +37,11 @@ function EpDataActions({ row }: { row: Row<EpData> }) {
       const res = await fetch('/api/admin/update-data', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          table: 'ep_data',
-          id: row.getValue('id') as string,
-          values: { title: editData.title },
-        }),
+        body: JSON.stringify({ table: 'ep_data', id: editingValues.id, values: editingValues }),
       })
       if (!res.ok) throw new Error('업데이트 실패')
       toast.success('데이터가 성공적으로 수정되었습니다.')
-      setIsEditing(false)
+      setEditingRowId(null)
       if (typeof window !== 'undefined') {
         window.dispatchEvent(new CustomEvent('admin-table-refresh'))
       }
@@ -52,10 +52,8 @@ function EpDataActions({ row }: { row: Row<EpData> }) {
   }
 
   const handleCancelEdit = () => {
-    setEditData({
-      title: row.getValue('title') as string,
-    })
-    setIsEditing(false)
+    setEditingRowId(null)
+    setEditingValues({})
   }
 
   const handleDelete = async () => {
@@ -78,21 +76,11 @@ function EpDataActions({ row }: { row: Row<EpData> }) {
     }
   }
 
-  if (isEditing) {
+  if (editingRowId === (row.getValue('id') as string)) {
     return (
       <div className="flex items-center space-x-2">
-        <Input
-          value={editData.title}
-          onChange={(e) => setEditData({...editData, title: e.target.value})}
-          className="h-8"
-          placeholder="제목을 입력하세요"
-        />
-        <Button size="sm" onClick={handleSaveEdit}>
-          저장
-        </Button>
-        <Button size="sm" variant="outline" onClick={handleCancelEdit}>
-          취소
-        </Button>
+        <Button size="sm" onClick={handleSaveEdit}>저장</Button>
+        <Button size="sm" variant="outline" onClick={handleCancelEdit}>취소</Button>
       </div>
     )
   }
@@ -156,26 +144,29 @@ function EpDataActions({ row }: { row: Row<EpData> }) {
 
 // 삭제된 아이템 액션 컴포넌트
 function DeletedItemActions({ row }: { row: Row<DeletedItem> }) {
-  const [isEditing, setIsEditing] = useState(false)
+  const { editingRowId, setEditingRowId, editingValues, setEditingValues } = useTableEditing()
   const [isDeleteOpen, setIsDeleteOpen] = useState(false)
-  const [editData, setEditData] = useState({
-    title: (row.getValue('title') as string) || '',
-  })
+
+  const handleEdit = () => {
+    setEditingRowId(row.getValue('id') as number)
+    setEditingValues({
+      id: row.getValue('id') as number,
+      title: (row.getValue('title') as string) || '',
+      created_at: row.getValue('created_at') as string,
+      updated_at: row.getValue('updated_at') as string,
+    })
+  }
 
   const handleSaveEdit = async () => {
     try {
       const res = await fetch('/api/admin/update-data', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          table: 'delect',
-          id: row.getValue('id') as number,
-          values: { title: editData.title },
-        }),
+        body: JSON.stringify({ table: 'delect', id: editingValues.id, values: editingValues }),
       })
       if (!res.ok) throw new Error('업데이트 실패')
       toast.success('데이터가 성공적으로 수정되었습니다.')
-      setIsEditing(false)
+      setEditingRowId(null)
       if (typeof window !== 'undefined') {
         window.dispatchEvent(new CustomEvent('admin-table-refresh'))
       }
@@ -183,6 +174,11 @@ function DeletedItemActions({ row }: { row: Row<DeletedItem> }) {
       toast.error('데이터 수정 중 오류가 발생했습니다.')
       console.error(e)
     }
+  }
+
+  const handleCancelEdit = () => {
+    setEditingRowId(null)
+    setEditingValues({})
   }
 
   const handleDelete = async () => {
@@ -205,17 +201,11 @@ function DeletedItemActions({ row }: { row: Row<DeletedItem> }) {
     }
   }
 
-  if (isEditing) {
+  if (editingRowId === (row.getValue('id') as number)) {
     return (
       <div className="flex items-center space-x-2">
-        <Input
-          value={editData.title}
-          onChange={(e) => setEditData({ ...editData, title: e.target.value })}
-          className="h-8"
-          placeholder="제목을 입력하세요"
-        />
         <Button size="sm" onClick={handleSaveEdit}>저장</Button>
-        <Button size="sm" variant="outline" onClick={() => setIsEditing(false)}>취소</Button>
+        <Button size="sm" variant="outline" onClick={handleCancelEdit}>취소</Button>
       </div>
     )
   }
@@ -236,7 +226,7 @@ function DeletedItemActions({ row }: { row: Row<DeletedItem> }) {
             제목 복사
           </DropdownMenuItem>
           <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={() => setIsEditing(true)}>
+          <DropdownMenuItem onClick={handleEdit}>
             <Edit className="h-4 w-4 mr-2" />
             수정
           </DropdownMenuItem>
@@ -279,18 +269,21 @@ function DeletedItemActions({ row }: { row: Row<DeletedItem> }) {
 
 // API 키 액션 컴포넌트
 function ApiKeyActions({ row }: { row: Row<ApiKey> }) {
-  const [isEditing, setIsEditing] = useState(false)
+  const { editingRowId, setEditingRowId, editingValues, setEditingValues } = useTableEditing()
   const [isDeleteOpen, setIsDeleteOpen] = useState(false)
-  const [editData, setEditData] = useState({
-    name: row.getValue('name') as string,
-    provider: row.getValue('provider') as string,
-    api_key: row.getValue('api_key') as string,
-    is_active: row.getValue('is_active') as boolean,
-    is_default: row.getValue('is_default') as boolean,
-  })
 
   const handleEdit = () => {
-    setIsEditing(true)
+    setEditingRowId(row.getValue('id') as number)
+    setEditingValues({
+      id: row.getValue('id') as number,
+      provider: row.getValue('provider') as string,
+      name: row.getValue('name') as string,
+      api_key: row.getValue('api_key') as string,
+      is_active: row.getValue('is_active') as boolean,
+      is_default: row.getValue('is_default') as boolean,
+      created_at: row.getValue('created_at') as string,
+      updated_at: row.getValue('updated_at') as string,
+    })
   }
 
   const handleSaveEdit = async () => {
@@ -298,20 +291,11 @@ function ApiKeyActions({ row }: { row: Row<ApiKey> }) {
       const res = await fetch('/api/admin/update-data', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          table: 'api',
-          id: row.getValue('id') as number,
-          values: {
-            name: editData.name,
-            api_key: editData.api_key,
-            is_active: editData.is_active,
-            is_default: editData.is_default,
-          },
-        }),
+        body: JSON.stringify({ table: 'api', id: editingValues.id, values: editingValues }),
       })
       if (!res.ok) throw new Error('업데이트 실패')
       toast.success('API 키가 성공적으로 수정되었습니다.')
-      setIsEditing(false)
+      setEditingRowId(null)
       if (typeof window !== 'undefined') {
         window.dispatchEvent(new CustomEvent('admin-table-refresh'))
       }
@@ -322,14 +306,8 @@ function ApiKeyActions({ row }: { row: Row<ApiKey> }) {
   }
 
   const handleCancelEdit = () => {
-    setEditData({
-      name: row.getValue('name') as string,
-      provider: row.getValue('provider') as string,
-      api_key: row.getValue('api_key') as string,
-      is_active: row.getValue('is_active') as boolean,
-      is_default: row.getValue('is_default') as boolean,
-    })
-    setIsEditing(false)
+    setEditingRowId(null)
+    setEditingValues({})
   }
 
   const handleDelete = async () => {
@@ -352,20 +330,20 @@ function ApiKeyActions({ row }: { row: Row<ApiKey> }) {
     }
   }
 
-  if (isEditing) {
+  if (editingRowId === (row.getValue('id') as number)) {
     return (
       <div className="flex items-center space-x-2">
         <div className="flex flex-col space-y-2">
           <Input
-            value={editData.name}
-            onChange={(e) => setEditData({...editData, name: e.target.value})}
+            value={(editingValues.name as string) ?? ''}
+            onChange={(e) => setEditingValues((prev) => ({ ...prev, name: e.target.value }))}
             className="h-8"
             placeholder="이름"
           />
           <Input
             type="password"
-            value={editData.api_key}
-            onChange={(e) => setEditData({...editData, api_key: e.target.value})}
+            value={(editingValues.api_key as string) ?? ''}
+            onChange={(e) => setEditingValues((prev) => ({ ...prev, api_key: e.target.value }))}
             className="h-8"
             placeholder="API 키"
           />
@@ -374,8 +352,8 @@ function ApiKeyActions({ row }: { row: Row<ApiKey> }) {
               <input
                 type="checkbox"
                 id="is_active"
-                checked={editData.is_active}
-                onChange={(e) => setEditData({...editData, is_active: e.target.checked})}
+                checked={Boolean(editingValues.is_active)}
+                onChange={(e) => setEditingValues((prev) => ({ ...prev, is_active: e.target.checked }))}
                 className="rounded"
               />
               <Label htmlFor="is_active" className="text-sm">활성화</Label>
@@ -384,8 +362,8 @@ function ApiKeyActions({ row }: { row: Row<ApiKey> }) {
               <input
                 type="checkbox"
                 id="is_default"
-                checked={editData.is_default}
-                onChange={(e) => setEditData({...editData, is_default: e.target.checked})}
+                checked={Boolean(editingValues.is_default)}
+                onChange={(e) => setEditingValues((prev) => ({ ...prev, is_default: e.target.checked }))}
                 className="rounded"
               />
               <Label htmlFor="is_default" className="text-sm">기본값</Label>
@@ -490,22 +468,91 @@ export const epDataColumns: ColumnDef<EpData>[] = [
   {
     accessorKey: 'id',
     header: 'ID',
-    cell: ({ row }) => <div className="font-mono text-xs">{row.getValue('id')}</div>,
+    cell: ({ row }) => {
+      const { editingRowId, editingValues, setEditingValues } = useTableEditing()
+      const isEditing = editingRowId === (row.getValue('id') as string)
+      if (!isEditing) return <div className="font-mono text-xs">{row.getValue('id')}</div>
+      return (
+        <Input
+          value={(editingValues.id as string) ?? ''}
+          onChange={(e) => setEditingValues((prev) => ({ ...prev, id: e.target.value }))}
+          className="h-8"
+        />
+      )
+    },
   },
   {
     accessorKey: 'title',
     header: '제목',
-    cell: ({ row }) => <div className="max-w-[200px] truncate">{row.getValue('title')}</div>,
+    cell: ({ row }) => {
+      const { editingRowId, editingValues, setEditingValues } = useTableEditing()
+      const isEditing = editingRowId === (row.getValue('id') as string)
+      if (!isEditing) return <div className="max-w-[200px] truncate">{row.getValue('title')}</div>
+      return (
+        <Input
+          value={(editingValues.title as string) ?? ''}
+          onChange={(e) => setEditingValues((prev) => ({ ...prev, title: e.target.value }))}
+          className="h-8"
+          placeholder="제목"
+        />
+      )
+    },
   },
   {
     accessorKey: 'created_at',
     header: '생성일',
-    cell: ({ row }) => format(new Date(row.getValue('created_at')), 'yyyy-MM-dd HH:mm'),
+    cell: ({ row }) => {
+      const { editingRowId, editingValues, setEditingValues } = useTableEditing()
+      const isEditing = editingRowId === (row.getValue('id') as string)
+      if (!isEditing) return format(new Date(row.getValue('created_at')), 'yyyy-MM-dd HH:mm')
+      const toLocal = (iso?: string) => {
+        if (!iso) return ''
+        const d = new Date(iso)
+        const pad = (n: number) => String(n).padStart(2, '0')
+        const yyyy = d.getFullYear()
+        const mm = pad(d.getMonth() + 1)
+        const dd = pad(d.getDate())
+        const hh = pad(d.getHours())
+        const mi = pad(d.getMinutes())
+        return `${yyyy}-${mm}-${dd}T${hh}:${mi}`
+      }
+      return (
+        <input
+          type="datetime-local"
+          value={toLocal(editingValues.created_at as string)}
+          onChange={(e) => setEditingValues((prev) => ({ ...prev, created_at: new Date(e.target.value).toISOString() }))}
+          className="h-8 rounded border px-2 text-sm"
+        />
+      )
+    },
   },
   {
     accessorKey: 'updated_at',
     header: '수정일',
-    cell: ({ row }) => format(new Date(row.getValue('updated_at')), 'yyyy-MM-dd HH:mm'),
+    cell: ({ row }) => {
+      const { editingRowId, editingValues, setEditingValues } = useTableEditing()
+      const isEditing = editingRowId === (row.getValue('id') as string)
+      if (!isEditing) return format(new Date(row.getValue('updated_at')), 'yyyy-MM-dd HH:mm')
+      const toLocal = (iso?: string) => {
+        if (!iso) return ''
+        const d = new Date(iso)
+        const pad = (n: number) => String(n).padStart(2, '0')
+        const yyyy = d.getFullYear()
+        const mm = pad(d.getMonth() + 1)
+        const dd = pad(d.getDate())
+        const hh = pad(d.getHours())
+        const mi = pad(d.getMinutes())
+        return `${yyyy}-${mm}-${dd}T${hh}:${mi}`
+      }
+      return (
+        <input
+          type="datetime-local"
+          value={toLocal(editingValues.updated_at as string)}
+          onChange={(e) => setEditingValues((prev) => ({ ...prev, updated_at: new Date(e.target.value).toISOString() }))}
+          className="h-8 rounded border px-2 text-sm"
+        />
+      )
+    },
   },
   {
     id: 'actions',
@@ -541,22 +588,90 @@ export const deletedItemsColumns: ColumnDef<DeletedItem>[] = [
   {
     accessorKey: 'id',
     header: '삭제 ID',
-    cell: ({ row }) => <div className="font-mono text-xs">{row.getValue('id')}</div>,
+    cell: ({ row }) => {
+      const { editingRowId, editingValues, setEditingValues } = useTableEditing()
+      const isEditing = editingRowId === (row.getValue('id') as number)
+      if (!isEditing) return <div className="font-mono text-xs">{row.getValue('id')}</div>
+      return (
+        <Input
+          value={String(editingValues.id ?? '')}
+          onChange={(e) => setEditingValues((prev) => ({ ...prev, id: e.target.value }))}
+          className="h-8"
+        />
+      )
+    },
   },
   {
     accessorKey: 'title',
     header: '제목',
-    cell: ({ row }) => <div className="max-w-[200px] truncate">{row.getValue('title')}</div>,
+    cell: ({ row }) => {
+      const { editingRowId, editingValues, setEditingValues } = useTableEditing()
+      const isEditing = editingRowId === (row.getValue('id') as number)
+      if (!isEditing) return <div className="max-w-[200px] truncate">{row.getValue('title')}</div>
+      return (
+        <Input
+          value={(editingValues.title as string) ?? ''}
+          onChange={(e) => setEditingValues((prev) => ({ ...prev, title: e.target.value }))}
+          className="h-8"
+        />
+      )
+    },
   },
   {
     accessorKey: 'created_at',
     header: '삭제일',
-    cell: ({ row }) => format(new Date(row.getValue('created_at')), 'yyyy-MM-dd HH:mm'),
+    cell: ({ row }) => {
+      const { editingRowId, editingValues, setEditingValues } = useTableEditing()
+      const isEditing = editingRowId === (row.getValue('id') as number)
+      if (!isEditing) return format(new Date(row.getValue('created_at')), 'yyyy-MM-dd HH:mm')
+      const toLocal = (iso?: string) => {
+        if (!iso) return ''
+        const d = new Date(iso)
+        const pad = (n: number) => String(n).padStart(2, '0')
+        const yyyy = d.getFullYear()
+        const mm = pad(d.getMonth() + 1)
+        const dd = pad(d.getDate())
+        const hh = pad(d.getHours())
+        const mi = pad(d.getMinutes())
+        return `${yyyy}-${mm}-${dd}T${hh}:${mi}`
+      }
+      return (
+        <input
+          type="datetime-local"
+          value={toLocal(editingValues.created_at as string)}
+          onChange={(e) => setEditingValues((prev) => ({ ...prev, created_at: new Date(e.target.value).toISOString() }))}
+          className="h-8 rounded border px-2 text-sm"
+        />
+      )
+    },
   },
   {
     accessorKey: 'updated_at',
     header: '수정일',
-    cell: ({ row }) => format(new Date(row.getValue('updated_at')), 'yyyy-MM-dd HH:mm'),
+    cell: ({ row }) => {
+      const { editingRowId, editingValues, setEditingValues } = useTableEditing()
+      const isEditing = editingRowId === (row.getValue('id') as number)
+      if (!isEditing) return format(new Date(row.getValue('updated_at')), 'yyyy-MM-dd HH:mm')
+      const toLocal = (iso?: string) => {
+        if (!iso) return ''
+        const d = new Date(iso)
+        const pad = (n: number) => String(n).padStart(2, '0')
+        const yyyy = d.getFullYear()
+        const mm = pad(d.getMonth() + 1)
+        const dd = pad(d.getDate())
+        const hh = pad(d.getHours())
+        const mi = pad(d.getMinutes())
+        return `${yyyy}-${mm}-${dd}T${hh}:${mi}`
+      }
+      return (
+        <input
+          type="datetime-local"
+          value={toLocal(editingValues.updated_at as string)}
+          onChange={(e) => setEditingValues((prev) => ({ ...prev, updated_at: new Date(e.target.value).toISOString() }))}
+          className="h-8 rounded border px-2 text-sm"
+        />
+      )
+    },
   },
   {
     id: 'actions',
@@ -597,44 +712,142 @@ export const apiKeyColumns: ColumnDef<ApiKey>[] = [
   {
     accessorKey: 'provider',
     header: '제공자',
-    cell: ({ row }) => (
-      <Badge variant={row.getValue('provider') === 'openai' ? 'default' : 'secondary'}>
-        {row.getValue('provider')}
-      </Badge>
-    ),
+    cell: ({ row }) => {
+      const { editingRowId, editingValues, setEditingValues } = useTableEditing()
+      const isEditing = editingRowId === (row.getValue('id') as number)
+      if (!isEditing) {
+        return (
+          <Badge variant={row.getValue('provider') === 'openai' ? 'default' : 'secondary'}>
+            {row.getValue('provider')}
+          </Badge>
+        )
+      }
+      return (
+        <Input
+          value={(editingValues.provider as string) ?? String(row.getValue('provider') || '')}
+          onChange={(e) => setEditingValues((prev) => ({ ...prev, provider: e.target.value }))}
+          className="h-8"
+          placeholder="provider"
+        />
+      )
+    },
   },
   {
     accessorKey: 'name',
     header: '이름',
-    cell: ({ row }) => <div className="font-medium">{row.getValue('name')}</div>,
+    cell: ({ row }) => {
+      const { editingRowId, editingValues, setEditingValues } = useTableEditing()
+      const isEditing = editingRowId === (row.getValue('id') as number)
+      if (!isEditing) return <div className="font-medium">{row.getValue('name')}</div>
+      return (
+        <Input
+          value={(editingValues.name as string) ?? ''}
+          onChange={(e) => setEditingValues((prev) => ({ ...prev, name: e.target.value }))}
+          className="h-8"
+          placeholder="이름"
+        />
+      )
+    },
   },
   {
     accessorKey: 'is_active',
     header: '활성',
-    cell: ({ row }) => (
-      <Badge variant={row.getValue('is_active') ? 'default' : 'secondary'}>
-        {row.getValue('is_active') ? '활성' : '비활성'}
-      </Badge>
-    ),
+    cell: ({ row }) => {
+      const { editingRowId, editingValues, setEditingValues } = useTableEditing()
+      const isEditing = editingRowId === (row.getValue('id') as number)
+      if (!isEditing) {
+        return (
+          <Badge variant={row.getValue('is_active') ? 'default' : 'secondary'}>
+            {row.getValue('is_active') ? '활성' : '비활성'}
+          </Badge>
+        )
+      }
+      return (
+        <input
+          type="checkbox"
+          checked={Boolean(editingValues.is_active ?? row.getValue('is_active'))}
+          onChange={(e) => setEditingValues((prev) => ({ ...prev, is_active: e.target.checked }))}
+        />
+      )
+    },
   },
   {
     accessorKey: 'is_default',
     header: '기본값',
-    cell: ({ row }) => (
-      <Badge variant={row.getValue('is_default') ? 'default' : 'secondary'}>
-        {row.getValue('is_default') ? '기본' : '일반'}
-      </Badge>
-    ),
+    cell: ({ row }) => {
+      const { editingRowId, editingValues, setEditingValues } = useTableEditing()
+      const isEditing = editingRowId === (row.getValue('id') as number)
+      if (!isEditing) {
+        return (
+          <Badge variant={row.getValue('is_default') ? 'default' : 'secondary'}>
+            {row.getValue('is_default') ? '기본' : '일반'}
+          </Badge>
+        )
+      }
+      return (
+        <input
+          type="checkbox"
+          checked={Boolean(editingValues.is_default ?? row.getValue('is_default'))}
+          onChange={(e) => setEditingValues((prev) => ({ ...prev, is_default: e.target.checked }))}
+        />
+      )
+    },
   },
   {
     accessorKey: 'created_at',
     header: '생성일',
-    cell: ({ row }) => format(new Date(row.getValue('created_at')), 'yyyy-MM-dd HH:mm'),
+    cell: ({ row }) => {
+      const { editingRowId, editingValues, setEditingValues } = useTableEditing()
+      const isEditing = editingRowId === (row.getValue('id') as number)
+      if (!isEditing) return format(new Date(row.getValue('created_at')), 'yyyy-MM-dd HH:mm')
+      const toLocal = (iso?: string) => {
+        if (!iso) return ''
+        const d = new Date(iso)
+        const pad = (n: number) => String(n).padStart(2, '0')
+        const yyyy = d.getFullYear()
+        const mm = pad(d.getMonth() + 1)
+        const dd = pad(d.getDate())
+        const hh = pad(d.getHours())
+        const mi = pad(d.getMinutes())
+        return `${yyyy}-${mm}-${dd}T${hh}:${mi}`
+      }
+      return (
+        <input
+          type="datetime-local"
+          value={toLocal(editingValues.created_at as string)}
+          onChange={(e) => setEditingValues((prev) => ({ ...prev, created_at: new Date(e.target.value).toISOString() }))}
+          className="h-8 rounded border px-2 text-sm"
+        />
+      )
+    },
   },
   {
     accessorKey: 'updated_at',
     header: '수정일',
-    cell: ({ row }) => format(new Date(row.getValue('updated_at')), 'yyyy-MM-dd HH:mm'),
+    cell: ({ row }) => {
+      const { editingRowId, editingValues, setEditingValues } = useTableEditing()
+      const isEditing = editingRowId === (row.getValue('id') as number)
+      if (!isEditing) return format(new Date(row.getValue('updated_at')), 'yyyy-MM-dd HH:mm')
+      const toLocal = (iso?: string) => {
+        if (!iso) return ''
+        const d = new Date(iso)
+        const pad = (n: number) => String(n).padStart(2, '0')
+        const yyyy = d.getFullYear()
+        const mm = pad(d.getMonth() + 1)
+        const dd = pad(d.getDate())
+        const hh = pad(d.getHours())
+        const mi = pad(d.getMinutes())
+        return `${yyyy}-${mm}-${dd}T${hh}:${mi}`
+      }
+      return (
+        <input
+          type="datetime-local"
+          value={toLocal(editingValues.updated_at as string)}
+          onChange={(e) => setEditingValues((prev) => ({ ...prev, updated_at: new Date(e.target.value).toISOString() }))}
+          className="h-8 rounded border px-2 text-sm"
+        />
+      )
+    },
   },
   {
     id: 'actions',
