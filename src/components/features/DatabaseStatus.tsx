@@ -75,7 +75,20 @@ export function DatabaseStatus({ onRefresh }: DatabaseStatusProps) {
     toast.success('데이터베이스 상태를 새로고침했습니다')
   }
 
-  const fetchTableData = async (tableName: string) => {
+  const getTableDisplayName = useCallback((tableName: string) => {
+    switch (tableName) {
+      case TABLE_NAMES.EP_DATA:
+        return 'EP 데이터'
+      case TABLE_NAMES.DELETED_ITEMS:
+        return '삭제된 아이템'
+      case TABLE_NAMES.API_KEYS:
+        return 'API 키'
+      default:
+        return tableName
+    }
+  }, [])
+
+  const fetchTableData = useCallback(async (tableName: string) => {
     try {
       setIsTableLoading(true)
       // Supabase 1000개 제한 우회: API를 페이지네이션으로 반복 호출
@@ -86,8 +99,8 @@ export function DatabaseStatus({ onRefresh }: DatabaseStatusProps) {
         const url = `/api/admin/table-data?table=${tableName}&page=${page}&limit=${limit}`
         const response = await fetch(url)
         if (!response.ok) {
-          const errorData = await response.json().catch(() => ({}))
-          const errorMessage = (errorData as any).error || '테이블 데이터 조회 실패'
+          const errorData: unknown = await response.json().catch(() => ({}))
+          const errorMessage = (errorData as { error?: string }).error ?? '테이블 데이터 조회 실패'
           throw new Error(errorMessage)
         }
         const result = await response.json()
@@ -115,7 +128,7 @@ export function DatabaseStatus({ onRefresh }: DatabaseStatusProps) {
     } finally {
       setIsTableLoading(false)
     }
-  }
+  }, [getTableDisplayName])
 
   const handleDeleteData = async (ids: string[]) => {
     try {
@@ -191,18 +204,7 @@ export function DatabaseStatus({ onRefresh }: DatabaseStatusProps) {
     }
   }
 
-  const getTableDisplayName = (tableName: string) => {
-    switch (tableName) {
-      case TABLE_NAMES.EP_DATA:
-        return 'EP 데이터'
-      case TABLE_NAMES.DELETED_ITEMS:
-        return '삭제된 아이템'
-      case TABLE_NAMES.API_KEYS:
-        return 'API 키'
-      default:
-        return tableName
-    }
-  }
+  // getTableDisplayName는 위 useCallback으로 대체됨
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleString('ko-KR')
