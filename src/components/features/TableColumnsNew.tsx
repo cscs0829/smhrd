@@ -5,11 +5,368 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Checkbox } from '@/components/ui/checkbox'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
-import { MoreHorizontal, Edit, Trash2, Eye, Copy } from 'lucide-react'
-// import { toast } from 'sonner'
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { MoreHorizontal, Edit, Trash2, Copy } from 'lucide-react'
+import { toast } from 'sonner'
 import { format } from 'date-fns'
+import { useState } from 'react'
 
-import { EpData, DeletedItem, ApiKey, CityImage, Title } from '@/types/database'
+import { EpData, DeletedItem, ApiKey } from '@/types/database'
+import { Row } from '@tanstack/react-table'
+
+// EP 데이터 액션 컴포넌트
+function EpDataActions({ row }: { row: Row<EpData> }) {
+  const [isEditOpen, setIsEditOpen] = useState(false)
+  const [isDeleteOpen, setIsDeleteOpen] = useState(false)
+  const [editData, setEditData] = useState({
+    title: row.getValue('title') as string,
+  })
+
+  const handleEdit = () => {
+    setIsEditOpen(true)
+  }
+
+  const handleSaveEdit = async () => {
+    try {
+      // TODO: API 호출로 데이터 수정
+      toast.success('데이터가 성공적으로 수정되었습니다.')
+      setIsEditOpen(false)
+    } catch {
+      toast.error('데이터 수정 중 오류가 발생했습니다.')
+    }
+  }
+
+  const handleDelete = async () => {
+    try {
+      // TODO: API 호출로 데이터 삭제
+      toast.success('데이터가 성공적으로 삭제되었습니다.')
+      setIsDeleteOpen(false)
+    } catch {
+      toast.error('데이터 삭제 중 오류가 발생했습니다.')
+    }
+  }
+
+  return (
+    <div className="flex items-center space-x-2">
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" className="h-8 w-8 p-0">
+            <span className="sr-only">메뉴 열기</span>
+            <MoreHorizontal className="h-4 w-4" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <DropdownMenuLabel>액션</DropdownMenuLabel>
+          <DropdownMenuItem onClick={() => navigator.clipboard.writeText(row.getValue('title'))}>
+            <Copy className="mr-2 h-4 w-4" />
+            제목 복사
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem onClick={handleEdit}>
+            <Edit className="h-4 w-4 mr-2" />
+            수정
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem 
+            className="text-red-600"
+            onClick={() => setIsDeleteOpen(true)}
+          >
+            <Trash2 className="h-4 w-4 mr-2" />
+            삭제
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      {/* 수정 Dialog */}
+      <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>EP 데이터 수정</DialogTitle>
+            <DialogDescription>
+              제목을 수정하고 저장하세요.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="title">제목</Label>
+              <Input
+                id="title"
+                value={editData.title}
+                onChange={(e) => setEditData({...editData, title: e.target.value})}
+                placeholder="제목을 입력하세요"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsEditOpen(false)}>
+              취소
+            </Button>
+            <Button onClick={handleSaveEdit}>
+              저장
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* 삭제 AlertDialog */}
+      <AlertDialog open={isDeleteOpen} onOpenChange={setIsDeleteOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>정말 삭제하시겠습니까?</AlertDialogTitle>
+            <AlertDialogDescription>
+              이 작업은 되돌릴 수 없습니다. 이 데이터를 영구적으로 삭제하시겠습니까?
+              <br />
+              <strong>제목: {row.getValue('title')}</strong>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>취소</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleDelete}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              삭제
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </div>
+  )
+}
+
+// 삭제된 아이템 액션 컴포넌트
+function DeletedItemActions({ row }: { row: Row<DeletedItem> }) {
+  const [isDeleteOpen, setIsDeleteOpen] = useState(false)
+
+  const handleDelete = async () => {
+    try {
+      // TODO: API 호출로 데이터 삭제
+      toast.success('데이터가 성공적으로 삭제되었습니다.')
+      setIsDeleteOpen(false)
+    } catch {
+      toast.error('데이터 삭제 중 오류가 발생했습니다.')
+    }
+  }
+
+  return (
+    <div className="flex items-center space-x-2">
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" className="h-8 w-8 p-0">
+            <span className="sr-only">메뉴 열기</span>
+            <MoreHorizontal className="h-4 w-4" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <DropdownMenuLabel>액션</DropdownMenuLabel>
+          <DropdownMenuItem onClick={() => navigator.clipboard.writeText(row.getValue('title'))}>
+            <Copy className="mr-2 h-4 w-4" />
+            제목 복사
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem 
+            className="text-red-600"
+            onClick={() => setIsDeleteOpen(true)}
+          >
+            <Trash2 className="h-4 w-4 mr-2" />
+            영구 삭제
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      {/* 삭제 AlertDialog */}
+      <AlertDialog open={isDeleteOpen} onOpenChange={setIsDeleteOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>정말 영구 삭제하시겠습니까?</AlertDialogTitle>
+            <AlertDialogDescription>
+              이 작업은 되돌릴 수 없습니다. 이 데이터를 영구적으로 삭제하시겠습니까?
+              <br />
+              <strong>제목: {row.getValue('title')}</strong>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>취소</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleDelete}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              영구 삭제
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </div>
+  )
+}
+
+// API 키 액션 컴포넌트
+function ApiKeyActions({ row }: { row: Row<ApiKey> }) {
+  const [isEditOpen, setIsEditOpen] = useState(false)
+  const [isDeleteOpen, setIsDeleteOpen] = useState(false)
+  const [editData, setEditData] = useState({
+    name: row.getValue('name') as string,
+    provider: row.getValue('provider') as string,
+    api_key: row.getValue('api_key') as string,
+    is_active: row.getValue('is_active') as boolean,
+    is_default: row.getValue('is_default') as boolean,
+  })
+
+  const handleEdit = () => {
+    setIsEditOpen(true)
+  }
+
+  const handleSaveEdit = async () => {
+    try {
+      // TODO: API 호출로 데이터 수정
+      toast.success('API 키가 성공적으로 수정되었습니다.')
+      setIsEditOpen(false)
+    } catch {
+      toast.error('API 키 수정 중 오류가 발생했습니다.')
+    }
+  }
+
+  const handleDelete = async () => {
+    try {
+      // TODO: API 호출로 데이터 삭제
+      toast.success('API 키가 성공적으로 삭제되었습니다.')
+      setIsDeleteOpen(false)
+    } catch {
+      toast.error('API 키 삭제 중 오류가 발생했습니다.')
+    }
+  }
+
+  return (
+    <div className="flex items-center space-x-2">
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" className="h-8 w-8 p-0">
+            <span className="sr-only">메뉴 열기</span>
+            <MoreHorizontal className="h-4 w-4" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <DropdownMenuLabel>액션</DropdownMenuLabel>
+          <DropdownMenuItem onClick={() => navigator.clipboard.writeText(row.getValue('api_key'))}>
+            <Copy className="mr-2 h-4 w-4" />
+            API 키 복사
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem onClick={handleEdit}>
+            <Edit className="h-4 w-4 mr-2" />
+            수정
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem 
+            className="text-red-600"
+            onClick={() => setIsDeleteOpen(true)}
+          >
+            <Trash2 className="h-4 w-4 mr-2" />
+            삭제
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      {/* 수정 Dialog */}
+      <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>API 키 수정</DialogTitle>
+            <DialogDescription>
+              API 키 정보를 수정하고 저장하세요.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="name">이름</Label>
+              <Input
+                id="name"
+                value={editData.name}
+                onChange={(e) => setEditData({...editData, name: e.target.value})}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="provider">제공자</Label>
+              <Input
+                id="provider"
+                value={editData.provider}
+                onChange={(e) => setEditData({...editData, provider: e.target.value})}
+                disabled
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="api_key">API 키</Label>
+              <Input
+                id="api_key"
+                type="password"
+                value={editData.api_key}
+                onChange={(e) => setEditData({...editData, api_key: e.target.value})}
+              />
+            </div>
+            <div className="flex items-center space-x-4">
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="is_active"
+                  checked={editData.is_active}
+                  onChange={(e) => setEditData({...editData, is_active: e.target.checked})}
+                  className="rounded"
+                />
+                <Label htmlFor="is_active">활성화</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="is_default"
+                  checked={editData.is_default}
+                  onChange={(e) => setEditData({...editData, is_default: e.target.checked})}
+                  className="rounded"
+                />
+                <Label htmlFor="is_default">기본값</Label>
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsEditOpen(false)}>
+              취소
+            </Button>
+            <Button onClick={handleSaveEdit}>
+              저장
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* 삭제 AlertDialog */}
+      <AlertDialog open={isDeleteOpen} onOpenChange={setIsDeleteOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>정말 삭제하시겠습니까?</AlertDialogTitle>
+            <AlertDialogDescription>
+              이 작업은 되돌릴 수 없습니다. 이 API 키를 영구적으로 삭제하시겠습니까?
+              <br />
+              <strong>이름: {row.getValue('name')}</strong>
+              <br />
+              <strong>제공자: {row.getValue('provider')}</strong>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>취소</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleDelete}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              삭제
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </div>
+  )
+}
 
 // EP 데이터 컬럼 정의
 export const epDataColumns: ColumnDef<EpData>[] = [
@@ -46,21 +403,6 @@ export const epDataColumns: ColumnDef<EpData>[] = [
     cell: ({ row }) => <div className="max-w-[200px] truncate">{row.getValue('title')}</div>,
   },
   {
-    accessorKey: 'price_pc',
-    header: '가격 (PC)',
-    cell: ({ row }) => <div className="text-right">{row.getValue('price_pc')?.toLocaleString()}</div>,
-  },
-  {
-    accessorKey: 'brand',
-    header: '브랜드',
-    cell: ({ row }) => <div className="font-medium">{row.getValue('brand') || 'N/A'}</div>,
-  },
-  {
-    accessorKey: 'city',
-    header: '도시',
-    cell: ({ row }) => <div className="font-medium">{row.getValue('city') || 'N/A'}</div>,
-  },
-  {
     accessorKey: 'created_at',
     header: '생성일',
     cell: ({ row }) => format(new Date(row.getValue('created_at')), 'yyyy-MM-dd HH:mm'),
@@ -73,37 +415,7 @@ export const epDataColumns: ColumnDef<EpData>[] = [
   {
     id: 'actions',
     header: '액션',
-    cell: ({ row }) => (
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button variant="ghost" className="h-8 w-8 p-0">
-            <span className="sr-only">메뉴 열기</span>
-            <MoreHorizontal className="h-4 w-4" />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
-          <DropdownMenuLabel>액션</DropdownMenuLabel>
-          <DropdownMenuItem onClick={() => navigator.clipboard.writeText(row.getValue('title'))}>
-            <Copy className="mr-2 h-4 w-4" />
-            제목 복사
-          </DropdownMenuItem>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem>
-            <Eye className="h-4 w-4 mr-2" />
-            상세 보기
-          </DropdownMenuItem>
-          <DropdownMenuItem>
-            <Edit className="h-4 w-4 mr-2" />
-            수정
-          </DropdownMenuItem>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem className="text-red-600">
-            <Trash2 className="h-4 w-4 mr-2" />
-            삭제
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
-    ),
+    cell: ({ row }) => <EpDataActions row={row} />,
   },
 ]
 
@@ -137,22 +449,9 @@ export const deletedItemsColumns: ColumnDef<DeletedItem>[] = [
     cell: ({ row }) => <div className="font-mono text-xs">{row.getValue('id')}</div>,
   },
   {
-    accessorKey: 'original_id',
-    header: '원본 ID',
-    cell: ({ row }) => <div className="font-mono text-xs">{row.getValue('original_id')}</div>,
-  },
-  {
-    accessorKey: 'original_data.title',
-    header: '원본 제목',
-    cell: ({ row }) => {
-      const originalData: EpData = row.getValue('original_data')
-      return <div className="max-w-[200px] truncate">{originalData?.title || 'N/A'}</div>
-    },
-  },
-  {
-    accessorKey: 'reason',
-    header: '삭제 이유',
-    cell: ({ row }) => <Badge variant="destructive">{row.getValue('reason') || 'N/A'}</Badge>,
+    accessorKey: 'title',
+    header: '제목',
+    cell: ({ row }) => <div className="max-w-[200px] truncate">{row.getValue('title')}</div>,
   },
   {
     accessorKey: 'created_at',
@@ -160,34 +459,14 @@ export const deletedItemsColumns: ColumnDef<DeletedItem>[] = [
     cell: ({ row }) => format(new Date(row.getValue('created_at')), 'yyyy-MM-dd HH:mm'),
   },
   {
+    accessorKey: 'updated_at',
+    header: '수정일',
+    cell: ({ row }) => format(new Date(row.getValue('updated_at')), 'yyyy-MM-dd HH:mm'),
+  },
+  {
     id: 'actions',
     header: '액션',
-    cell: () => (
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button variant="ghost" className="h-8 w-8 p-0">
-            <span className="sr-only">메뉴 열기</span>
-            <MoreHorizontal className="h-4 w-4" />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
-          <DropdownMenuLabel>액션</DropdownMenuLabel>
-          <DropdownMenuItem>
-            <Eye className="h-4 w-4 mr-2" />
-            상세 보기
-          </DropdownMenuItem>
-          <DropdownMenuItem>
-            <Edit className="h-4 w-4 mr-2" />
-            수정
-          </DropdownMenuItem>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem className="text-red-600">
-            <Trash2 className="h-4 w-4 mr-2" />
-            삭제
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
-    ),
+    cell: ({ row }) => <DeletedItemActions row={row} />,
   },
 ]
 
@@ -244,106 +523,11 @@ export const apiKeyColumns: ColumnDef<ApiKey>[] = [
     ),
   },
   {
-    accessorKey: 'usage_count',
-    header: '사용 횟수',
-    cell: ({ row }) => <div className="text-right">{row.getValue('usage_count')}</div>,
-  },
-  {
-    accessorKey: 'created_at',
-    header: '생성일',
-    cell: ({ row }) => format(new Date(row.getValue('created_at')), 'yyyy-MM-dd HH:mm'),
-  },
-  {
-    accessorKey: 'last_used_at',
-    header: '마지막 사용일',
-    cell: ({ row }) => {
-      const lastUsedAt = row.getValue('last_used_at')
-      return lastUsedAt && typeof lastUsedAt === 'string' ? format(new Date(lastUsedAt), 'yyyy-MM-dd HH:mm') : 'N/A'
-    },
-  },
-  {
-    id: 'actions',
-    header: '액션',
-    cell: () => (
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button variant="ghost" className="h-8 w-8 p-0">
-            <span className="sr-only">메뉴 열기</span>
-            <MoreHorizontal className="h-4 w-4" />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
-          <DropdownMenuLabel>액션</DropdownMenuLabel>
-          <DropdownMenuItem>
-            <Eye className="h-4 w-4 mr-2" />
-            상세 보기
-          </DropdownMenuItem>
-          <DropdownMenuItem>
-            <Edit className="h-4 w-4 mr-2" />
-            수정
-          </DropdownMenuItem>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem className="text-red-600">
-            <Trash2 className="h-4 w-4 mr-2" />
-            삭제
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
-    ),
-  },
-]
-
-// 도시 이미지 컬럼 정의
-export const cityImagesColumns: ColumnDef<CityImage>[] = [
-  {
-    id: 'select',
-    header: ({ table }) => (
-      <Checkbox
-        checked={
-          table.getIsAllPageRowsSelected() ||
-          (table.getIsSomePageRowsSelected() && 'indeterminate')
-        }
-        onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-        aria-label="Select all"
-      />
-    ),
+    accessorKey: 'is_default',
+    header: '기본값',
     cell: ({ row }) => (
-      <Checkbox
-        checked={row.getIsSelected()}
-        onCheckedChange={(value) => row.toggleSelected(!!value)}
-        aria-label="Select row"
-      />
-    ),
-    enableSorting: false,
-    enableHiding: false,
-  },
-  {
-    accessorKey: 'id',
-    header: 'ID',
-    cell: ({ row }) => <div className="font-mono text-xs">{row.getValue('id')}</div>,
-  },
-  {
-    accessorKey: 'city',
-    header: '도시',
-    cell: ({ row }) => <div className="font-medium">{row.getValue('city')}</div>,
-  },
-  {
-    accessorKey: 'image_link',
-    header: '이미지 링크',
-    cell: ({ row }) => (
-      <div className="max-w-[200px] truncate text-blue-600 hover:text-blue-800">
-        <a href={row.getValue('image_link')} target="_blank" rel="noopener noreferrer">
-          {row.getValue('image_link')}
-        </a>
-      </div>
-    ),
-  },
-  {
-    accessorKey: 'is_main_image',
-    header: '메인 이미지',
-    cell: ({ row }) => (
-      <Badge variant={row.getValue('is_main_image') === 1 ? 'default' : 'secondary'}>
-        {row.getValue('is_main_image') === 1 ? '메인' : '추가'}
+      <Badge variant={row.getValue('is_default') ? 'default' : 'secondary'}>
+        {row.getValue('is_default') ? '기본' : '일반'}
       </Badge>
     ),
   },
@@ -353,96 +537,19 @@ export const cityImagesColumns: ColumnDef<CityImage>[] = [
     cell: ({ row }) => format(new Date(row.getValue('created_at')), 'yyyy-MM-dd HH:mm'),
   },
   {
+    accessorKey: 'updated_at',
+    header: '수정일',
+    cell: ({ row }) => format(new Date(row.getValue('updated_at')), 'yyyy-MM-dd HH:mm'),
+  },
+  {
     id: 'actions',
     header: '액션',
-    cell: ({ row }) => (
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button variant="ghost" className="h-8 w-8 p-0">
-            <span className="sr-only">메뉴 열기</span>
-            <MoreHorizontal className="h-4 w-4" />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
-          <DropdownMenuLabel>액션</DropdownMenuLabel>
-          <DropdownMenuItem onClick={() => navigator.clipboard.writeText(row.getValue('image_link'))}>
-            <Copy className="mr-2 h-4 w-4" />
-            링크 복사
-          </DropdownMenuItem>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={() => window.open(row.getValue('image_link'), '_blank')}>
-            <Eye className="mr-2 h-4 w-4" />
-            이미지 보기
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
-    ),
+    cell: ({ row }) => <ApiKeyActions row={row} />,
   },
 ]
 
-// 제목 컬럼 정의
-export const titlesColumns: ColumnDef<Title>[] = [
-  {
-    id: 'select',
-    header: ({ table }) => (
-      <Checkbox
-        checked={
-          table.getIsAllPageRowsSelected() ||
-          (table.getIsSomePageRowsSelected() && 'indeterminate')
-        }
-        onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-        aria-label="Select all"
-      />
-    ),
-    cell: ({ row }) => (
-      <Checkbox
-        checked={row.getIsSelected()}
-        onCheckedChange={(value) => row.toggleSelected(!!value)}
-        aria-label="Select row"
-      />
-    ),
-    enableSorting: false,
-    enableHiding: false,
-  },
-  {
-    accessorKey: 'id',
-    header: 'ID',
-    cell: ({ row }) => <div className="font-mono text-xs">{row.getValue('id')}</div>,
-  },
-  {
-    accessorKey: 'title',
-    header: '제목',
-    cell: ({ row }) => <div className="max-w-[300px] truncate">{row.getValue('title')}</div>,
-  },
-  {
-    accessorKey: 'city',
-    header: '도시',
-    cell: ({ row }) => <div className="font-medium">{row.getValue('city') || 'N/A'}</div>,
-  },
-  {
-    accessorKey: 'created_at',
-    header: '생성일',
-    cell: ({ row }) => format(new Date(row.getValue('created_at')), 'yyyy-MM-dd HH:mm'),
-  },
-  {
-    id: 'actions',
-    header: '액션',
-    cell: ({ row }) => (
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button variant="ghost" className="h-8 w-8 p-0">
-            <span className="sr-only">메뉴 열기</span>
-            <MoreHorizontal className="h-4 w-4" />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
-          <DropdownMenuLabel>액션</DropdownMenuLabel>
-          <DropdownMenuItem onClick={() => navigator.clipboard.writeText(row.getValue('title'))}>
-            <Copy className="mr-2 h-4 w-4" />
-            제목 복사
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
-    ),
-  },
-]
+// 도시 이미지 컬럼 정의 (테이블이 존재하지 않음)
+export const cityImagesColumns: ColumnDef<unknown>[] = []
+
+// 제목 컬럼 정의 (테이블이 존재하지 않음)
+export const titlesColumns: ColumnDef<unknown>[] = []
