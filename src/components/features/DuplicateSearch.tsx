@@ -26,7 +26,7 @@ interface SearchFormData extends Record<string, unknown> {
 export function DuplicateSearch() {
   // API 훅 사용
   const { data: searchResult, isLoading, execute: searchDuplicates, reset: resetSearch } = useApi<DuplicateCheckResponse>({
-    showSuccessToast: false, // 성공/실패에 따른 토스트는 별도 처리
+    showSuccessToast: false, // 성공/실패에 따른 토스트는 별도
     showErrorToast: true
   })
 
