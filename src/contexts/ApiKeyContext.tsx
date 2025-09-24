@@ -196,7 +196,7 @@ export function ApiKeyProvider({ children }: ApiKeyProviderProps) {
   }
 
   // API 키 삭제
-  const deleteApiKey = (id: number) => {
+  const deleteApiKey = (id: string) => {
     setApiKeys(prev => {
       const updated = prev.filter(k => k.id !== id)
       saveApiKeysToStorage(updated)
@@ -205,7 +205,7 @@ export function ApiKeyProvider({ children }: ApiKeyProviderProps) {
   }
 
   // API 키 활성화/비활성화 - Context7 단일 활성화 패턴 사용
-  const toggleApiKeyActive = (id: number, isActive: boolean) => {
+  const toggleApiKeyActive = (id: string, isActive: boolean) => {
     setApiKeys(prev => {
       const targetKey = prev.find(k => k.id === id)
       if (!targetKey) return prev

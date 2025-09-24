@@ -27,7 +27,7 @@ export function KeywordTitleGenerator() {
   
   // AI 모델 설정을 내부에서 관리
   const [selectedModel, setSelectedModel] = useState<string>(getRecommendedModel().id)
-  const [selectedApiKeyId, setSelectedApiKeyId] = useState<number>(0)
+  const [selectedApiKeyId, setSelectedApiKeyId] = useState<string>('')
   const [temperature, setTemperature] = useState<number>(0.7)
   const [maxTokens, setMaxTokens] = useState<number>(100)
   const [location, setLocation] = useState('')
@@ -39,7 +39,7 @@ export function KeywordTitleGenerator() {
 
   // 활성 상태인 API 키를 자동으로 선택 (기본값 우선)
   useEffect(() => {
-    if (apiKeys.length > 0 && selectedApiKeyId === 0) {
+    if (apiKeys.length > 0 && selectedApiKeyId === '') {
       // 기본값으로 설정된 API 키를 먼저 찾기
       const defaultApiKey = apiKeys.find(key => key.isActive && key.isDefault)
       if (defaultApiKey) {

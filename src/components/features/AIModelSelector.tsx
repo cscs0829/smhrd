@@ -19,8 +19,8 @@ import { useSpring, animated } from '@react-spring/web' // Context7 React Spring
 interface AIModelSelectorProps {
   selectedModel: string
   onModelChange: (modelId: string) => void
-  selectedApiKeyId?: number
-  onApiKeyChange?: (apiKeyId: number) => void
+  selectedApiKeyId?: string
+  onApiKeyChange?: (apiKeyId: string) => void
   temperature?: number
   onTemperatureChange?: (temperature: number) => void
   maxTokens?: number
@@ -40,7 +40,7 @@ export function AIModelSelector({
   const { apiKeys } = useApiKeys() // 전역 상태에서 API 키 가져오기
   const [open, setOpen] = useState(false)
   const [selectedProvider, setSelectedProvider] = useState<'openai' | 'gemini'>('openai')
-  const [tempApiKeyId, setTempApiKeyId] = useState(selectedApiKeyId || 0)
+  const [tempApiKeyId, setTempApiKeyId] = useState(selectedApiKeyId || '')
   const [tempTemperature, setTempTemperature] = useState(temperature)
   const [tempMaxTokens, setTempMaxTokens] = useState(maxTokens)
 
@@ -70,7 +70,7 @@ export function AIModelSelector({
 
   // 활성 상태인 API 키를 자동으로 선택 (기본값 우선)
   useEffect(() => {
-    if (apiKeys.length > 0 && (!tempApiKeyId || tempApiKeyId === 0)) {
+    if (apiKeys.length > 0 && (!tempApiKeyId || tempApiKeyId === '')) {
       // 기본값으로 설정된 API 키를 먼저 찾기
       const defaultApiKey = apiKeys.find(key => key.isActive && key.isDefault)
       if (defaultApiKey) {
@@ -134,8 +134,8 @@ export function AIModelSelector({
         
         toast.success(`${model.provider.toUpperCase()} 활성화된 API 키가 자동 선택되었습니다`)
       } else {
-        setTempApiKeyId(0)
-        onApiKeyChange?.(0)
+        setTempApiKeyId('')
+        onApiKeyChange?.('')
         toast.warning(`${model.provider.toUpperCase()} 활성화된 API 키가 없습니다`)
       }
     }
@@ -283,7 +283,7 @@ export function AIModelSelector({
                       ...apiKeySprings
                     }}
                   >
-                    <Select value={tempApiKeyId.toString()} onValueChange={(value) => setTempApiKeyId(parseInt(value))}>
+                    <Select value={tempApiKeyId} onValueChange={(value) => setTempApiKeyId(value)}>
                       <SelectTrigger>
                         <SelectValue placeholder="API 키를 선택하세요" />
                       </SelectTrigger>
@@ -291,7 +291,7 @@ export function AIModelSelector({
                         {apiKeys
                           .filter(key => key.provider === selectedProvider && key.isActive)
                           .map((key) => (
-                            <SelectItem key={key.id} value={key.id.toString()}>
+                            <SelectItem key={key.id} value={key.id}>
                               <div className="flex items-center gap-2">
                                 <span>{key.name}</span>
                                 {key.description && (
