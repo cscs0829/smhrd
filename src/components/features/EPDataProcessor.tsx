@@ -39,7 +39,7 @@ export function EPDataProcessor({ onFileSelect }: FileProcessorProps) {
     acceptedTypes: FILE_CONFIG.ALLOWED_EXCEL_TYPES as readonly FileType[],
     maxFileSize: FILE_CONFIG.MAX_SIZE_MB,
     onSuccess: (data) => {
-      setNewItems(data)
+      setNewItems(data as ExcelDataItem[])
     },
     onError: (error) => {
       handleError(error, { component: 'EPDataProcessor', action: 'processFile' })
