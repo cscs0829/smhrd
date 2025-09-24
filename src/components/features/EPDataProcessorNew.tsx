@@ -336,7 +336,7 @@ export function EPDataProcessorNew({ onFileSelect }: EPDataProcessorNewProps) {
             </Card>
           )}
 
-          {/* 삭제할 데이터 */}
+          {/* 삭제 데이터 */}
           {comparisonResult.itemsToRemove.length > 0 && (
             <Card>
               <CardHeader>
