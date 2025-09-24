@@ -56,6 +56,21 @@ export function ImageLinkGenerator() {
     return uniqueEntries
   }, [uniqueEntries])
 
+  const previewRows = useMemo(() => {
+    if (uniqueEntries.length === 0) return []
+    
+    const rows = []
+    const maxPreviewRows = Math.min(uniqueEntries.length, 5) // 최대 5개까지 미리보기
+    
+    for (let i = 0; i < maxPreviewRows; i++) {
+      const imageLink = mainCandidates[getRandomInt(0, mainCandidates.length - 1)].url
+      const addList = shuffleArray(uniqueEntries)
+      const addImageLink = addList.map(e => e.url).join('|')
+      rows.push({ image_link: imageLink, add_image_link: addImageLink })
+    }
+    return rows
+  }, [uniqueEntries, mainCandidates])
+
   const handleAddEntry = () => {
     if (uniqueEntries.length >= 11) {
       toast.warning('최대 11개까지 추가할 수 있어요')
@@ -70,6 +85,23 @@ export function ImageLinkGenerator() {
 
   const handleChangeUrl = (index: number, value: string) => {
     setEntries(prev => prev.map((e, i) => (i === index ? { ...e, url: value } : e)))
+  }
+
+  const handleKeyPress = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault()
+      // 현재 입력창이 비어있지 않고, 마지막 행이 아니며, 11개 미만인 경우에만 새 행 추가
+      if (entries[index].url.trim() && index === entries.length - 1 && entries.length < 11) {
+        setEntries(prev => [...prev, { url: '', isMain: false }])
+        // 다음 입력창으로 포커스 이동
+        setTimeout(() => {
+          const nextInput = document.querySelector(`input[data-input-index="${index + 1}"]`) as HTMLInputElement
+          if (nextInput) {
+            nextInput.focus()
+          }
+        }, 0)
+      }
+    }
   }
 
   const handleToggleMain = (index: number) => {
@@ -196,6 +228,8 @@ export function ImageLinkGenerator() {
                               placeholder={`https://example.com/image-${index + 1}.jpg`}
                               value={entry.url}
                               onChange={(e) => handleChangeUrl(index, e.target.value)}
+                              onKeyDown={(e) => handleKeyPress(index, e)}
+                              data-input-index={index}
                             />
                           </TableCell>
                           <TableCell>
@@ -222,7 +256,8 @@ export function ImageLinkGenerator() {
                     </TableBody>
                   </Table>
                   <div className="p-2 text-xs text-muted-foreground">
-                    아무 것도 체크하지 않으면 모든 링크가 메인 후보로 사용됩니다. 최대 11개까지 추가할 수 있어요.
+                    아무 것도 체크하지 않으면 모든 링크가 메인 후보로 사용됩니다. 최대 11개까지 추가할 수 있어요.<br/>
+                    <span className="text-blue-600 font-medium">💡 팁: 이미지링크를 입력한 후 엔터키를 누르면 자동으로 다음 입력창이 생성됩니다!</span>
                   </div>
                 </div>
               </div>
@@ -247,20 +282,27 @@ export function ImageLinkGenerator() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {/* 간단한 미리보기 */}
-                      <TableRow>
-                        <TableCell className="truncate max-w-xs" title={mainCandidates[0]?.url || ''}>
-                          {mainCandidates[0]?.url || '-'}
-                        </TableCell>
-                        <TableCell className="truncate max-w-xs" title={uniqueEntries.map(e => e.url).join('|')}>
-                          {uniqueEntries.map(e => e.url).join('|') || '-'}
-                        </TableCell>
-                      </TableRow>
+                      {/* 미리보기 행들 */}
+                      {previewRows.length > 0 ? (
+                        previewRows.map((row, index) => (
+                          <TableRow key={index}>
+                            <TableCell className="truncate max-w-xs" title={row.image_link}>
+                              {row.image_link}
+                            </TableCell>
+                            <TableCell className="truncate max-w-xs" title={row.add_image_link}>
+                              {row.add_image_link}
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      ) : (
+                        <TableRow>
+                          <TableCell colSpan={2} className="text-center text-gray-500">
+                            이미지링크를 입력하면 예시가 표시됩니다
+                          </TableCell>
+                        </TableRow>
+                      )}
                     </TableBody>
                   </Table>
-                  <div className="p-2 text-xs text-muted-foreground">
-                    아무 것도 체크하지 않으면 모든 링크가 메인 후보로 사용됩니다. 최대 11개까지 추가할 수 있어요.
-                  </div>
                 </div>
               </div>
             </div>
