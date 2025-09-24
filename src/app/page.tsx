@@ -35,7 +35,7 @@ export default function Home() {
     <div className="flex flex-col min-h-screen bg-background dark:bg-background">
       {/* 상단 헤더 영역 */}
       <div className="sticky top-0 z-50 w-full border-b bg-background/95 dark:bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 shadow-sm">
-        <div className="container flex h-16 max-w-screen-2xl items-center justify-between px-4">
+        <div className="container mx-auto flex h-16 max-w-screen-2xl items-center justify-between px-4">
           {/* 로고 */}
           <div className="flex items-center space-x-3 group">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground group-hover:bg-primary/90 transition-colors">

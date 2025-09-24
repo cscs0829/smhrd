@@ -158,6 +158,28 @@ export function DatabaseStatus({ onRefresh }: DatabaseStatusProps) {
     }
   }
 
+  const handleDeleteAllData = async () => {
+    try {
+      if (!activeTable) return
+      const response = await fetch('/api/admin/truncate-table', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ table: activeTable }),
+      })
+
+      if (!response.ok) {
+        throw new Error('전체 삭제 실패')
+      }
+
+      toast.success('테이블 전체 데이터가 삭제되었습니다')
+      await fetchTableData(activeTable)
+      await fetchDbStatus()
+    } catch (error) {
+      console.error('전체 삭제 오류:', error)
+      toast.error('전체 삭제에 실패했습니다')
+    }
+  }
+
   // 저장/삭제 후 테이블 새로고침을 위한 글로벌 이벤트 리스너
   useEffect(() => {
     const handler = () => {
@@ -471,6 +493,7 @@ export function DatabaseStatus({ onRefresh }: DatabaseStatusProps) {
                   columns={getTableColumns(activeTable)}
                   onRefresh={() => fetchTableData(activeTable)}
                   onDelete={handleDeleteData}
+                  onDeleteAll={handleDeleteAllData}
                   onExport={handleExportData}
                 />
               )}
