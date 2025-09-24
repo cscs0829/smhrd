@@ -14,12 +14,13 @@ import { useApiKeys } from '@/contexts/ApiKeyContext'
 import { useSpring, animated } from '@react-spring/web' // Context7 React Spring 패턴
 
 interface ApiKey {
-  id: number
+  id: string
   provider: 'openai' | 'gemini'
   name: string
   description?: string
   apiKey: string
   isActive: boolean
+  isDefault?: boolean
   createdAt: string
   lastUsedAt?: string
   usageCount: number
@@ -30,8 +31,8 @@ export function ApiKeyManager() {
   
   const [open, setOpen] = useState(false)
   const [editingKey, setEditingKey] = useState<ApiKey | null>(null)
-  const [showKeys, setShowKeys] = useState<Record<number, boolean>>({})
-  const [actionLoading, setActionLoading] = useState<{ [key: number]: boolean }>({})
+  const [showKeys, setShowKeys] = useState<Record<string, boolean>>({})
+  const [actionLoading, setActionLoading] = useState<{ [key: string]: boolean }>({})
 
   // 폼 상태
   const [formData, setFormData] = useState({
@@ -135,7 +136,7 @@ export function ApiKeyManager() {
   }
 
   // API 키 삭제 함수
-  const handleDelete = async (id: number) => {
+  const handleDelete = async (id: string) => {
     if (actionLoading[id]) return // 이미 처리 중이면 무시
     if (!confirm('정말로 이 API 키를 삭제하시겠습니까?')) return
 
@@ -164,7 +165,7 @@ export function ApiKeyManager() {
   }
 
   // API 키 활성화/비활성화 함수
-  const handleToggleActive = async (id: number) => {
+  const handleToggleActive = async (id: string) => {
     if (actionLoading[id]) return // 이미 처리 중이면 무시
     
     try {
@@ -228,7 +229,7 @@ export function ApiKeyManager() {
   }
 
   // API 키 표시/숨김 토글
-  const toggleKeyVisibility = (id: number) => {
+  const toggleKeyVisibility = (id: string) => {
     setShowKeys(prev => ({ ...prev, [id]: !prev[id] }))
   }
 

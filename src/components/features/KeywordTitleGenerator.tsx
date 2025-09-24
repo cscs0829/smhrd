@@ -37,16 +37,22 @@ export function KeywordTitleGenerator() {
   const [isGenerating, setIsGenerating] = useState(false)
   const [generatedTitles, setGeneratedTitles] = useState<GeneratedTitle[]>([])
 
-  // 활성 상태인 API 키를 자동으로 선택
+  // 활성 상태인 API 키를 자동으로 선택 (기본값 우선)
   useEffect(() => {
     if (apiKeys.length > 0 && selectedApiKeyId === 0) {
-      // 활성 상태인 API 키 중에서 첫 번째 선택
-      const activeApiKey = apiKeys.find(key => key.isActive)
-      if (activeApiKey) {
-        setSelectedApiKeyId(activeApiKey.id)
+      // 기본값으로 설정된 API 키를 먼저 찾기
+      const defaultApiKey = apiKeys.find(key => key.isActive && key.isDefault)
+      if (defaultApiKey) {
+        setSelectedApiKeyId(defaultApiKey.id)
       } else {
-        // 활성 상태인 키가 없으면 첫 번째 키 선택
-        setSelectedApiKeyId(apiKeys[0].id)
+        // 기본값이 없으면 활성 상태인 API 키 중에서 첫 번째 선택
+        const activeApiKey = apiKeys.find(key => key.isActive)
+        if (activeApiKey) {
+          setSelectedApiKeyId(activeApiKey.id)
+        } else {
+          // 활성 상태인 키가 없으면 첫 번째 키 선택
+          setSelectedApiKeyId(apiKeys[0].id)
+        }
       }
     }
   }, [apiKeys, selectedApiKeyId])

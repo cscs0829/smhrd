@@ -15,13 +15,26 @@ export async function GET() {
   try {
     const supabase = getSupabase()
     const { data, error } = await supabase
-      .from('api_keys')
+      .from('api')
       .select('*')
       .order('created_at', { ascending: false })
 
     if (error) throw error
 
-    return NextResponse.json({ data })
+    // 기존 api_keys 테이블 형식으로 변환
+    const transformedData = data?.map(item => ({
+      id: item.id,
+      provider: item.provider,
+      name: item.name,
+      description: item.description,
+      apiKey: item.api_key,
+      isActive: item.is_active,
+      createdAt: item.created_at,
+      lastUsedAt: item.last_used_at,
+      usageCount: item.usage_count || 0
+    })) || []
+
+    return NextResponse.json({ data: transformedData })
   } catch (error: unknown) {
     console.error('API 키 조회 오류:', error)
     const message = error instanceof Error ? error.message : '알 수 없는 오류가 발생했습니다.'
@@ -49,20 +62,34 @@ export async function POST(req: NextRequest) {
 
     const supabase = getSupabase()
     const { data, error } = await supabase
-      .from('api_keys')
+      .from('api')
       .insert({
         provider,
         name,
         description,
-        api_key: apiKey, // 실제 환경에서는 암호화 필요
-        is_active: true
+        api_key: apiKey,
+        is_active: true,
+        is_default: false
       })
       .select()
       .single()
 
     if (error) throw error
 
-    return NextResponse.json({ data })
+    // 기존 api_keys 테이블 형식으로 변환
+    const transformedData = {
+      id: data.id,
+      provider: data.provider,
+      name: data.name,
+      description: data.description,
+      apiKey: data.api_key,
+      isActive: data.is_active,
+      createdAt: data.created_at,
+      lastUsedAt: data.last_used_at,
+      usageCount: data.usage_count || 0
+    }
+
+    return NextResponse.json({ data: transformedData })
   } catch (error: unknown) {
     console.error('API 키 생성 오류:', error)
     const message = error instanceof Error ? error.message : '알 수 없는 오류가 발생했습니다.'
@@ -92,7 +119,7 @@ export async function PUT(req: NextRequest) {
 
     const supabase = getSupabase()
     const { data, error } = await supabase
-      .from('api_keys')
+      .from('api')
       .update(updateData)
       .eq('id', id)
       .select()
@@ -100,7 +127,20 @@ export async function PUT(req: NextRequest) {
 
     if (error) throw error
 
-    return NextResponse.json({ data })
+    // 기존 api_keys 테이블 형식으로 변환
+    const transformedData = {
+      id: data.id,
+      provider: data.provider,
+      name: data.name,
+      description: data.description,
+      apiKey: data.api_key,
+      isActive: data.is_active,
+      createdAt: data.created_at,
+      lastUsedAt: data.last_used_at,
+      usageCount: data.usage_count || 0
+    }
+
+    return NextResponse.json({ data: transformedData })
   } catch (error: unknown) {
     console.error('API 키 수정 오류:', error)
     const message = error instanceof Error ? error.message : '알 수 없는 오류가 발생했습니다.'
@@ -120,7 +160,7 @@ export async function DELETE(req: NextRequest) {
 
     const supabase = getSupabase()
     const { error } = await supabase
-      .from('api_keys')
+      .from('api')
       .delete()
       .eq('id', id)
 

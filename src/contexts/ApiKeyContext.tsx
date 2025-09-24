@@ -4,12 +4,13 @@ import React, { createContext, useContext, useState, useEffect, useCallback, Rea
 import { toast } from 'sonner'
 
 interface ApiKey {
-  id: number
+  id: string
   provider: 'openai' | 'gemini'
   name: string
   description?: string
   apiKey: string
   isActive: boolean
+  isDefault?: boolean
   createdAt: string
   lastUsedAt?: string
   usageCount: number
@@ -22,8 +23,8 @@ interface ApiKeyContextType {
   loadApiKeys: (forceRefresh?: boolean) => Promise<void>
   addApiKey: (key: ApiKey) => void
   updateApiKey: (key: ApiKey) => void
-  deleteApiKey: (id: number) => void
-  toggleApiKeyActive: (id: number, isActive: boolean) => void
+  deleteApiKey: (id: string) => void
+  toggleApiKeyActive: (id: string, isActive: boolean) => void
 }
 
 const ApiKeyContext = createContext<ApiKeyContextType | undefined>(undefined)
