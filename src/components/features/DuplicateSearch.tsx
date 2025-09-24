@@ -19,7 +19,7 @@ import {
 import { handleError } from '@/utils/errorHandler'
 import { validators } from '@/utils/validation'
 
-interface SearchFormData {
+interface SearchFormData extends Record<string, unknown> {
   title: string
 }
 
