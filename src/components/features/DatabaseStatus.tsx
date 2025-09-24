@@ -5,8 +5,17 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { Database, RefreshCw, CheckCircle, XCircle, AlertTriangle } from 'lucide-react'
+import { Database, RefreshCw, CheckCircle, XCircle, AlertTriangle, Settings, Eye } from 'lucide-react'
 import { toast } from 'sonner'
+import { TableDataManager } from './TableDataManager'
+import { epDataColumns, deleteDataColumns, apiKeyColumns } from './TableColumns'
+import { ColumnDef } from '@tanstack/react-table'
+
+// 공통 타입 정의
+interface TableRowData {
+  id: string | number
+  [key: string]: unknown
+}
 
 interface TableCounts {
   ep_data: number
@@ -50,6 +59,9 @@ export function DatabaseStatus({ onRefresh }: DatabaseStatusProps) {
   const [dbStatus, setDbStatus] = useState<DbStatus | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [isRefreshing, setIsRefreshing] = useState(false)
+  const [activeTable, setActiveTable] = useState<string | null>(null)
+  const [tableData, setTableData] = useState<TableRowData[]>([])
+  const [isTableLoading, setIsTableLoading] = useState(false)
 
   const fetchDbStatus = useCallback(async () => {
     try {
@@ -85,6 +97,93 @@ export function DatabaseStatus({ onRefresh }: DatabaseStatusProps) {
   const handleRefresh = () => {
     fetchDbStatus()
     toast.success('데이터베이스 상태를 새로고침했습니다')
+  }
+
+  const fetchTableData = async (tableName: string) => {
+    try {
+      setIsTableLoading(true)
+      const response = await fetch(`/api/admin/table-data?table=${tableName}`)
+      if (!response.ok) {
+        throw new Error('테이블 데이터 조회 실패')
+      }
+      const data = await response.json()
+      setTableData(data)
+      setActiveTable(tableName)
+    } catch (error) {
+      console.error('테이블 데이터 조회 오류:', error)
+      toast.error('테이블 데이터 조회에 실패했습니다')
+    } finally {
+      setIsTableLoading(false)
+    }
+  }
+
+  const handleDeleteData = async (ids: string[]) => {
+    try {
+      const response = await fetch('/api/admin/delete-data', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+          table: activeTable,
+          ids 
+        }),
+      })
+      
+      if (!response.ok) {
+        throw new Error('데이터 삭제 실패')
+      }
+      
+      toast.success('데이터가 삭제되었습니다')
+      if (activeTable) {
+        fetchTableData(activeTable)
+      }
+      fetchDbStatus()
+    } catch (error) {
+      console.error('데이터 삭제 오류:', error)
+      toast.error('데이터 삭제에 실패했습니다')
+    }
+  }
+
+  const handleExportData = (data: TableRowData[]) => {
+    const csvContent = [
+      Object.keys(data[0] || {}).join(','),
+      ...data.map(row => Object.values(row).join(','))
+    ].join('\n')
+    
+    const blob = new Blob([csvContent], { type: 'text/csv' })
+    const url = window.URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `${activeTable}_data.csv`
+    a.click()
+    window.URL.revokeObjectURL(url)
+  }
+
+  const getTableColumns = (tableName: string): ColumnDef<TableRowData>[] => {
+    switch (tableName) {
+      case 'ep_data':
+        return epDataColumns as ColumnDef<TableRowData>[]
+      case 'delete':
+        return deleteDataColumns as ColumnDef<TableRowData>[]
+      case 'api_keys':
+        return apiKeyColumns as ColumnDef<TableRowData>[]
+      default:
+        return []
+    }
+  }
+
+  const getTableDisplayName = (tableName: string) => {
+    switch (tableName) {
+      case 'ep_data':
+        return 'EP 데이터'
+      case 'delete':
+        return '삭제된 아이템'
+      case 'api_keys':
+        return 'API 키'
+      default:
+        return tableName
+    }
   }
 
   const formatDate = (dateString: string) => {
@@ -158,39 +257,69 @@ export function DatabaseStatus({ onRefresh }: DatabaseStatusProps) {
         <CardHeader>
           <CardTitle>테이블 데이터 현황</CardTitle>
           <CardDescription>
-            각 테이블의 데이터 개수를 확인할 수 있습니다.
+            각 테이블의 데이터 개수를 확인하고 관리할 수 있습니다.
           </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="flex items-center justify-between p-4 border rounded-lg">
-              <div>
+            <div className="flex items-center justify-between p-4 border rounded-lg hover:shadow-md transition-shadow">
+              <div className="flex-1">
                 <p className="text-sm font-medium text-gray-600">EP 데이터</p>
                 <p className="text-2xl font-bold text-blue-600">
                   {dbStatus.tableCounts.ep_data.toLocaleString()}
                 </p>
               </div>
-              <Database className="h-8 w-8 text-blue-400" />
+              <div className="flex items-center gap-2">
+                <Database className="h-8 w-8 text-blue-400" />
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => fetchTableData('ep_data')}
+                  disabled={isTableLoading}
+                >
+                  <Settings className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
 
-            <div className="flex items-center justify-between p-4 border rounded-lg">
-              <div>
+            <div className="flex items-center justify-between p-4 border rounded-lg hover:shadow-md transition-shadow">
+              <div className="flex-1">
                 <p className="text-sm font-medium text-gray-600">삭제된 아이템</p>
                 <p className="text-2xl font-bold text-red-600">
                   {dbStatus.tableCounts.delete.toLocaleString()}
                 </p>
               </div>
-              <XCircle className="h-8 w-8 text-red-400" />
+              <div className="flex items-center gap-2">
+                <XCircle className="h-8 w-8 text-red-400" />
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => fetchTableData('delete')}
+                  disabled={isTableLoading}
+                >
+                  <Settings className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
 
-            <div className="flex items-center justify-between p-4 border rounded-lg">
-              <div>
+            <div className="flex items-center justify-between p-4 border rounded-lg hover:shadow-md transition-shadow">
+              <div className="flex-1">
                 <p className="text-sm font-medium text-gray-600">API 키</p>
                 <p className="text-2xl font-bold text-green-600">
                   {dbStatus.tableCounts.api_keys.toLocaleString()}
                 </p>
               </div>
-              <AlertTriangle className="h-8 w-8 text-green-400" />
+              <div className="flex items-center gap-2">
+                <AlertTriangle className="h-8 w-8 text-green-400" />
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => fetchTableData('api_keys')}
+                  disabled={isTableLoading}
+                >
+                  <Settings className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
           </div>
         </CardContent>
@@ -283,6 +412,49 @@ export function DatabaseStatus({ onRefresh }: DatabaseStatusProps) {
           )}
         </CardContent>
       </Card>
+
+      {/* 테이블 데이터 관리 모달 */}
+      {activeTable && (
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="flex items-center gap-2">
+                  <Eye className="h-5 w-5" />
+                  {getTableDisplayName(activeTable)} 관리
+                </CardTitle>
+                <CardDescription>
+                  {getTableDisplayName(activeTable)} 데이터를 검색, 필터링, 수정, 삭제할 수 있습니다.
+                </CardDescription>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setActiveTable(null)}
+              >
+                닫기
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent>
+            {isTableLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <RefreshCw className="h-6 w-6 animate-spin mr-2" />
+                <span>데이터를 불러오는 중...</span>
+              </div>
+            ) : (
+              <TableDataManager
+                tableName={activeTable}
+                data={tableData}
+                columns={getTableColumns(activeTable)}
+                onRefresh={() => fetchTableData(activeTable)}
+                onDelete={handleDeleteData}
+                onExport={handleExportData}
+              />
+            )}
+          </CardContent>
+        </Card>
+      )}
     </div>
   )
 }
