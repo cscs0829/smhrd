@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { ApiKeyManager } from '@/components/features/ApiKeyManager'
 import { ClickDataProcessor } from '@/components/features/ClickDataProcessor'
-import { EPDataProcessorNew } from '@/components/features/EPDataProcessorNew'
+import { EPDataProcessor } from '@/components/features/EPDataProcessor'
 import { ImageLinkGenerator } from '@/components/features/ImageLinkGenerator'
 
 export default function Home() {
@@ -47,7 +47,7 @@ export default function Home() {
               </TabsContent>
 
               <TabsContent value="ep-data" className="space-y-4">
-                <EPDataProcessorNew 
+                <EPDataProcessor 
                   onFileSelect={handleFileSelect}
                 />
               </TabsContent>
