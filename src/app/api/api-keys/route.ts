@@ -21,7 +21,7 @@ export async function GET() {
 
     if (error) throw error
 
-    // 기존 api_keys 테이블 형식으로 변환
+    // 기존 api_keys 테이블 형식으로 
     const transformedData = data?.map(item => ({
       id: item.id,
       provider: item.provider,
