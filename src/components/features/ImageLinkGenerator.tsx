@@ -739,7 +739,7 @@ export function ImageLinkGenerator() {
                       <TableHeader className="sticky top-0 bg-background z-10">
                         <TableRow>
                           <TableHead className="w-12">순번</TableHead>
-                          <TableHead className="w-[300px]">링크</TableHead>
+                          <TableHead className="w-[500px]">링크</TableHead>
                           <TableHead className="w-16">상태</TableHead>
                           <TableHead className="w-16">작업</TableHead>
                         </TableRow>
