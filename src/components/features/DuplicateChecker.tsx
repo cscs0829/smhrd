@@ -33,12 +33,19 @@ export function DuplicateChecker({ generatedTitles, onRegenerateTitles }: Duplic
   const [isSearching, setIsSearching] = useState(false)
 
   const handleSearchDuplicates = async () => {
+    console.log('중복 검색 시작:', { 
+      generatedTitles: generatedTitles?.length, 
+      titles: generatedTitles?.slice(0, 2) 
+    })
+    
     if (!generatedTitles || generatedTitles.length === 0) {
+      console.log('generatedTitles가 없거나 비어있음')
       return
     }
 
     setIsSearching(true)
     try {
+      console.log('API 요청 전송 중...')
       const response = await fetch('/api/duplicate-search', {
         method: 'POST',
         headers: {
@@ -49,11 +56,16 @@ export function DuplicateChecker({ generatedTitles, onRegenerateTitles }: Duplic
         })
       })
 
+      console.log('API 응답:', { status: response.status, ok: response.ok })
+
       if (!response.ok) {
+        const errorText = await response.text()
+        console.error('API 오류 응답:', errorText)
         throw new Error('중복 검색 중 오류가 발생했습니다')
       }
 
       const result = await response.json()
+      console.log('API 응답 데이터:', result)
       setDuplicates(result.duplicates || [])
     } catch (error) {
       console.error('중복 검색 오류:', error)

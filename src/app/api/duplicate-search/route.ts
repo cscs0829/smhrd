@@ -25,6 +25,8 @@ async function fetchAllData(supabase: SupabaseClient, tableName: string, selectC
   let from = 0
   let hasMore = true
 
+  console.log(`${tableName} 테이블에서 "${searchTitle}" 검색 시작`)
+
   while (hasMore) {
     const { data, error } = await supabase
       .from(tableName)
@@ -36,15 +38,19 @@ async function fetchAllData(supabase: SupabaseClient, tableName: string, selectC
     if (error) {
       if (error.code !== 'PGRST116') { // 데이터가 없을 때는 에러가 아님
         console.error(`${tableName} 검색 오류:`, error)
+      } else {
+        console.log(`${tableName} 테이블에 데이터가 없음`)
       }
       break
     }
 
     if (!data || data.length === 0) {
+      console.log(`${tableName} 테이블 검색 완료: ${allData.length}개 데이터 발견`)
       hasMore = false
     } else {
       allData.push(...data)
       from += pageSize
+      console.log(`${tableName} 테이블 페이지 ${Math.floor(from/pageSize)}: ${data.length}개 데이터 추가 (총 ${allData.length}개)`)
       
       // 실제로 가져온 데이터가 페이지 크기보다 적으면 마지막 페이지
       if (data.length < pageSize) {
@@ -59,6 +65,7 @@ async function fetchAllData(supabase: SupabaseClient, tableName: string, selectC
 export async function POST(request: NextRequest) {
   try {
     const { titles } = await request.json()
+    console.log('중복 검색 요청:', { titlesCount: titles?.length, titles: titles?.slice(0, 3) })
 
     if (!titles || !Array.isArray(titles) || titles.length === 0) {
       return NextResponse.json(
@@ -75,14 +82,19 @@ export async function POST(request: NextRequest) {
       const title = titleData.title || titleData
       
       if (!title || typeof title !== 'string') {
+        console.log('유효하지 않은 제목:', titleData)
         continue
       }
 
+      console.log(`제목 검색 중: "${title}"`)
+
       // 페이지네이션으로 모든 EP 데이터 검색
       const epData = await fetchAllData(supabase, 'ep_data', 'id, title', title) as EpDataItem[]
+      console.log(`EP 데이터 검색 결과: ${epData.length}개`)
 
       // 페이지네이션으로 모든 삭제 테이블 데이터 검색
       const deleteData = await fetchAllData(supabase, 'delete', 'product_id, title', title) as DeleteDataItem[]
+      console.log(`삭제 테이블 검색 결과: ${deleteData.length}개`)
 
       // 중복이 발견된 경우
       if (epData.length > 0 || deleteData.length > 0) {
@@ -123,6 +135,12 @@ export async function POST(request: NextRequest) {
         })
       }
     }
+
+    console.log('최종 중복 검색 결과:', { 
+      totalChecked: titles.length, 
+      duplicatesFound: duplicates.length,
+      duplicates: duplicates.map(d => ({ title: d.title, count: d.count }))
+    })
 
     return NextResponse.json({
       duplicates,
