@@ -18,7 +18,7 @@ function getSupabase() {
   return createClient(supabaseUrl, supabaseAnonKey)
 }
 
-// 페이지네이션으로 모든 데이터를 가져오는 함수
+// 페이지네이션으로 모든 데이터를 가져오는 함수.
 async function fetchAllData(supabase: SupabaseClient, tableName: string, selectColumns: string, searchTitle: string) {
   const allData: unknown[] = []
   const pageSize = 1000 // Supabase 기본 제한
