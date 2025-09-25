@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
 import { toast } from 'sonner'
-import { CheckSquare, Download, Minus, Plus, RefreshCw, Search, AlertTriangle, CheckCircle, ExternalLink, Copy, ChevronLeft, ChevronRight } from 'lucide-react'
+import { CheckSquare, Download, Minus, Plus, RefreshCw, Search, AlertTriangle, CheckCircle, ExternalLink, Copy } from 'lucide-react'
 
 type ImageEntry = {
   url: string
@@ -483,86 +483,39 @@ export function ImageLinkGenerator() {
                                 <TableCell className="align-top p-2 max-w-[300px]">
                                   <div className="flex items-center gap-1">
                                     <div 
-                                      className="flex-1 overflow-x-auto scrollbar-hide max-w-[200px]"
+                                      className="flex-1 overflow-x-auto scrollbar-hide max-w-[220px]"
                                       style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
                                     >
                                       <div className="text-xs p-1 bg-gray-50 rounded whitespace-nowrap">
                                         {row.image_link}
                                       </div>
                                     </div>
-                                    <div className="flex gap-1">
-                                      <button
-                                        onClick={() => {
-                                          const container = document.querySelector(`#image-link-${idx}`)
-                                          if (container) {
-                                            container.scrollLeft -= 100
-                                          }
-                                        }}
-                                        className="p-1 text-gray-500 hover:text-gray-700"
-                                      >
-                                        <ChevronLeft className="h-3 w-3" />
-                                      </button>
-                                      <button
-                                        onClick={() => {
-                                          const container = document.querySelector(`#image-link-${idx}`)
-                                          if (container) {
-                                            container.scrollLeft += 100
-                                          }
-                                        }}
-                                        className="p-1 text-gray-500 hover:text-gray-700"
-                                      >
-                                        <ChevronRight className="h-3 w-3" />
-                                      </button>
-                                      <button
-                                        onClick={() => handleCopyLink(row.image_link, 'image_link')}
-                                        className="p-1 text-gray-500 hover:text-gray-700"
-                                      >
-                                        <Copy className="h-3 w-3" />
-                                      </button>
-                                    </div>
+                                    <button
+                                      onClick={() => handleCopyLink(row.image_link, 'image_link')}
+                                      className="p-1 text-gray-500 hover:text-gray-700 flex-shrink-0"
+                                      title="링크 복사"
+                                    >
+                                      <Copy className="h-3 w-3" />
+                                    </button>
                                   </div>
                                 </TableCell>
                                 <TableCell className="align-top p-2 max-w-[300px]">
                                   <div className="flex items-center gap-1">
                                     <div 
-                                      id={`add-image-link-${idx}`}
-                                      className="flex-1 overflow-x-auto scrollbar-hide max-w-[200px]"
+                                      className="flex-1 overflow-x-auto scrollbar-hide max-w-[220px]"
                                       style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
                                     >
                                       <div className="text-xs p-1 bg-gray-50 rounded whitespace-nowrap">
                                         {row.add_image_link}
                                       </div>
                                     </div>
-                                    <div className="flex gap-1">
-                                      <button
-                                        onClick={() => {
-                                          const container = document.querySelector(`#add-image-link-${idx}`)
-                                          if (container) {
-                                            container.scrollLeft -= 100
-                                          }
-                                        }}
-                                        className="p-1 text-gray-500 hover:text-gray-700"
-                                      >
-                                        <ChevronLeft className="h-3 w-3" />
-                                      </button>
-                                      <button
-                                        onClick={() => {
-                                          const container = document.querySelector(`#add-image-link-${idx}`)
-                                          if (container) {
-                                            container.scrollLeft += 100
-                                          }
-                                        }}
-                                        className="p-1 text-gray-500 hover:text-gray-700"
-                                      >
-                                        <ChevronRight className="h-3 w-3" />
-                                      </button>
-                                      <button
-                                        onClick={() => handleCopyLink(row.add_image_link, 'add_image_link')}
-                                        className="p-1 text-gray-500 hover:text-gray-700"
-                                      >
-                                        <Copy className="h-3 w-3" />
-                                      </button>
-                                    </div>
+                                    <button
+                                      onClick={() => handleCopyLink(row.add_image_link, 'add_image_link')}
+                                      className="p-1 text-gray-500 hover:text-gray-700 flex-shrink-0"
+                                      title="링크 복사"
+                                    >
+                                      <Copy className="h-3 w-3" />
+                                    </button>
                                   </div>
                                 </TableCell>
                               </TableRow>
@@ -785,10 +738,10 @@ export function ImageLinkGenerator() {
                     <Table>
                       <TableHeader className="sticky top-0 bg-background z-10">
                         <TableRow>
-                          <TableHead className="w-16">순번</TableHead>
-                          <TableHead className="max-w-[200px]">링크</TableHead>
-                          <TableHead className="w-20">상태</TableHead>
-                          <TableHead className="w-20">작업</TableHead>
+                          <TableHead className="w-12">순번</TableHead>
+                          <TableHead className="w-[300px]">링크</TableHead>
+                          <TableHead className="w-16">상태</TableHead>
+                          <TableHead className="w-16">작업</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -796,51 +749,27 @@ export function ImageLinkGenerator() {
                           const isDuplicate = duplicateCheckResult.duplicateLinks.includes(link)
                           return (
                             <TableRow key={index}>
-                              <TableCell className="w-16">{index + 1}</TableCell>
-                              <TableCell className="max-w-[200px]">
+                              <TableCell className="w-12">{index + 1}</TableCell>
+                              <TableCell className="w-[300px]">
                                 <div className="flex items-center gap-1">
                                   <div 
-                                    id={`duplicate-link-${index}`}
-                                    className="flex-1 overflow-x-auto scrollbar-hide max-w-[120px]"
+                                    className="flex-1 overflow-x-auto scrollbar-hide max-w-[260px]"
                                     style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
                                   >
                                     <div className="text-xs font-mono bg-gray-50 p-1 rounded whitespace-nowrap">
                                       {link}
                                     </div>
                                   </div>
-                                  <div className="flex gap-1">
-                                    <button
-                                      onClick={() => {
-                                        const container = document.querySelector(`#duplicate-link-${index}`)
-                                        if (container) {
-                                          container.scrollLeft -= 100
-                                        }
-                                      }}
-                                      className="p-1 text-gray-500 hover:text-gray-700"
-                                    >
-                                      <ChevronLeft className="h-3 w-3" />
-                                    </button>
-                                    <button
-                                      onClick={() => {
-                                        const container = document.querySelector(`#duplicate-link-${index}`)
-                                        if (container) {
-                                          container.scrollLeft += 100
-                                        }
-                                      }}
-                                      className="p-1 text-gray-500 hover:text-gray-700"
-                                    >
-                                      <ChevronRight className="h-3 w-3" />
-                                    </button>
-                                    <button
-                                      onClick={() => handleCopyLink(link, '링크')}
-                                      className="p-1 text-gray-500 hover:text-gray-700"
-                                    >
-                                      <Copy className="h-3 w-3" />
-                                    </button>
-                                  </div>
+                                  <button
+                                    onClick={() => handleCopyLink(link, '링크')}
+                                    className="p-1 text-gray-500 hover:text-gray-700 flex-shrink-0"
+                                    title="링크 복사"
+                                  >
+                                    <Copy className="h-3 w-3" />
+                                  </button>
                                 </div>
                               </TableCell>
-                              <TableCell className="w-20">
+                              <TableCell className="w-16">
                                 {isDuplicate ? (
                                   <Badge variant="destructive" className="text-xs">
                                     중복
@@ -851,7 +780,7 @@ export function ImageLinkGenerator() {
                                   </Badge>
                                 )}
                               </TableCell>
-                              <TableCell className="w-20">
+                              <TableCell className="w-16">
                                 <Button
                                   size="sm"
                                   variant="outline"
