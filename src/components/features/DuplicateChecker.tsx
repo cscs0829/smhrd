@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Search, AlertCircle, CheckCircle } from 'lucide-react'
+import { Search, AlertCircle, CheckCircle, RefreshCw } from 'lucide-react'
 
 interface DuplicateItem {
   id: string
@@ -14,6 +14,7 @@ interface DuplicateItem {
   items: Array<{
     id: string
     title: string
+    source: 'ep_data' | 'delete'
     [key: string]: unknown
   }>
 }
@@ -28,13 +29,14 @@ interface DuplicateCheckerProps {
 }
 
 export function DuplicateChecker({ generatedTitles, onRegenerateTitles }: DuplicateCheckerProps = {}) {
-  // Suppress unused parameter warnings
-  void generatedTitles
-  void onRegenerateTitles
   const [duplicates, setDuplicates] = useState<DuplicateItem[]>([])
   const [isSearching, setIsSearching] = useState(false)
 
   const handleSearchDuplicates = async () => {
+    if (!generatedTitles || generatedTitles.length === 0) {
+      return
+    }
+
     setIsSearching(true)
     try {
       const response = await fetch('/api/duplicate-search', {
@@ -42,6 +44,9 @@ export function DuplicateChecker({ generatedTitles, onRegenerateTitles }: Duplic
         headers: {
           'Content-Type': 'application/json',
         },
+        body: JSON.stringify({
+          titles: generatedTitles
+        })
       })
 
       if (!response.ok) {
@@ -55,6 +60,16 @@ export function DuplicateChecker({ generatedTitles, onRegenerateTitles }: Duplic
     } finally {
       setIsSearching(false)
     }
+  }
+
+  const handleRegenerateDuplicates = async () => {
+    if (!onRegenerateTitles || duplicates.length === 0) {
+      return
+    }
+
+    const duplicateTitles = duplicates.map(dup => dup.title)
+    await onRegenerateTitles(duplicateTitles)
+    setDuplicates([]) // 중복 목록 초기화
   }
 
   return (
@@ -87,6 +102,17 @@ export function DuplicateChecker({ generatedTitles, onRegenerateTitles }: Duplic
                 </AlertDescription>
               </Alert>
 
+              {onRegenerateTitles && (
+                <Button 
+                  onClick={handleRegenerateDuplicates}
+                  variant="outline"
+                  className="w-full"
+                >
+                  <RefreshCw className="mr-2 h-4 w-4" />
+                  중복 제목들 새로 생성하기
+                </Button>
+              )}
+
               <div className="space-y-3">
                 {duplicates.map((duplicate, index) => (
                   <Card key={index} className="border-orange-200">
@@ -105,6 +131,9 @@ export function DuplicateChecker({ generatedTitles, onRegenerateTitles }: Duplic
                             <CheckCircle className="h-4 w-4 text-gray-400" />
                             <span className="text-sm font-mono">{item.id}</span>
                             <span className="text-sm text-gray-600">{item.title}</span>
+                            <Badge variant="outline" className="ml-auto">
+                              {item.source === 'ep_data' ? 'EP 데이터' : '삭제 테이블'}
+                            </Badge>
                           </div>
                         ))}
                       </div>
