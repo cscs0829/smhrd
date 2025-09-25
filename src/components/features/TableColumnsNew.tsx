@@ -159,7 +159,11 @@ function EpIdCell({ row }: { row: Row<EpData> }) {
 function EpTitleCell({ row }: { row: Row<EpData> }) {
   const { editingRowId, editingValues, setEditingValues } = useTableEditing()
   const isEditing = editingRowId === (row.getValue('id') as string)
-  if (!isEditing) return <div className="max-w-[200px] truncate">{row.getValue('title')}</div>
+  if (!isEditing) return (
+    <div className="max-w-[300px] overflow-x-auto whitespace-nowrap scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent">
+      {row.getValue('title')}
+    </div>
+  )
   return (
     <Input
       value={(editingValues.title as string) ?? ''}
@@ -236,7 +240,11 @@ function DeletedIdCell({ row }: { row: Row<DeletedItem> }) {
 function DeletedTitleCell({ row }: { row: Row<DeletedItem> }) {
   const { editingRowId, editingValues, setEditingValues } = useTableEditing()
   const isEditing = editingRowId === (row.getValue('id') as number)
-  if (!isEditing) return <div className="max-w-[200px] truncate">{row.getValue('title')}</div>
+  if (!isEditing) return (
+    <div className="max-w-[300px] overflow-x-auto whitespace-nowrap scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent">
+      {row.getValue('title')}
+    </div>
+  )
   return (
     <Input
       value={(editingValues.title as string) ?? ''}
@@ -319,7 +327,11 @@ function ApiProviderCell({ row }: { row: Row<ApiKey> }) {
 function ApiNameCell({ row }: { row: Row<ApiKey> }) {
   const { editingRowId, editingValues, setEditingValues } = useTableEditing()
   const isEditing = editingRowId === (row.getValue('id') as number)
-  if (!isEditing) return <div className="font-medium">{row.getValue('name')}</div>
+  if (!isEditing) return (
+    <div className="font-medium max-w-[200px] overflow-x-auto whitespace-nowrap scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent">
+      {row.getValue('name')}
+    </div>
+  )
   return (
     <Input
       value={(editingValues.name as string) ?? ''}

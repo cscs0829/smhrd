@@ -270,7 +270,7 @@ export function TableDataManager({
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header) => {
                   return (
-                    <TableHead key={header.id} className="text-left px-4 py-2 whitespace-nowrap">
+                    <TableHead key={header.id} className="text-left px-4 py-2">
                       {header.isPlaceholder
                         ? null
                         : flexRender(
@@ -291,7 +291,7 @@ export function TableDataManager({
                   data-state={row.getIsSelected() && "selected"}
                 >
                   {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id} className="p-2 whitespace-nowrap [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px] text-left px-4 py-2 align-middle">
+                    <TableCell key={cell.id} className="p-2 [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px] text-left px-4 py-2 align-middle">
                       {flexRender(cell.column.columnDef.cell, cell.getContext())}
                     </TableCell>
                   ))}
