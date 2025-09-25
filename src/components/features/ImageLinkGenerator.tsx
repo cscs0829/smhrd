@@ -610,40 +610,86 @@ export function ImageLinkGenerator() {
               <div className="space-y-4">
                 {/* 요약 정보 */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="bg-blue-50 p-4 rounded-lg">
-                    <div className="flex items-center gap-2">
-                      <CheckCircle className="h-5 w-5 text-blue-600" />
-                      <div>
-                        <p className="text-sm font-medium text-blue-700">전체 링크</p>
-                        <p className="text-2xl font-bold text-blue-600">{duplicateCheckResult.totalLinks}</p>
+                  <div className="bg-card text-card-foreground flex flex-col gap-6 rounded-xl border py-6 shadow-sm">
+                    <div className="px-6">
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center gap-2">
+                          <CheckCircle className="h-5 w-5 text-blue-600" />
+                          <div>
+                            <p className="text-sm font-medium text-blue-700">전체 링크</p>
+                            <p className="text-2xl font-bold text-blue-600">{duplicateCheckResult.totalLinks}</p>
+                          </div>
+                        </div>
+                        <Button 
+                          size="sm"
+                          variant="outline"
+                          className="text-blue-600 border-blue-200 hover:bg-blue-50"
+                        >
+                          <CheckCircle className="mr-2 h-4 w-4" />
+                          전체 보기
+                        </Button>
                       </div>
                     </div>
                   </div>
                   
-                  <div className="bg-green-50 p-4 rounded-lg">
-                    <div className="flex items-center gap-2">
-                      <CheckCircle className="h-5 w-5 text-green-600" />
-                      <div>
-                        <p className="text-sm font-medium text-green-700">고유 링크</p>
-                        <p className="text-2xl font-bold text-green-600">{duplicateCheckResult.uniqueLinks}</p>
+                  <div className="bg-card text-card-foreground flex flex-col gap-6 rounded-xl border py-6 shadow-sm">
+                    <div className="px-6">
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center gap-2">
+                          <CheckCircle className="h-5 w-5 text-green-600" />
+                          <div>
+                            <p className="text-sm font-medium text-green-700">고유 링크</p>
+                            <p className="text-2xl font-bold text-green-600">{duplicateCheckResult.uniqueLinks}</p>
+                          </div>
+                        </div>
+                        <Button 
+                          size="sm"
+                          variant="outline"
+                          className="text-green-600 border-green-200 hover:bg-green-50"
+                        >
+                          <CheckCircle className="mr-2 h-4 w-4" />
+                          고유 링크 보기
+                        </Button>
                       </div>
                     </div>
                   </div>
 
-                  <div className={`p-4 rounded-lg ${duplicateCheckResult.duplicateLinks.length > 0 ? 'bg-red-50' : 'bg-gray-50'}`}>
-                    <div className="flex items-center gap-2">
-                      {duplicateCheckResult.duplicateLinks.length > 0 ? (
-                        <AlertTriangle className="h-5 w-5 text-red-600" />
-                      ) : (
-                        <CheckCircle className="h-5 w-5 text-gray-600" />
-                      )}
-                      <div>
-                        <p className={`text-sm font-medium ${duplicateCheckResult.duplicateLinks.length > 0 ? 'text-red-700' : 'text-gray-700'}`}>
-                          중복 링크
-                        </p>
-                        <p className={`text-2xl font-bold ${duplicateCheckResult.duplicateLinks.length > 0 ? 'text-red-600' : 'text-gray-600'}`}>
-                          {duplicateCheckResult.duplicateLinks.length}
-                        </p>
+                  <div className={`bg-card text-card-foreground flex flex-col gap-6 rounded-xl border py-6 shadow-sm ${duplicateCheckResult.duplicateLinks.length > 0 ? 'border-red-200' : 'border-gray-200'}`}>
+                    <div className="px-6">
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center gap-2">
+                          {duplicateCheckResult.duplicateLinks.length > 0 ? (
+                            <AlertTriangle className="h-5 w-5 text-red-600" />
+                          ) : (
+                            <CheckCircle className="h-5 w-5 text-gray-600" />
+                          )}
+                          <div>
+                            <p className={`text-sm font-medium ${duplicateCheckResult.duplicateLinks.length > 0 ? 'text-red-700' : 'text-gray-700'}`}>
+                              중복 링크
+                            </p>
+                            <p className={`text-2xl font-bold ${duplicateCheckResult.duplicateLinks.length > 0 ? 'text-red-600' : 'text-gray-600'}`}>
+                              {duplicateCheckResult.duplicateLinks.length}
+                            </p>
+                          </div>
+                        </div>
+                        <Button 
+                          size="sm"
+                          variant="outline"
+                          className={`${duplicateCheckResult.duplicateLinks.length > 0 ? 'text-red-600 border-red-200 hover:bg-red-50' : 'text-gray-600 border-gray-200 hover:bg-gray-50'}`}
+                          disabled={duplicateCheckResult.duplicateLinks.length === 0}
+                        >
+                          {duplicateCheckResult.duplicateLinks.length > 0 ? (
+                            <>
+                              <AlertTriangle className="mr-2 h-4 w-4" />
+                              중복 보기
+                            </>
+                          ) : (
+                            <>
+                              <CheckCircle className="mr-2 h-4 w-4" />
+                              중복 없음
+                            </>
+                          )}
+                        </Button>
                       </div>
                     </div>
                   </div>
