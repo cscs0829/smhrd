@@ -59,7 +59,7 @@ export async function POST(request: NextRequest) {
     console.log('API 키 조회 중...', apiKeyId)
     const supabase = getSupabase()
     const { data: apiKeyData, error: apiKeyError } = await supabase
-      .from('api_keys')
+      .from('api')
       .select('*')
       .eq('id', apiKeyId)
       .eq('is_active', true)

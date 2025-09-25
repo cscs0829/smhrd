@@ -70,6 +70,9 @@ export function ApiKeyManager() {
     config: { tension: 300, friction: 30 }
   }))
 
+  // 애니메이션 상태 관리
+  const [isRefreshing, setIsRefreshing] = useState(false)
+
   // API 키 저장/수정 함수
   const handleSave = async () => {
     if (!formData.name.trim() || !formData.apiKey.trim()) {
@@ -325,7 +328,7 @@ export function ApiKeyManager() {
         </div>
         <div className="flex gap-2">
           <Button 
-            onClick={() => { 
+            onClick={async () => { 
               // Context7 React Spring 패턴: 클릭 시 애니메이션 트리거
               refreshApi.start({
                 from: { scale: 1, rotate: 0 },
@@ -337,7 +340,9 @@ export function ApiKeyManager() {
                   refreshApi.start({ scale: 1, rotate: 0 })
                 }
               })
-              loadApiKeys(true) 
+              setIsRefreshing(true)
+              await loadApiKeys(true)
+              setIsRefreshing(false)
             }} 
             variant="outline" 
             size="sm"
@@ -351,7 +356,7 @@ export function ApiKeyManager() {
               }}
             >
               <RefreshCw 
-                className={`mr-2 h-4 w-4 ${loading ? 'animate-spin' : ''}`}
+                className={`mr-2 h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`}
               />
               새로고침
             </animated.div>
