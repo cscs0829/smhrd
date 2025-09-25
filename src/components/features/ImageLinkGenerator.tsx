@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
 import { toast } from 'sonner'
-import { CheckSquare, Download, Minus, Plus, RefreshCw, Search, AlertTriangle, CheckCircle } from 'lucide-react'
+import { CheckSquare, Download, Minus, Plus, RefreshCw, Search, AlertTriangle, CheckCircle, ExternalLink, Copy, ChevronLeft, ChevronRight } from 'lucide-react'
 
 type ImageEntry = {
   url: string
@@ -48,6 +48,10 @@ export function ImageLinkGenerator() {
   const [duplicateCheckInput, setDuplicateCheckInput] = useState<string>('')
   const [duplicateCheckResult, setDuplicateCheckResult] = useState<DuplicateCheckResult | null>(null)
   const [isCheckingDuplicates, setIsCheckingDuplicates] = useState<boolean>(false)
+  
+  // 결과 테이블 스크롤 상태
+  const [imageLinkScrollPosition, setImageLinkScrollPosition] = useState<number>(0)
+  const [addImageLinkScrollPosition, setAddImageLinkScrollPosition] = useState<number>(0)
 
   const uniqueEntries = useMemo(() => {
     const seen = new Set<string>()
@@ -69,27 +73,6 @@ export function ImageLinkGenerator() {
     return uniqueEntries
   }, [uniqueEntries])
 
-  const previewRows = useMemo(() => {
-    if (uniqueEntries.length === 0) return []
-    
-    const rows = []
-    const maxPreviewRows = Math.min(uniqueEntries.length, 5) // 최대 5개까지 미리보기
-    
-    for (let i = 0; i < maxPreviewRows; i++) {
-      const imageLink = mainCandidates[getRandomInt(0, mainCandidates.length - 1)].url
-      
-      let addEntries = uniqueEntries
-      // 중복 제외 옵션이 체크되어 있으면 현재 image_link 제외
-      if (excludeDuplicates) {
-        addEntries = uniqueEntries.filter(e => e.url !== imageLink)
-      }
-      
-      const addList = shuffleArray(addEntries)
-      const addImageLink = addList.map(e => e.url).join('|')
-      rows.push({ image_link: imageLink, add_image_link: addImageLink })
-    }
-    return rows
-  }, [uniqueEntries, mainCandidates, excludeDuplicates])
 
   const handleAddEntry = () => {
     if (uniqueEntries.length >= 11) {
@@ -292,8 +275,60 @@ export function ImageLinkGenerator() {
     setDuplicateCheckResult(null)
   }
 
+  const handleOpenLink = (url: string) => {
+    try {
+      window.open(url, '_blank', 'noopener,noreferrer')
+    } catch (error) {
+      toast.error('링크를 열 수 없습니다')
+    }
+  }
+
+  const handleCopyLink = async (text: string, type: string) => {
+    try {
+      await navigator.clipboard.writeText(text)
+      toast.success(`${type}이 클립보드에 복사되었습니다`)
+    } catch (error) {
+      toast.error('복사에 실패했습니다')
+    }
+  }
+
+  const handleScrollImageLink = (direction: 'left' | 'right') => {
+    const container = document.getElementById('image-link-container')
+    if (container) {
+      const scrollAmount = 200
+      const newPosition = direction === 'left' 
+        ? Math.max(0, imageLinkScrollPosition - scrollAmount)
+        : imageLinkScrollPosition + scrollAmount
+      
+      container.scrollLeft = newPosition
+      setImageLinkScrollPosition(newPosition)
+    }
+  }
+
+  const handleScrollAddImageLink = (direction: 'left' | 'right') => {
+    const container = document.getElementById('add-image-link-container')
+    if (container) {
+      const scrollAmount = 200
+      const newPosition = direction === 'left' 
+        ? Math.max(0, addImageLinkScrollPosition - scrollAmount)
+        : addImageLinkScrollPosition + scrollAmount
+      
+      container.scrollLeft = newPosition
+      setAddImageLinkScrollPosition(newPosition)
+    }
+  }
+
   return (
     <div className="space-y-6">
+      <style jsx>{`
+        .scrollbar-hide {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+        }
+        .scrollbar-hide::-webkit-scrollbar {
+          display: none;
+        }
+      `}</style>
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -465,20 +500,92 @@ export function ImageLinkGenerator() {
                     <div className="max-h-64 overflow-auto">
                       {results.length > 0 ? (
                         <Table>
-                          <TableHeader className="sticky top-0 bg-background">
+                          <TableHeader className="sticky top-0 bg-background z-10">
                             <TableRow>
-                              <TableHead className="w-1/3">image_link</TableHead>
-                              <TableHead className="w-2/3">add_image_link</TableHead>
+                              <TableHead className="w-1/2 min-w-[300px]">image_link</TableHead>
+                              <TableHead className="w-1/2 min-w-[300px]">add_image_link</TableHead>
                             </TableRow>
                           </TableHeader>
                           <TableBody>
                             {results.map((row, idx) => (
                               <TableRow key={idx}>
-                                <TableCell className="align-top">
-                                  <div className="break-all text-xs p-1 bg-gray-50 rounded min-h-[40px] flex items-center">{row.image_link}</div>
+                                <TableCell className="align-top p-2">
+                                  <div className="flex items-center gap-2">
+                                    <div 
+                                      id={`image-link-container-${idx}`}
+                                      className="flex-1 overflow-x-auto scrollbar-hide"
+                                      style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+                                    >
+                                      <div className="break-all text-xs p-2 bg-gray-50 rounded min-h-[40px] flex items-center whitespace-nowrap min-w-max">
+                                        {row.image_link}
+                                      </div>
+                                    </div>
+                                    <div className="flex flex-col gap-1">
+                                      <Button
+                                        size="sm"
+                                        variant="outline"
+                                        onClick={() => handleScrollImageLink('left')}
+                                        className="h-6 w-6 p-0"
+                                      >
+                                        <ChevronLeft className="h-3 w-3" />
+                                      </Button>
+                                      <Button
+                                        size="sm"
+                                        variant="outline"
+                                        onClick={() => handleScrollImageLink('right')}
+                                        className="h-6 w-6 p-0"
+                                      >
+                                        <ChevronRight className="h-3 w-3" />
+                                      </Button>
+                                      <Button
+                                        size="sm"
+                                        variant="outline"
+                                        onClick={() => handleCopyLink(row.image_link, 'image_link')}
+                                        className="h-6 w-6 p-0"
+                                      >
+                                        <Copy className="h-3 w-3" />
+                                      </Button>
+                                    </div>
+                                  </div>
                                 </TableCell>
-                                <TableCell className="align-top">
-                                  <div className="break-all text-xs p-1 bg-gray-50 rounded min-h-[40px]">{row.add_image_link}</div>
+                                <TableCell className="align-top p-2">
+                                  <div className="flex items-center gap-2">
+                                    <div 
+                                      id={`add-image-link-container-${idx}`}
+                                      className="flex-1 overflow-x-auto scrollbar-hide"
+                                      style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+                                    >
+                                      <div className="break-all text-xs p-2 bg-gray-50 rounded min-h-[40px] whitespace-nowrap min-w-max">
+                                        {row.add_image_link}
+                                      </div>
+                                    </div>
+                                    <div className="flex flex-col gap-1">
+                                      <Button
+                                        size="sm"
+                                        variant="outline"
+                                        onClick={() => handleScrollAddImageLink('left')}
+                                        className="h-6 w-6 p-0"
+                                      >
+                                        <ChevronLeft className="h-3 w-3" />
+                                      </Button>
+                                      <Button
+                                        size="sm"
+                                        variant="outline"
+                                        onClick={() => handleScrollAddImageLink('right')}
+                                        className="h-6 w-6 p-0"
+                                      >
+                                        <ChevronRight className="h-3 w-3" />
+                                      </Button>
+                                      <Button
+                                        size="sm"
+                                        variant="outline"
+                                        onClick={() => handleCopyLink(row.add_image_link, 'add_image_link')}
+                                        className="h-6 w-6 p-0"
+                                      >
+                                        <Copy className="h-3 w-3" />
+                                      </Button>
+                                    </div>
+                                  </div>
                                 </TableCell>
                               </TableRow>
                             ))}
@@ -491,43 +598,6 @@ export function ImageLinkGenerator() {
                   </div>
                 </div>
 
-                <div className="relative w-full border rounded-lg">
-                  <div className="overflow-x-auto max-h-96 overflow-y-auto">
-                    <Table>
-                      <TableHeader className="sticky top-0 bg-background">
-                        <TableRow>
-                          <TableHead className="w-1/3">예시 image_link</TableHead>
-                          <TableHead className="w-2/3">예시 add_image_link</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {/* 미리보기 행들 */}
-                        {previewRows.length > 0 ? (
-                          previewRows.map((row, index) => (
-                            <TableRow key={index}>
-                              <TableCell className="align-top">
-                                <div className="break-all text-xs p-1 bg-gray-50 rounded min-h-[40px] flex items-center">
-                                  {row.image_link}
-                                </div>
-                              </TableCell>
-                              <TableCell className="align-top">
-                                <div className="break-all text-xs p-1 bg-gray-50 rounded min-h-[40px]">
-                                  {row.add_image_link}
-                                </div>
-                              </TableCell>
-                            </TableRow>
-                          ))
-                        ) : (
-                          <TableRow>
-                            <TableCell colSpan={2} className="text-center text-gray-500">
-                              이미지링크를 입력하면 예시가 표시됩니다
-                            </TableCell>
-                          </TableRow>
-                        )}
-                      </TableBody>
-                    </Table>
-                  </div>
-                </div>
               </div>
             </div>
           </div>
@@ -740,6 +810,7 @@ export function ImageLinkGenerator() {
                           <TableHead className="w-16">순번</TableHead>
                           <TableHead>링크</TableHead>
                           <TableHead className="w-20">상태</TableHead>
+                          <TableHead className="w-20">작업</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -763,6 +834,17 @@ export function ImageLinkGenerator() {
                                     고유
                                   </Badge>
                                 )}
+                              </TableCell>
+                              <TableCell>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => handleOpenLink(link)}
+                                  className="h-8 px-2 text-xs"
+                                >
+                                  <ExternalLink className="h-3 w-3 mr-1" />
+                                  열기
+                                </Button>
                               </TableCell>
                             </TableRow>
                           )
