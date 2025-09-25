@@ -8,14 +8,20 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Search, AlertCircle, CheckCircle, RefreshCw } from 'lucide-react'
 
 interface DuplicateItem {
-  id: string
   title: string
   count: number
+  exactMatches: number
+  mostSimilar: {
+    title: string
+    similarity: number
+    source: 'ep_data' | 'delect'
+  }
   items: Array<{
     id: string
     title: string
-    source: 'ep_data' | 'delete'
-    [key: string]: unknown
+    source: 'ep_data' | 'delect'
+    similarity: number
+    distance: number
   }>
 }
 
@@ -110,7 +116,7 @@ export function DuplicateChecker({ generatedTitles, onRegenerateTitles }: Duplic
               <Alert>
                 <AlertCircle className="h-4 w-4" />
                 <AlertDescription>
-                  {duplicates.length}개의 중복 그룹을 발견했습니다
+                  {duplicates.length}개의 제목에서 유사한 항목을 발견했습니다
                 </AlertDescription>
               </Alert>
 
@@ -125,27 +131,66 @@ export function DuplicateChecker({ generatedTitles, onRegenerateTitles }: Duplic
                 </Button>
               )}
 
-              <div className="space-y-3">
+              <div className="space-y-4">
                 {duplicates.map((duplicate, index) => (
                   <Card key={index} className="border-orange-200">
                     <CardHeader className="pb-3">
                       <div className="flex items-center justify-between">
                         <CardTitle className="text-lg">{duplicate.title}</CardTitle>
-                        <Badge variant="destructive">
-                          {duplicate.count}개 중복
-                        </Badge>
+                        <div className="flex gap-2">
+                          {duplicate.exactMatches > 0 && (
+                            <Badge variant="destructive">
+                              정확 일치 {duplicate.exactMatches}개
+                            </Badge>
+                          )}
+                          <Badge variant="outline">
+                            유사 {duplicate.count}개
+                          </Badge>
+                        </div>
                       </div>
                     </CardHeader>
                     <CardContent>
+                      {/* 가장 유사한 제목 표시 */}
+                      <div className="mb-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <div className="font-medium text-blue-900">가장 유사한 제목</div>
+                            <div className="text-sm text-blue-700">{duplicate.mostSimilar.title}</div>
+                            <div className="text-xs text-blue-600">
+                              {duplicate.mostSimilar.source === 'ep_data' ? 'EP 데이터' : 'Delect 테이블'} • 
+                              유사도 {duplicate.mostSimilar.similarity}%
+                            </div>
+                          </div>
+                          <Badge 
+                            variant={duplicate.mostSimilar.similarity >= 90 ? "destructive" : 
+                                   duplicate.mostSimilar.similarity >= 70 ? "default" : "secondary"}
+                            className="text-lg px-3 py-1"
+                          >
+                            {duplicate.mostSimilar.similarity}%
+                          </Badge>
+                        </div>
+                      </div>
+
+                      {/* 유사한 제목들 목록 */}
                       <div className="space-y-2">
+                        <h4 className="font-medium text-sm text-gray-700">유사한 제목들 (상위 10개)</h4>
                         {duplicate.items.map((item, itemIndex) => (
                           <div key={itemIndex} className="flex items-center gap-2 p-2 bg-gray-50 rounded">
                             <CheckCircle className="h-4 w-4 text-gray-400" />
-                            <span className="text-sm font-mono">{item.id}</span>
-                            <span className="text-sm text-gray-600">{item.title}</span>
-                            <Badge variant="outline" className="ml-auto">
-                              {item.source === 'ep_data' ? 'EP 데이터' : '삭제 테이블'}
-                            </Badge>
+                            <span className="text-sm font-mono text-xs">{item.id}</span>
+                            <span className="text-sm text-gray-600 flex-1">{item.title}</span>
+                            <div className="flex items-center gap-2">
+                              <Badge 
+                                variant={item.similarity >= 90 ? "destructive" : 
+                                       item.similarity >= 70 ? "default" : "secondary"}
+                                className="text-xs"
+                              >
+                                {item.similarity}%
+                              </Badge>
+                              <Badge variant="outline" className="text-xs">
+                                {item.source === 'ep_data' ? 'EP' : 'Delect'}
+                              </Badge>
+                            </div>
                           </div>
                         ))}
                       </div>
