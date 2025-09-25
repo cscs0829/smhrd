@@ -487,7 +487,7 @@ export default function ClickDataProcessor({}: ClickDataProcessorProps) {
                 </div>
 
                 {/* Delect 테이블에 추가할 데이터 카드 */}
-                {processedData?.zeroClickItems.length > 0 && (
+                {processedData?.zeroClickItems && processedData.zeroClickItems.length > 0 && (
                   <div className="bg-card text-card-foreground flex flex-col gap-6 rounded-xl border py-6 shadow-sm">
                     <div className="px-6">
                       <h3 className="text-lg font-semibold mb-3 text-red-700 flex items-center gap-2">
@@ -543,7 +543,7 @@ export default function ClickDataProcessor({}: ClickDataProcessorProps) {
                 )}
 
                 {/* EP 데이터에 추가할 데이터 카드 */}
-                {processedData?.newItems.length > 0 && (
+                {processedData?.newItems && processedData.newItems.length > 0 && (
                   <div className="bg-card text-card-foreground flex flex-col gap-6 rounded-xl border py-6 shadow-sm">
                     <div className="px-6">
                       <h3 className="text-lg font-semibold mb-3 text-green-700 flex items-center gap-2">
@@ -606,7 +606,7 @@ export default function ClickDataProcessor({}: ClickDataProcessorProps) {
             </Button>
             <Button 
                 onClick={handleProcessData}
-                disabled={isProcessing || !processedData?.zeroClickItems.length}
+                disabled={isProcessing || !processedData?.zeroClickItems || processedData.zeroClickItems.length === 0}
                 className="bg-green-600 hover:bg-green-700"
               >
                 {isProcessing ? (
