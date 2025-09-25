@@ -154,12 +154,12 @@ export function DuplicateChecker({ generatedTitles, onRegenerateTitles }: Duplic
                     </CardHeader>
                     <CardContent>
                       {/* 가장 유사한 제목 표시 */}
-                      <div className="mb-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                      <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
                         <div className="flex items-center justify-between">
                           <div>
-                            <div className="font-medium text-blue-900">가장 유사한 제목</div>
-                            <div className="text-sm text-blue-700">{duplicate.mostSimilar.title}</div>
-                            <div className="text-xs text-blue-600">
+                            <div className="font-medium text-blue-900 dark:text-blue-100">가장 유사한 제목</div>
+                            <div className="text-sm text-blue-700 dark:text-blue-300">{duplicate.mostSimilar.title}</div>
+                            <div className="text-xs text-blue-600 dark:text-blue-400">
                               {duplicate.mostSimilar.source === 'ep_data' ? 'EP 데이터' : 'Delect 테이블'} • 
                               유사도 {duplicate.mostSimilar.similarity}%
                             </div>
@@ -176,12 +176,12 @@ export function DuplicateChecker({ generatedTitles, onRegenerateTitles }: Duplic
 
                       {/* 유사한 제목들 목록 */}
                       <div className="space-y-2">
-                        <h4 className="font-medium text-sm text-gray-700">유사한 제목들 (상위 10개)</h4>
+                        <h4 className="font-medium text-sm text-gray-700 dark:text-gray-300">유사한 제목들 (상위 10개)</h4>
                         {duplicate.items.map((item, itemIndex) => (
-                          <div key={itemIndex} className="flex items-center gap-2 p-2 bg-gray-50 rounded">
-                            <CheckCircle className="h-4 w-4 text-gray-400" />
-                            <span className="text-sm font-mono text-xs">{item.id}</span>
-                            <span className="text-sm text-gray-600 flex-1">{item.title}</span>
+                          <div key={itemIndex} className="flex items-center gap-2 p-2 bg-gray-50 dark:bg-gray-800 rounded">
+                            <CheckCircle className="h-4 w-4 text-gray-400 dark:text-gray-500" />
+                            <span className="text-sm font-mono text-xs text-gray-600 dark:text-gray-400">{item.id}</span>
+                            <span className="text-sm text-gray-600 dark:text-gray-300 flex-1">{item.title}</span>
                             <div className="flex items-center gap-2">
                               <Badge 
                                 variant={item.similarity >= 90 ? "destructive" : 

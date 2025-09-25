@@ -222,10 +222,10 @@ export default function ClickDataProcessor({}: ClickDataProcessorProps) {
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ delay: 0.1, duration: 0.2 }}
-            className="bg-blue-50 p-4 rounded-lg"
+            className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg"
           >
-            <div className="text-2xl font-bold text-blue-600">{processingResult.totalCsvItems}</div>
-            <div className="text-sm text-blue-700">CSV 총 개수</div>
+            <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">{processingResult.totalCsvItems}</div>
+            <div className="text-sm text-blue-700 dark:text-blue-300">CSV 총 개수</div>
           </motion.div>
           <motion.div
             initial={{ scale: 0.8, opacity: 0 }}
@@ -240,19 +240,19 @@ export default function ClickDataProcessor({}: ClickDataProcessorProps) {
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ delay: 0.3, duration: 0.2 }}
-            className="bg-green-50 p-4 rounded-lg"
+            className="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg"
           >
-            <div className="text-2xl font-bold text-green-600">{processingResult.movedToDelect}</div>
-            <div className="text-sm text-green-700">ep_data에서 이동</div>
+            <div className="text-2xl font-bold text-green-600 dark:text-green-400">{processingResult.movedToDelect}</div>
+            <div className="text-sm text-green-700 dark:text-green-300">ep_data에서 이동</div>
           </motion.div>
           <motion.div
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ delay: 0.4, duration: 0.2 }}
-            className="bg-red-50 p-4 rounded-lg"
+            className="bg-red-50 dark:bg-red-900/20 p-4 rounded-lg"
           >
-            <div className="text-2xl font-bold text-red-600">{processingResult.notFoundInEpData}</div>
-            <div className="text-sm text-red-700">ep_data에 없음</div>
+            <div className="text-2xl font-bold text-red-600 dark:text-red-400">{processingResult.notFoundInEpData}</div>
+            <div className="text-sm text-red-700 dark:text-red-300">ep_data에 없음</div>
           </motion.div>
         </div>
 
@@ -260,13 +260,13 @@ export default function ClickDataProcessor({}: ClickDataProcessorProps) {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.5, duration: 0.3 }}
-          className="bg-gray-50 p-4 rounded-lg"
+          className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg"
         >
           <div className="flex items-center gap-2 mb-2">
-            <Database className="h-4 w-4 text-gray-600" />
-            <span className="font-medium text-gray-700">처리 결과</span>
+            <Database className="h-4 w-4 text-gray-600 dark:text-gray-400" />
+            <span className="font-medium text-gray-700 dark:text-gray-300">처리 결과</span>
           </div>
-          <div className="text-sm text-gray-600 space-y-1">
+          <div className="text-sm text-gray-600 dark:text-gray-400 space-y-1">
             <p>• CSV 파일 총 {processingResult.totalCsvItems}개 상품 중 클릭수 0개: {processingResult.zeroClickItems}개</p>
             <p>• ep_data에 있던 데이터: {processingResult.movedToDelect}개 → delect 테이블로 이동</p>
             <p>• ep_data에 없던 데이터: {processingResult.notFoundInEpData}개 → delect 테이블에 추가</p>

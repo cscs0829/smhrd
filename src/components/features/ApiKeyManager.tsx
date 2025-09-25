@@ -269,15 +269,15 @@ export function ApiKeyManager() {
     }
   }
 
-  // 제공업체 색상 반환
+  // 제공업체 색상 반환 (다크모드 지원)
   const getProviderColor = (provider: string) => {
     switch (provider) {
       case 'openai':
-        return 'bg-green-100 text-green-800'
+        return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
       case 'gemini':
-        return 'bg-blue-100 text-blue-800'
+        return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
       default:
-        return 'bg-gray-100 text-gray-800'
+        return 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200'
     }
   }
 
@@ -495,7 +495,7 @@ export function ApiKeyManager() {
               </TableCell>
               <TableCell>
                 <div className="flex items-center gap-2">
-                  <code className="text-xs bg-gray-100 px-2 py-1 rounded">
+                  <code className="text-xs bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 px-2 py-1 rounded">
                     {showKeys[key.id] ? key.apiKey : '••••••••••••••••'}
                   </code>
                   <Button
@@ -518,7 +518,7 @@ export function ApiKeyManager() {
               <TableCell>
                 <div className="flex items-center gap-2">
                   {key.isActive ? (
-                    <Badge className="bg-green-100 text-green-800">
+                    <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
                       <CheckCircle className="mr-1 h-3 w-3" />
                       활성
                     </Badge>

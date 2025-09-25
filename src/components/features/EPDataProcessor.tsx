@@ -217,37 +217,37 @@ export function EPDataProcessor({}: EPDataProcessorProps) {
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ delay: 0.1, duration: 0.2 }}
-            className="bg-green-50 p-4 rounded-lg"
+            className="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg"
           >
-            <div className="text-2xl font-bold text-green-600">{processingResult.addedCount}</div>
-            <div className="text-sm text-green-700">새로 추가</div>
+            <div className="text-2xl font-bold text-green-600 dark:text-green-400">{processingResult.addedCount}</div>
+            <div className="text-sm text-green-700 dark:text-green-300">새로 추가</div>
           </motion.div>
           <motion.div
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ delay: 0.2, duration: 0.2 }}
-            className="bg-red-50 p-4 rounded-lg"
+            className="bg-red-50 dark:bg-red-900/20 p-4 rounded-lg"
           >
-            <div className="text-2xl font-bold text-red-600">{processingResult.deletedCount}</div>
-            <div className="text-sm text-red-700">삭제됨</div>
+            <div className="text-2xl font-bold text-red-600 dark:text-red-400">{processingResult.deletedCount}</div>
+            <div className="text-sm text-red-700 dark:text-red-300">삭제됨</div>
           </motion.div>
           <motion.div
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ delay: 0.3, duration: 0.2 }}
-            className="bg-blue-50 p-4 rounded-lg"
+            className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg"
           >
-            <div className="text-2xl font-bold text-blue-600">{processingResult.totalExcelItems}</div>
-            <div className="text-sm text-blue-700">Excel 총 개수</div>
+            <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">{processingResult.totalExcelItems}</div>
+            <div className="text-sm text-blue-700 dark:text-blue-300">Excel 총 개수</div>
           </motion.div>
           <motion.div
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ delay: 0.4, duration: 0.2 }}
-            className="bg-gray-50 p-4 rounded-lg"
+            className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg"
           >
-            <div className="text-2xl font-bold text-gray-600">{processingResult.totalDbItems}</div>
-            <div className="text-sm text-gray-700">DB 총 개수</div>
+            <div className="text-2xl font-bold text-gray-600 dark:text-gray-300">{processingResult.totalDbItems}</div>
+            <div className="text-sm text-gray-700 dark:text-gray-400">DB 총 개수</div>
           </motion.div>
         </div>
 
@@ -255,13 +255,13 @@ export function EPDataProcessor({}: EPDataProcessorProps) {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.5, duration: 0.3 }}
-          className="bg-gray-50 p-4 rounded-lg"
+          className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg"
         >
           <div className="flex items-center gap-2 mb-2">
-            <Database className="h-4 w-4 text-gray-600" />
-            <span className="font-medium text-gray-700">처리 결과</span>
+            <Database className="h-4 w-4 text-gray-600 dark:text-gray-400" />
+            <span className="font-medium text-gray-700 dark:text-gray-300">처리 결과</span>
           </div>
-          <div className="text-sm text-gray-600 space-y-1">
+          <div className="text-sm text-gray-600 dark:text-gray-400 space-y-1">
             <p>• Excel에 있지만 DB에 없는 데이터: {processingResult.addedCount}개 추가</p>
             <p>• DB에 있지만 Excel에 없는 데이터: {processingResult.deletedCount}개 삭제 (delect 테이블로 이동)</p>
             <p>• 중복된 데이터: {processingResult.skippedCount}개 건너뜀</p>

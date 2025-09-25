@@ -411,7 +411,7 @@ export function ImageLinkGenerator() {
                       • 아무 것도 체크하지 않으면 모든 링크가 메인 후보로 사용됩니다<br/>
                       • 중복 제외 옵션 사용 시 add_image_link는 최소 5개, 최대 10개까지
                     </div>
-                    <span className="text-blue-600 font-medium">💡 팁: 이미지링크를 입력한 후 엔터키를 누르면 자동으로 다음 입력창이 생성됩니다!</span>
+                    <span className="text-blue-600 dark:text-blue-400 font-medium">💡 팁: 이미지링크를 입력한 후 엔터키를 누르면 자동으로 다음 입력창이 생성됩니다!</span>
                   </div>
                 </div>
               </div>
@@ -486,13 +486,13 @@ export function ImageLinkGenerator() {
                                       className="flex-1 overflow-x-auto scrollbar-hide max-w-[220px]"
                                       style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
                                     >
-                                      <div className="text-xs p-1 bg-gray-50 rounded whitespace-nowrap">
+                                      <div className="text-xs p-1 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded whitespace-nowrap">
                                         {row.image_link}
                                       </div>
                                     </div>
                                     <button
                                       onClick={() => handleCopyLink(row.image_link, 'image_link')}
-                                      className="p-1 text-gray-500 hover:text-gray-700 flex-shrink-0"
+                                      className="p-1 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 flex-shrink-0"
                                       title="링크 복사"
                                     >
                                       <Copy className="h-3 w-3" />
@@ -505,13 +505,13 @@ export function ImageLinkGenerator() {
                                       className="flex-1 overflow-x-auto scrollbar-hide max-w-[220px]"
                                       style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
                                     >
-                                      <div className="text-xs p-1 bg-gray-50 rounded whitespace-nowrap">
+                                      <div className="text-xs p-1 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded whitespace-nowrap">
                                         {row.add_image_link}
                                       </div>
                                     </div>
                                     <button
                                       onClick={() => handleCopyLink(row.add_image_link, 'add_image_link')}
-                                      className="p-1 text-gray-500 hover:text-gray-700 flex-shrink-0"
+                                      className="p-1 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 flex-shrink-0"
                                       title="링크 복사"
                                     >
                                       <Copy className="h-3 w-3" />
@@ -615,16 +615,16 @@ export function ImageLinkGenerator() {
                     <div className="px-6">
                       <div className="flex items-center justify-between mb-3">
                         <div className="flex items-center gap-2">
-                          <CheckCircle className="h-5 w-5 text-blue-600" />
+                          <CheckCircle className="h-5 w-5 text-blue-600 dark:text-blue-400" />
                           <div>
-                            <p className="text-sm font-medium text-blue-700">전체 링크</p>
-                            <p className="text-2xl font-bold text-blue-600">{duplicateCheckResult.totalLinks}</p>
+                            <p className="text-sm font-medium text-blue-700 dark:text-blue-300">전체 링크</p>
+                            <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">{duplicateCheckResult.totalLinks}</p>
                           </div>
                         </div>
                         <Button 
                           size="sm"
                           variant="outline"
-                          className="text-blue-600 border-blue-200 hover:bg-blue-50"
+                          className="text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-800 hover:bg-blue-50 dark:hover:bg-blue-900/20"
                         >
                           <CheckCircle className="mr-2 h-4 w-4" />
                           전체 보기
@@ -756,13 +756,13 @@ export function ImageLinkGenerator() {
                                     className="flex-1 overflow-x-auto scrollbar-hide max-w-[160px] sm:max-w-[210px] md:max-w-[360px] lg:max-w-[500px] xl:max-w-[1000px]"
                                     style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
                                   >
-                                    <div className="text-xs font-mono bg-gray-50 p-1 rounded whitespace-nowrap">
+                                    <div className="text-xs font-mono bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-100 p-1 rounded whitespace-nowrap">
                                       {link}
                                     </div>
                                   </div>
                                   <button
                                     onClick={() => handleCopyLink(link, '링크')}
-                                    className="p-1 text-gray-500 hover:text-gray-700 flex-shrink-0"
+                                    className="p-1 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 flex-shrink-0"
                                     title="링크 복사"
                                   >
                                     <Copy className="h-3 w-3" />
