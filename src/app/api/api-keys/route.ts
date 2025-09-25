@@ -2,11 +2,9 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 
 function getSupabase() {
-  const supabaseUrl = 'https://cbetujraqbeegqtjghpl.supabase.co'
-  const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNiZXR1anJhcWJlZWdxdGpnaHBsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTA0OTgsImV4cCI6MjA3MzU4NjQ5OH0.CqgOMrgEN4xyE5CZKHy7uuKuEQQcUoHrU-_6L1Dh-Tw'
-  
-  console.log('Supabase URL:', supabaseUrl)
-  console.log('Anon Key 사용')
+  // 환경 변수 우선, 없으면 기본값 사용
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://cbetujraqbeegqtjghpl.supabase.co'
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNiZXR1anJhcWJlZWdxdGpnaHBsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTA0OTgsImV4cCI6MjA3MzU4NjQ5OH0.CqgOMrgEN4xyE5CZKHy7uuKuEQQcUoHrU-_6L1Dh-Tw'
   
   return createClient(supabaseUrl, supabaseAnonKey)
 }
@@ -46,52 +44,40 @@ export async function GET() {
 // API 키 생성
 export async function POST(req: NextRequest) {
   try {
-    console.log('API 키 생성 요청 시작')
     const { provider, name, description, apiKey } = await req.json()
-    console.log('요청 데이터:', { provider, name, description, apiKey: apiKey ? '***' : 'undefined' })
 
     if (!provider || !name || !apiKey) {
-      console.log('필수 필드 누락:', { provider: !!provider, name: !!name, apiKey: !!apiKey })
       return NextResponse.json({ error: '필수 필드가 누락되었습니다.' }, { status: 400 })
     }
 
     // API 키 유효성 검사
     if (provider === 'openai' && !apiKey.startsWith('sk-')) {
-      console.log('OpenAI API 키 형식 오류:', apiKey.substring(0, 10) + '...')
       return NextResponse.json({ error: 'OpenAI API 키는 sk-로 시작해야 합니다.' }, { status: 400 })
     }
 
     if (provider === 'gemini' && !apiKey.startsWith('AI')) {
-      console.log('Gemini API 키 형식 오류:', apiKey.substring(0, 10) + '...')
       return NextResponse.json({ error: 'Gemini API 키는 AI로 시작해야 합니다.' }, { status: 400 })
     }
 
-    console.log('Supabase 연결 시도')
     const supabase = getSupabase()
-    console.log('Supabase 연결 성공')
-
-    const insertData = {
-      provider,
-      name,
-      description: description || null,
-      api_key: apiKey,
-      is_active: true,
-      is_default: false
-    }
-    console.log('삽입할 데이터:', { ...insertData, api_key: '***' })
 
     const { data, error } = await supabase
       .from('api')
-      .insert(insertData)
+      .insert({
+        provider,
+        name,
+        description: description || null,
+        api_key: apiKey,
+        is_active: true,
+        is_default: false
+      })
       .select()
       .single()
 
     if (error) {
-      console.error('Supabase 삽입 오류:', error)
+      console.error('API 키 생성 오류:', error)
       throw error
     }
-
-    console.log('Supabase 삽입 성공:', data)
 
     // 기존 api_keys 테이블 형식으로 변환
     const transformedData = {
@@ -106,7 +92,6 @@ export async function POST(req: NextRequest) {
       usageCount: data.usage_count || 0
     }
 
-    console.log('변환된 데이터:', { ...transformedData, apiKey: '***' })
     return NextResponse.json({ data: transformedData })
   } catch (error: unknown) {
     console.error('API 키 생성 오류:', error)
