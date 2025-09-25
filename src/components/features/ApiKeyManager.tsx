@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
@@ -29,7 +29,17 @@ interface ApiKey {
 export function ApiKeyManager() {
   const { apiKeys, loading, error, loadApiKeys, addApiKey, updateApiKey, deleteApiKey, toggleApiKeyActive } = useApiKeys()
   
+  // 컴포넌트 마운트 시 API 키 로드
+  useEffect(() => {
+    if (apiKeys.length === 0 && !loading) {
+      loadApiKeys()
+    }
+  }, [apiKeys.length, loading, loadApiKeys])
+  
   const [open, setOpen] = useState(false)
+  
+  // 디버깅을 위한 로그
+  console.log('ApiKeyManager render:', { open, apiKeys: apiKeys.length, loading, error })
   const [editingKey, setEditingKey] = useState<ApiKey | null>(null)
   const [showKeys, setShowKeys] = useState<Record<string, boolean>>({})
   const [actionLoading, setActionLoading] = useState<{ [key: string]: boolean }>({})
@@ -307,7 +317,10 @@ export function ApiKeyManager() {
       <div className="text-center py-8">
         <Key className="h-12 w-12 text-gray-400 mx-auto mb-4" />
         <p className="text-gray-500 mb-4">등록된 API 키가 없습니다</p>
-        <Button onClick={() => setOpen(true)}>
+        <Button onClick={() => {
+          console.log('첫 번째 API 키 추가 버튼 클릭')
+          setOpen(true)
+        }}>
           <Plus className="mr-2 h-4 w-4" />
           첫 번째 API 키 추가
         </Button>
@@ -361,7 +374,10 @@ export function ApiKeyManager() {
               새로고침
             </animated.div>
           </Button>
-          <Button onClick={() => setOpen(true)}>
+          <Button onClick={() => {
+            console.log('API 키 추가 버튼 클릭')
+            setOpen(true)
+          }}>
             <Plus className="mr-2 h-4 w-4" />
             API 키 추가
           </Button>
@@ -510,7 +526,10 @@ export function ApiKeyManager() {
       </Table>
 
       {/* API 키 추가/수정 다이얼로그 */}
-      <Dialog open={open} onOpenChange={setOpen}>
+      <Dialog open={open} onOpenChange={(isOpen) => {
+        console.log('Dialog onOpenChange:', isOpen)
+        setOpen(isOpen)
+      }}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
             <DialogTitle>
