@@ -37,6 +37,7 @@ interface DuplicateCheckerProps {
 export function DuplicateChecker({ generatedTitles, onRegenerateTitles }: DuplicateCheckerProps = {}) {
   const [duplicates, setDuplicates] = useState<DuplicateItem[]>([])
   const [isSearching, setIsSearching] = useState(false)
+  const [hasSearched, setHasSearched] = useState(false)
 
   const handleSearchDuplicates = async () => {
     console.log('중복 검색 시작:', { 
@@ -50,6 +51,7 @@ export function DuplicateChecker({ generatedTitles, onRegenerateTitles }: Duplic
     }
 
     setIsSearching(true)
+    setHasSearched(true)
     try {
       console.log('API 요청 전송 중...')
       const response = await fetch('/api/duplicate-search', {
@@ -88,6 +90,7 @@ export function DuplicateChecker({ generatedTitles, onRegenerateTitles }: Duplic
     const duplicateTitles = duplicates.map(dup => dup.title)
     await onRegenerateTitles(duplicateTitles)
     setDuplicates([]) // 중복 목록 초기화
+    setHasSearched(false) // 검색 상태 초기화
   }
 
   return (
@@ -120,16 +123,16 @@ export function DuplicateChecker({ generatedTitles, onRegenerateTitles }: Duplic
                 </AlertDescription>
               </Alert>
 
-              {onRegenerateTitles && (
-                <Button 
-                  onClick={handleRegenerateDuplicates}
-                  variant="outline"
-                  className="w-full"
-                >
-                  <RefreshCw className="mr-2 h-4 w-4" />
-                  중복 제목들 새로 생성하기
-                </Button>
-              )}
+                      {onRegenerateTitles && duplicates.length > 0 && (
+                        <Button 
+                          onClick={handleRegenerateDuplicates}
+                          variant="outline"
+                          className="w-full"
+                        >
+                          <RefreshCw className="mr-2 h-4 w-4" />
+                          중복 제목들 새로 생성하기
+                        </Button>
+                      )}
 
               <div className="space-y-4">
                 {duplicates.map((duplicate, index) => (
@@ -201,11 +204,20 @@ export function DuplicateChecker({ generatedTitles, onRegenerateTitles }: Duplic
             </div>
           )}
 
-          {duplicates.length === 0 && !isSearching && (
+          {!hasSearched && !isSearching && (
             <Alert>
               <CheckCircle className="h-4 w-4" />
               <AlertDescription>
                 중복 검색을 실행하여 중복된 데이터를 찾아보세요
+              </AlertDescription>
+            </Alert>
+          )}
+
+          {hasSearched && duplicates.length === 0 && !isSearching && (
+            <Alert>
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>
+                🎉 중복된 제목을 찾지 못했습니다! 생성된 제목들이 모두 고유합니다.
               </AlertDescription>
             </Alert>
           )}
