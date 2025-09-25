@@ -753,7 +753,7 @@ export function ImageLinkGenerator() {
                               <TableCell className="w-[550px]">
                                 <div className="flex items-center gap-1">
                                   <div 
-                                    className="flex-1 overflow-x-auto scrollbar-hide max-w-[310px]"
+                                    className="flex-1 overflow-x-auto scrollbar-hide max-w-[510px]"
                                     style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
                                   >
                                     <div className="text-xs font-mono bg-gray-50 p-1 rounded whitespace-nowrap">
