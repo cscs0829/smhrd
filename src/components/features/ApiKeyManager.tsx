@@ -313,13 +313,91 @@ export function ApiKeyManager() {
   // 빈 상태 렌더링
   if (apiKeys.length === 0) {
     return (
-      <div className="text-center py-8">
-        <Key className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-        <p className="text-gray-500 mb-4">등록된 API 키가 없습니다</p>
-        <Button onClick={() => setOpen(true)}>
-          <Plus className="mr-2 h-4 w-4" />
-          첫 번째 API 키 추가
-        </Button>
+      <div className="space-y-4">
+        <div className="text-center py-8">
+          <Key className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+          <p className="text-gray-500 mb-4">등록된 API 키가 없습니다</p>
+          <Button onClick={() => setOpen(true)}>
+            <Plus className="mr-2 h-4 w-4" />
+            첫 번째 API 키 추가
+          </Button>
+        </div>
+
+        {/* API 키 추가/수정 다이얼로그 */}
+        <Dialog open={open} onOpenChange={setOpen}>
+          <DialogContent className="sm:max-w-[425px]">
+            <DialogHeader>
+              <DialogTitle>
+                {editingKey ? 'API 키 수정' : 'API 키 추가'}
+              </DialogTitle>
+              <DialogDescription>
+                {editingKey ? 'API 키 정보를 수정하세요.' : '새로운 API 키를 추가하세요.'}
+              </DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="provider" className="text-right">
+                  제공업체
+                </Label>
+                <select
+                  id="provider"
+                  value={formData.provider}
+                  onChange={(e) => setFormData(prev => ({ ...prev, provider: e.target.value as 'openai' | 'gemini' }))}
+                  className="col-span-3 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  disabled={!!editingKey}
+                >
+                  <option value="openai">OpenAI</option>
+                  <option value="gemini">Google Gemini</option>
+                </select>
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="name" className="text-right">
+                  이름
+                </Label>
+                <Input
+                  id="name"
+                  value={formData.name}
+                  onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                  className="col-span-3"
+                  placeholder="API 키 이름을 입력하세요"
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="description" className="text-right">
+                  설명
+                </Label>
+                <Textarea
+                  id="description"
+                  value={formData.description}
+                  onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                  className="col-span-3"
+                  placeholder="API 키에 대한 설명을 입력하세요 (선택사항)"
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="apiKey" className="text-right">
+                  API 키
+                </Label>
+                <Input
+                  id="apiKey"
+                  type="password"
+                  value={formData.apiKey}
+                  onChange={(e) => setFormData(prev => ({ ...prev, apiKey: e.target.value }))}
+                  className="col-span-3"
+                  placeholder="API 키를 입력하세요"
+                />
+              </div>
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setOpen(false)}>
+                취소
+              </Button>
+              <Button onClick={handleSave}>
+                {editingKey ? '수정' : '추가'}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     )
   }
