@@ -34,15 +34,23 @@ interface PreviewData {
   totalCount: number
 }
 
+interface ProcessedData {
+  zeroClickItems: Array<{id: string, title: string, clicks: number}>
+  newItems: Array<{id: string, title: string, clicks: number}>
+}
+
 export default function ClickDataProcessor({}: ClickDataProcessorProps) {
   const [file, setFile] = useState<File | null>(null)
   const [isProcessing, setIsProcessing] = useState(false)
   const [isPreviewing, setIsPreviewing] = useState(false)
   const [previewData, setPreviewData] = useState<PreviewData | null>(null)
+  const [processedData, setProcessedData] = useState<ProcessedData | null>(null)
   const [processingResult, setProcessingResult] = useState<ClickDataResponse | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [zeroVisibleCount, setZeroVisibleCount] = useState(10)
   const [newVisibleCount, setNewVisibleCount] = useState(10)
+  const [isAddingToDelect, setIsAddingToDelect] = useState(false)
+  const [isAddingToEpData, setIsAddingToEpData] = useState(false)
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     const selectedFile = acceptedFiles[0]
@@ -94,10 +102,73 @@ export default function ClickDataProcessor({}: ClickDataProcessorProps) {
 
       const data = await response.json()
       setPreviewData(data)
+      const zeroClickItems = data.zeroClickItems || []
+      const newItems = data.newItems || []
+      setProcessedData({ zeroClickItems, newItems })
     } catch (error) {
       setError(error instanceof Error ? error.message : '미리보기 생성 중 오류가 발생했습니다.')
     } finally {
       setIsPreviewing(false)
+    }
+  }
+
+  const handleAddToDelect = async () => {
+    if (!processedData?.zeroClickItems.length) return
+
+    setIsAddingToDelect(true)
+    setError(null)
+
+    try {
+      const response = await fetch('/api/admin/click-data', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          zeroClickItems: processedData.zeroClickItems,
+          action: 'addToDelect'
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error('Delect 테이블 추가 중 오류가 발생했습니다.')
+      }
+
+      const result = await response.json()
+      setProcessingResult(result)
+      setPreviewData(null)
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'Delect 테이블 추가 중 오류가 발생했습니다.')
+    } finally {
+      setIsAddingToDelect(false)
+    }
+  }
+
+  const handleAddToEpData = async () => {
+    if (!processedData?.newItems.length) return
+
+    setIsAddingToEpData(true)
+    setError(null)
+
+    try {
+      const response = await fetch('/api/admin/ep-data', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          newItems: processedData.newItems,
+          action: 'addToEpData'
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error('EP 데이터 추가 중 오류가 발생했습니다.')
+      }
+
+      const result = await response.json()
+      setProcessingResult(result)
+      setPreviewData(null)
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'EP 데이터 추가 중 오류가 발생했습니다.')
+    } finally {
+      setIsAddingToEpData(false)
     }
   }
 
@@ -415,66 +486,114 @@ export default function ClickDataProcessor({}: ClickDataProcessorProps) {
                   </Card>
                 </div>
 
-                {/* 0클릭 상품 테이블 */}
-                {previewData.zeroClickItems.length > 0 && (
-                  <div className="w-full">
-                    <h3 className="text-lg font-semibold mb-3 text-red-700">0클릭 상품 ({previewData.zeroClickItems.length}개)</h3>
-                    <div className="border rounded-lg overflow-hidden w-full">
-                      <Table>
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead>ID</TableHead>
-                            <TableHead>제목</TableHead>
-                            <TableHead>클릭수</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {previewData.zeroClickItems.slice(0, zeroVisibleCount).map((item, index) => (
-                            <TableRow key={index}>
-                              <TableCell className="font-mono text-sm break-all">{item.id}</TableCell>
-                              <TableCell className="whitespace-normal break-words">{item.title}</TableCell>
-                              <TableCell className="text-red-600 font-bold">{item.clicks}</TableCell>
+                {/* Delect 테이블에 추가할 데이터 카드 */}
+                {processedData?.zeroClickItems.length > 0 && (
+                  <div className="bg-card text-card-foreground flex flex-col gap-6 rounded-xl border py-6 shadow-sm">
+                    <div className="px-6">
+                      <h3 className="text-lg font-semibold mb-3 text-red-700 flex items-center gap-2">
+                        <AlertCircle className="h-5 w-5" />
+                        Delect 테이블에 추가할 데이터 ({processedData.zeroClickItems.length}개)
+                      </h3>
+                      <div className="border rounded-lg overflow-hidden">
+                        <Table>
+                          <TableHeader>
+                            <TableRow>
+                              <TableHead>ID</TableHead>
+                              <TableHead>제목</TableHead>
+                              <TableHead>클릭수</TableHead>
                             </TableRow>
-                          ))}
-                        </TableBody>
-                      </Table>
-                      {previewData.zeroClickItems.length > zeroVisibleCount && (
-                        <div className="p-3 text-sm text-center">
-                          <Button variant="outline" size="sm" onClick={() => setZeroVisibleCount(c => c + 10)}>더보기 (+10)</Button>
-                        </div>
-                      )}
+                          </TableHeader>
+                          <TableBody>
+                            {processedData.zeroClickItems.slice(0, zeroVisibleCount).map((item, index) => (
+                              <TableRow key={index}>
+                                <TableCell className="font-mono text-sm break-all">{item.id}</TableCell>
+                                <TableCell className="whitespace-normal break-words">{item.title}</TableCell>
+                                <TableCell className="text-red-600 font-bold">{item.clicks}</TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                        {processedData.zeroClickItems.length > zeroVisibleCount && (
+                          <div className="p-3 text-sm text-center">
+                            <Button variant="outline" size="sm" onClick={() => setZeroVisibleCount(c => c + 10)}>더보기 (+10)</Button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    <div className="px-6">
+                      <Button 
+                        onClick={handleAddToDelect} 
+                        disabled={isAddingToDelect}
+                        className="w-full bg-red-600 hover:bg-red-700"
+                      >
+                        {isAddingToDelect ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Delect 테이블에 추가 중...
+                          </>
+                        ) : (
+                          <>
+                            <Database className="mr-2 h-4 w-4" />
+                            Delect 테이블에 추가
+                          </>
+                        )}
+                      </Button>
                     </div>
                   </div>
                 )}
 
-                {/* 새로 추가될 데이터 테이블 */}
-                {previewData.newItems.length > 0 && (
-                  <div className="w-full">
-                    <h3 className="text-lg font-semibold mb-3 text-green-700">새로 추가될 데이터 ({previewData.newItems.length}개)</h3>
-                    <div className="border rounded-lg overflow-hidden w-full">
-                      <Table>
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead>ID</TableHead>
-                            <TableHead>제목</TableHead>
-                            <TableHead>클릭수</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {previewData.newItems.slice(0, newVisibleCount).map((item, index) => (
-                            <TableRow key={index}>
-                              <TableCell className="font-mono text-sm break-all">{item.id}</TableCell>
-                              <TableCell className="whitespace-normal break-words">{item.title}</TableCell>
-                              <TableCell>{item.clicks}</TableCell>
+                {/* EP 데이터에 추가할 데이터 카드 */}
+                {processedData?.newItems.length > 0 && (
+                  <div className="bg-card text-card-foreground flex flex-col gap-6 rounded-xl border py-6 shadow-sm">
+                    <div className="px-6">
+                      <h3 className="text-lg font-semibold mb-3 text-green-700 flex items-center gap-2">
+                        <CheckCircle className="h-5 w-5" />
+                        EP 데이터에 추가할 데이터 ({processedData.newItems.length}개)
+                      </h3>
+                      <div className="border rounded-lg overflow-hidden">
+                        <Table>
+                          <TableHeader>
+                            <TableRow>
+                              <TableHead>ID</TableHead>
+                              <TableHead>제목</TableHead>
+                              <TableHead>클릭수</TableHead>
                             </TableRow>
-                          ))}
-                        </TableBody>
-                      </Table>
-                      {previewData.newItems.length > newVisibleCount && (
-                        <div className="p-3 text-sm text-center">
-                          <Button variant="outline" size="sm" onClick={() => setNewVisibleCount(c => c + 10)}>더보기 (+10)</Button>
-                        </div>
-                      )}
+                          </TableHeader>
+                          <TableBody>
+                            {processedData.newItems.slice(0, newVisibleCount).map((item, index) => (
+                              <TableRow key={index}>
+                                <TableCell className="font-mono text-sm break-all">{item.id}</TableCell>
+                                <TableCell className="whitespace-normal break-words">{item.title}</TableCell>
+                                <TableCell>{item.clicks}</TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                        {processedData.newItems.length > newVisibleCount && (
+                          <div className="p-3 text-sm text-center">
+                            <Button variant="outline" size="sm" onClick={() => setNewVisibleCount(c => c + 10)}>더보기 (+10)</Button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    <div className="px-6">
+                      <Button 
+                        onClick={handleAddToEpData} 
+                        disabled={isAddingToEpData}
+                        className="w-full bg-green-600 hover:bg-green-700"
+                      >
+                        {isAddingToEpData ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            EP 데이터에 추가 중...
+                          </>
+                        ) : (
+                          <>
+                            <Database className="mr-2 h-4 w-4" />
+                            EP 데이터에 추가
+                          </>
+                        )}
+                      </Button>
                     </div>
                   </div>
                 )}
@@ -487,7 +606,7 @@ export default function ClickDataProcessor({}: ClickDataProcessorProps) {
             </Button>
             <Button 
                 onClick={handleProcessData}
-                disabled={isProcessing}
+                disabled={isProcessing || !processedData?.zeroClickItems.length}
                 className="bg-green-600 hover:bg-green-700"
               >
                 {isProcessing ? (

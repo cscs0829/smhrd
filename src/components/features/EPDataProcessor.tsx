@@ -9,9 +9,10 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Progress } from '@/components/ui/progress'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { Upload, FileSpreadsheet, AlertCircle, Loader2, X, CheckCircle, Database, Eye, Play } from 'lucide-react'
+import { Upload, FileSpreadsheet, AlertCircle, Loader2, X, CheckCircle, Database, Eye, Play, Plus } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { EPDataResponse } from '@/types'
+import { toast } from 'sonner'
 
 interface EPDataProcessorProps {
   onFileSelect?: () => void
@@ -24,6 +25,11 @@ interface PreviewData {
   totalCount: number
 }
 
+interface ProcessedData {
+  epDataItems: Array<{id: string, title: string}>
+  delectItems: Array<{id: string, title: string}>
+}
+
 export function EPDataProcessor({}: EPDataProcessorProps) {
   const [file, setFile] = useState<File | null>(null)
   const [isProcessing, setIsProcessing] = useState(false)
@@ -33,6 +39,9 @@ export function EPDataProcessor({}: EPDataProcessorProps) {
   const [error, setError] = useState<string | null>(null)
   const [newVisibleCount, setNewVisibleCount] = useState(10)
   const [dupVisibleCount, setDupVisibleCount] = useState(10)
+  const [processedData, setProcessedData] = useState<ProcessedData | null>(null)
+  const [isAddingToEpData, setIsAddingToEpData] = useState(false)
+  const [isAddingToDelect, setIsAddingToDelect] = useState(false)
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     const selectedFile = acceptedFiles[0]
@@ -88,10 +97,73 @@ export function EPDataProcessor({}: EPDataProcessorProps) {
 
       const data = await response.json()
       setPreviewData(data)
+      
+      // 데이터 분류
+      const epDataItems = data.newItems || []
+      const delectItems = data.duplicates || []
+      setProcessedData({ epDataItems, delectItems })
     } catch (error) {
       setError(error instanceof Error ? error.message : '미리보기 생성 중 오류가 발생했습니다.')
     } finally {
       setIsPreviewing(false)
+    }
+  }
+
+  const handleAddToEpData = async () => {
+    if (!processedData?.epDataItems.length) return
+
+    setIsAddingToEpData(true)
+    setError(null)
+
+    try {
+      const response = await fetch('/api/admin/ep-data', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          action: 'add',
+          items: processedData.epDataItems 
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error('EP 데이터 추가 중 오류가 발생했습니다.')
+      }
+
+      const result = await response.json()
+      setProcessingResult(result)
+      toast.success(`${processedData.epDataItems.length}개 항목이 EP 데이터에 추가되었습니다.`)
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'EP 데이터 추가 중 오류가 발생했습니다.')
+    } finally {
+      setIsAddingToEpData(false)
+    }
+  }
+
+  const handleAddToDelect = async () => {
+    if (!processedData?.delectItems.length) return
+
+    setIsAddingToDelect(true)
+    setError(null)
+
+    try {
+      const response = await fetch('/api/admin/move-to-delete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          items: processedData.delectItems 
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error('Delect 테이블 추가 중 오류가 발생했습니다.')
+      }
+
+      const result = await response.json()
+      toast.success(`${processedData.delectItems.length}개 항목이 Delect 테이블에 추가되었습니다.`)
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'Delect 테이블 추가 중 오류가 발생했습니다.')
+    } finally {
+      setIsAddingToDelect(false)
     }
   }
 
@@ -409,62 +481,146 @@ export function EPDataProcessor({}: EPDataProcessorProps) {
                   </Card>
                 </div>
 
-                {/* 새로 추가될 데이터 테이블 */}
-                {previewData.newItems.length > 0 && (
-                  <div className="w-full">
-                    <h3 className="text-lg font-semibold mb-3 text-green-700">새로 추가될 데이터 ({previewData.newItems.length}개)</h3>
-                    <div className="border rounded-lg overflow-hidden w-full">
-                      <Table>
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead>ID</TableHead>
-                            <TableHead>제목</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {previewData.newItems.slice(0, newVisibleCount).map((item, index) => (
-                            <TableRow key={index}>
-                              <TableCell className="font-mono text-sm break-all">{item.id}</TableCell>
-                              <TableCell className="whitespace-normal break-words">{item.title}</TableCell>
+                {/* 중복 데이터 카드 */}
+                {previewData.duplicates.length > 0 && (
+                  <div className="bg-card text-card-foreground flex flex-col gap-6 rounded-xl border py-6 shadow-sm">
+                    <div className="px-6">
+                      <h3 className="text-lg font-semibold mb-3 text-orange-700 flex items-center gap-2">
+                        <AlertCircle className="h-5 w-5" />
+                        중복 데이터 ({previewData.duplicates.length}개)
+                      </h3>
+                      <div className="border rounded-lg overflow-hidden">
+                        <Table>
+                          <TableHeader>
+                            <TableRow>
+                              <TableHead>ID</TableHead>
+                              <TableHead>제목</TableHead>
                             </TableRow>
-                          ))}
-                        </TableBody>
-                      </Table>
-                      {previewData.newItems.length > newVisibleCount && (
-                        <div className="p-3 text-sm text-center">
-                          <Button variant="outline" size="sm" onClick={() => setNewVisibleCount(c => c + 10)}>더보기 (+10)</Button>
-                        </div>
-                      )}
+                          </TableHeader>
+                          <TableBody>
+                            {previewData.duplicates.slice(0, dupVisibleCount).map((item, index) => (
+                              <TableRow key={index}>
+                                <TableCell className="font-mono text-sm break-all">{item.id}</TableCell>
+                                <TableCell className="whitespace-normal break-words">{item.title}</TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                        {previewData.duplicates.length > dupVisibleCount && (
+                          <div className="p-3 text-sm text-center">
+                            <Button variant="outline" size="sm" onClick={() => setDupVisibleCount(c => c + 10)}>더보기 (+10)</Button>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
                 )}
 
-                {/* 중복 데이터 테이블 */}
-                {previewData.duplicates.length > 0 && (
-                  <div className="w-full">
-                    <h3 className="text-lg font-semibold mb-3 text-orange-700">중복 데이터 ({previewData.duplicates.length}개)</h3>
-                    <div className="border rounded-lg overflow-hidden w-full">
-                      <Table>
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead>ID</TableHead>
-                            <TableHead>제목</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {previewData.duplicates.slice(0, dupVisibleCount).map((item, index) => (
-                            <TableRow key={index}>
-                              <TableCell className="font-mono text-sm break-all">{item.id}</TableCell>
-                              <TableCell className="whitespace-normal break-words">{item.title}</TableCell>
+                {/* EP 데이터에 추가할 데이터 */}
+                {processedData && processedData.epDataItems.length > 0 && (
+                  <div className="bg-card text-card-foreground flex flex-col gap-6 rounded-xl border py-6 shadow-sm">
+                    <div className="px-6">
+                      <h3 className="text-lg font-semibold mb-3 text-green-700 flex items-center gap-2">
+                        <Database className="h-5 w-5" />
+                        EP 데이터에 추가할 데이터 ({processedData.epDataItems.length}개)
+                      </h3>
+                      <div className="border rounded-lg overflow-hidden">
+                        <Table>
+                          <TableHeader>
+                            <TableRow>
+                              <TableHead>ID</TableHead>
+                              <TableHead>제목</TableHead>
                             </TableRow>
-                          ))}
-                        </TableBody>
-                      </Table>
-                      {previewData.duplicates.length > dupVisibleCount && (
-                        <div className="p-3 text-sm text-center">
-                          <Button variant="outline" size="sm" onClick={() => setDupVisibleCount(c => c + 10)}>더보기 (+10)</Button>
-                        </div>
-                      )}
+                          </TableHeader>
+                          <TableBody>
+                            {processedData.epDataItems.slice(0, newVisibleCount).map((item, index) => (
+                              <TableRow key={index}>
+                                <TableCell className="font-mono text-sm break-all">{item.id}</TableCell>
+                                <TableCell className="whitespace-normal break-words">{item.title}</TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                        {processedData.epDataItems.length > newVisibleCount && (
+                          <div className="p-3 text-sm text-center">
+                            <Button variant="outline" size="sm" onClick={() => setNewVisibleCount(c => c + 10)}>더보기 (+10)</Button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    <div className="px-6">
+                      <Button 
+                        onClick={handleAddToEpData}
+                        disabled={isAddingToEpData}
+                        className="bg-green-600 hover:bg-green-700"
+                      >
+                        {isAddingToEpData ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            추가 중...
+                          </>
+                        ) : (
+                          <>
+                            <Plus className="mr-2 h-4 w-4" />
+                            EP 데이터에 추가
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Delect 테이블에 추가할 데이터 */}
+                {processedData && processedData.delectItems.length > 0 && (
+                  <div className="bg-card text-card-foreground flex flex-col gap-6 rounded-xl border py-6 shadow-sm">
+                    <div className="px-6">
+                      <h3 className="text-lg font-semibold mb-3 text-orange-700 flex items-center gap-2">
+                        <AlertCircle className="h-5 w-5" />
+                        Delect 테이블에 추가할 데이터 ({processedData.delectItems.length}개)
+                      </h3>
+                      <div className="border rounded-lg overflow-hidden">
+                        <Table>
+                          <TableHeader>
+                            <TableRow>
+                              <TableHead>ID</TableHead>
+                              <TableHead>제목</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {processedData.delectItems.slice(0, dupVisibleCount).map((item, index) => (
+                              <TableRow key={index}>
+                                <TableCell className="font-mono text-sm break-all">{item.id}</TableCell>
+                                <TableCell className="whitespace-normal break-words">{item.title}</TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                        {processedData.delectItems.length > dupVisibleCount && (
+                          <div className="p-3 text-sm text-center">
+                            <Button variant="outline" size="sm" onClick={() => setDupVisibleCount(c => c + 10)}>더보기 (+10)</Button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    <div className="px-6">
+                      <Button 
+                        onClick={handleAddToDelect}
+                        disabled={isAddingToDelect}
+                        variant="outline"
+                        className="border-orange-500 text-orange-600 hover:bg-orange-50"
+                      >
+                        {isAddingToDelect ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            추가 중...
+                          </>
+                        ) : (
+                          <>
+                            <Plus className="mr-2 h-4 w-4" />
+                            Delect 테이블에 추가
+                          </>
+                        )}
+                      </Button>
                     </div>
                   </div>
                 )}
@@ -477,7 +633,7 @@ export function EPDataProcessor({}: EPDataProcessorProps) {
             </Button>
               <Button 
                 onClick={handleProcessData}
-                disabled={isProcessing}
+                disabled={isProcessing || !processedData?.epDataItems.length}
                 className="bg-green-600 hover:bg-green-700"
               >
                 {isProcessing ? (
