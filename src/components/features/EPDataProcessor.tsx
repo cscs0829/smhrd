@@ -520,10 +520,30 @@ export function EPDataProcessor({}: EPDataProcessorProps) {
                 {processedData && processedData.epDataItems.length > 0 && (
                   <div className="bg-card text-card-foreground flex flex-col gap-6 rounded-xl border py-6 shadow-sm">
                     <div className="px-6">
-                      <h3 className="text-lg font-semibold mb-3 text-green-700 flex items-center gap-2">
-                        <Database className="h-5 w-5" />
-                        EP 데이터에 추가할 데이터 ({processedData.epDataItems.length}개)
-                      </h3>
+                      <div className="flex items-center justify-between mb-3">
+                        <h3 className="text-lg font-semibold text-green-700 flex items-center gap-2">
+                          <Database className="h-5 w-5" />
+                          EP 데이터에 추가할 데이터 ({processedData.epDataItems.length}개)
+                        </h3>
+                        <Button 
+                          onClick={handleAddToEpData}
+                          disabled={isAddingToEpData}
+                          size="sm"
+                          className="bg-green-600 hover:bg-green-700"
+                        >
+                          {isAddingToEpData ? (
+                            <>
+                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                              추가 중...
+                            </>
+                          ) : (
+                            <>
+                              <Plus className="mr-2 h-4 w-4" />
+                              EP 데이터에 추가
+                            </>
+                          )}
+                        </Button>
+                      </div>
                       <div className="border rounded-lg overflow-hidden">
                         <Table>
                           <TableHeader>
@@ -548,25 +568,6 @@ export function EPDataProcessor({}: EPDataProcessorProps) {
                         )}
                       </div>
                     </div>
-                    <div className="px-6">
-                      <Button 
-                        onClick={handleAddToEpData}
-                        disabled={isAddingToEpData}
-                        className="bg-green-600 hover:bg-green-700"
-                      >
-                        {isAddingToEpData ? (
-                          <>
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            추가 중...
-                          </>
-                        ) : (
-                          <>
-                            <Plus className="mr-2 h-4 w-4" />
-                            EP 데이터에 추가
-                          </>
-                        )}
-                      </Button>
-                    </div>
                   </div>
                 )}
 
@@ -574,10 +575,31 @@ export function EPDataProcessor({}: EPDataProcessorProps) {
                 {processedData && processedData.delectItems.length > 0 && (
                   <div className="bg-card text-card-foreground flex flex-col gap-6 rounded-xl border py-6 shadow-sm">
                     <div className="px-6">
-                      <h3 className="text-lg font-semibold mb-3 text-orange-700 flex items-center gap-2">
-                        <AlertCircle className="h-5 w-5" />
-                        Delect 테이블에 추가할 데이터 ({processedData.delectItems.length}개)
-                      </h3>
+                      <div className="flex items-center justify-between mb-3">
+                        <h3 className="text-lg font-semibold text-orange-700 flex items-center gap-2">
+                          <AlertCircle className="h-5 w-5" />
+                          Delect 테이블에 추가할 데이터 ({processedData.delectItems.length}개)
+                        </h3>
+                        <Button 
+                          onClick={handleAddToDelect}
+                          disabled={isAddingToDelect}
+                          size="sm"
+                          variant="outline"
+                          className="border-orange-500 text-orange-600 hover:bg-orange-50"
+                        >
+                          {isAddingToDelect ? (
+                            <>
+                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                              추가 중...
+                            </>
+                          ) : (
+                            <>
+                              <Plus className="mr-2 h-4 w-4" />
+                              Delect 테이블에 추가
+                            </>
+                          )}
+                        </Button>
+                      </div>
                       <div className="border rounded-lg overflow-hidden">
                         <Table>
                           <TableHeader>
@@ -601,26 +623,6 @@ export function EPDataProcessor({}: EPDataProcessorProps) {
                           </div>
                         )}
                       </div>
-                    </div>
-                    <div className="px-6">
-                      <Button 
-                        onClick={handleAddToDelect}
-                        disabled={isAddingToDelect}
-                        variant="outline"
-                        className="border-orange-500 text-orange-600 hover:bg-orange-50"
-                      >
-                        {isAddingToDelect ? (
-                          <>
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            추가 중...
-                          </>
-                        ) : (
-                          <>
-                            <Plus className="mr-2 h-4 w-4" />
-                            Delect 테이블에 추가
-                          </>
-                        )}
-                      </Button>
                     </div>
                   </div>
                 )}

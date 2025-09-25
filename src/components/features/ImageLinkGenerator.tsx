@@ -9,11 +9,18 @@ import { Label } from '@/components/ui/label'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
 import { toast } from 'sonner'
-import { CheckSquare, Download, Minus, Plus, RefreshCw } from 'lucide-react'
+import { CheckSquare, Download, Minus, Plus, RefreshCw, Search, AlertTriangle, CheckCircle } from 'lucide-react'
 
 type ImageEntry = {
   url: string
   isMain: boolean
+}
+
+type DuplicateCheckResult = {
+  totalLinks: number
+  uniqueLinks: number
+  duplicateLinks: string[]
+  allLinks: string[]
 }
 
 function getRandomInt(min: number, max: number) {
@@ -36,6 +43,11 @@ export function ImageLinkGenerator() {
   const [numRows, setNumRows] = useState<number>(10)
   const [excludeDuplicates, setExcludeDuplicates] = useState<boolean>(false)
   const [results, setResults] = useState<{ image_link: string; add_image_link: string }[]>([])
+  
+  // 중복 검사 관련 상태
+  const [duplicateCheckInput, setDuplicateCheckInput] = useState<string>('')
+  const [duplicateCheckResult, setDuplicateCheckResult] = useState<DuplicateCheckResult | null>(null)
+  const [isCheckingDuplicates, setIsCheckingDuplicates] = useState<boolean>(false)
 
   const uniqueEntries = useMemo(() => {
     const seen = new Set<string>()
@@ -217,6 +229,67 @@ export function ImageLinkGenerator() {
       console.error(e)
       toast.error('엑셀 생성 중 오류가 발생했습니다')
     }
+  }
+
+  const handleDuplicateCheck = () => {
+    if (!duplicateCheckInput.trim()) {
+      toast.error('링크를 입력해주세요')
+      return
+    }
+
+    setIsCheckingDuplicates(true)
+    
+    try {
+      // |로 구분된 링크들을 분리
+      const links = duplicateCheckInput
+        .split('|')
+        .map(link => link.trim())
+        .filter(link => link.length > 0)
+
+      if (links.length === 0) {
+        toast.error('유효한 링크가 없습니다')
+        setIsCheckingDuplicates(false)
+        return
+      }
+
+      // 중복 검사
+      const linkCount = new Map<string, number>()
+      const duplicateLinks: string[] = []
+      
+      links.forEach(link => {
+        const count = linkCount.get(link) || 0
+        linkCount.set(link, count + 1)
+        if (count === 1) { // 두 번째 발견 시 중복으로 기록
+          duplicateLinks.push(link)
+        }
+      })
+
+      const uniqueLinks = Array.from(linkCount.keys())
+      
+      const result: DuplicateCheckResult = {
+        totalLinks: links.length,
+        uniqueLinks: uniqueLinks.length,
+        duplicateLinks: duplicateLinks,
+        allLinks: links
+      }
+
+      setDuplicateCheckResult(result)
+      
+      if (duplicateLinks.length > 0) {
+        toast.warning(`${duplicateLinks.length}개의 중복 링크를 발견했습니다`)
+      } else {
+        toast.success('중복 링크가 없습니다')
+      }
+    } catch (error) {
+      toast.error('중복 검사 중 오류가 발생했습니다')
+    } finally {
+      setIsCheckingDuplicates(false)
+    }
+  }
+
+  const handleClearDuplicateCheck = () => {
+    setDuplicateCheckInput('')
+    setDuplicateCheckResult(null)
   }
 
   return (
@@ -473,6 +546,189 @@ export function ImageLinkGenerator() {
             </div>
           </div>
         </CardFooter>
+      </Card>
+
+      {/* 중복 검사기 카드 */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Search className="h-5 w-5" />
+            이미지 링크 중복 검사기
+          </CardTitle>
+          <CardDescription>
+            |로 구분된 이미지 링크들을 입력하여 중복을 검사합니다.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="duplicate-check-input">이미지 링크 입력</Label>
+              <div className="space-y-2">
+                <Input
+                  id="duplicate-check-input"
+                  placeholder="https://example.com/image1.jpg|https://example.com/image2.jpg|https://example.com/image3.jpg"
+                  value={duplicateCheckInput}
+                  onChange={(e) => setDuplicateCheckInput(e.target.value)}
+                  className="font-mono text-sm"
+                />
+                <div className="text-xs text-muted-foreground">
+                  링크들을 | (파이프) 문자로 구분하여 입력하세요
+                </div>
+              </div>
+            </div>
+
+            <div className="flex gap-2">
+              <Button 
+                onClick={handleDuplicateCheck}
+                disabled={isCheckingDuplicates || !duplicateCheckInput.trim()}
+                className="flex-1"
+              >
+                {isCheckingDuplicates ? (
+                  <>
+                    <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                    검사 중...
+                  </>
+                ) : (
+                  <>
+                    <Search className="mr-2 h-4 w-4" />
+                    중복 검사 실행
+                  </>
+                )}
+              </Button>
+              <Button 
+                variant="outline" 
+                onClick={handleClearDuplicateCheck}
+                disabled={isCheckingDuplicates}
+              >
+                <RefreshCw className="mr-2 h-4 w-4" />
+                초기화
+              </Button>
+            </div>
+
+            {/* 검사 결과 */}
+            {duplicateCheckResult && (
+              <div className="space-y-4">
+                {/* 요약 정보 */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="bg-blue-50 p-4 rounded-lg">
+                    <div className="flex items-center gap-2">
+                      <CheckCircle className="h-5 w-5 text-blue-600" />
+                      <div>
+                        <p className="text-sm font-medium text-blue-700">전체 링크</p>
+                        <p className="text-2xl font-bold text-blue-600">{duplicateCheckResult.totalLinks}</p>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="bg-green-50 p-4 rounded-lg">
+                    <div className="flex items-center gap-2">
+                      <CheckCircle className="h-5 w-5 text-green-600" />
+                      <div>
+                        <p className="text-sm font-medium text-green-700">고유 링크</p>
+                        <p className="text-2xl font-bold text-green-600">{duplicateCheckResult.uniqueLinks}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className={`p-4 rounded-lg ${duplicateCheckResult.duplicateLinks.length > 0 ? 'bg-red-50' : 'bg-gray-50'}`}>
+                    <div className="flex items-center gap-2">
+                      {duplicateCheckResult.duplicateLinks.length > 0 ? (
+                        <AlertTriangle className="h-5 w-5 text-red-600" />
+                      ) : (
+                        <CheckCircle className="h-5 w-5 text-gray-600" />
+                      )}
+                      <div>
+                        <p className={`text-sm font-medium ${duplicateCheckResult.duplicateLinks.length > 0 ? 'text-red-700' : 'text-gray-700'}`}>
+                          중복 링크
+                        </p>
+                        <p className={`text-2xl font-bold ${duplicateCheckResult.duplicateLinks.length > 0 ? 'text-red-600' : 'text-gray-600'}`}>
+                          {duplicateCheckResult.duplicateLinks.length}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 중복 링크 목록 */}
+                {duplicateCheckResult.duplicateLinks.length > 0 && (
+                  <div className="space-y-2">
+                    <h4 className="text-lg font-semibold text-red-700 flex items-center gap-2">
+                      <AlertTriangle className="h-5 w-5" />
+                      중복된 링크 ({duplicateCheckResult.duplicateLinks.length}개)
+                    </h4>
+                    <div className="border rounded-lg overflow-hidden">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>순번</TableHead>
+                            <TableHead>중복 링크</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {duplicateCheckResult.duplicateLinks.map((link, index) => (
+                            <TableRow key={index}>
+                              <TableCell className="w-16">{index + 1}</TableCell>
+                              <TableCell>
+                                <div className="break-all text-sm font-mono bg-red-50 p-2 rounded">
+                                  {link}
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  </div>
+                )}
+
+                {/* 전체 링크 목록 */}
+                <div className="space-y-2">
+                  <h4 className="text-lg font-semibold text-gray-700 flex items-center gap-2">
+                    <CheckCircle className="h-5 w-5" />
+                    전체 링크 목록 ({duplicateCheckResult.allLinks.length}개)
+                  </h4>
+                  <div className="border rounded-lg overflow-hidden max-h-64 overflow-y-auto">
+                    <Table>
+                      <TableHeader className="sticky top-0 bg-background">
+                        <TableRow>
+                          <TableHead className="w-16">순번</TableHead>
+                          <TableHead>링크</TableHead>
+                          <TableHead className="w-20">상태</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {duplicateCheckResult.allLinks.map((link, index) => {
+                          const isDuplicate = duplicateCheckResult.duplicateLinks.includes(link)
+                          return (
+                            <TableRow key={index}>
+                              <TableCell>{index + 1}</TableCell>
+                              <TableCell>
+                                <div className="break-all text-sm font-mono bg-gray-50 p-2 rounded">
+                                  {link}
+                                </div>
+                              </TableCell>
+                              <TableCell>
+                                {isDuplicate ? (
+                                  <Badge variant="destructive" className="text-xs">
+                                    중복
+                                  </Badge>
+                                ) : (
+                                  <Badge variant="secondary" className="text-xs">
+                                    고유
+                                  </Badge>
+                                )}
+                              </TableCell>
+                            </TableRow>
+                          )
+                        })}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </CardContent>
       </Card>
     </div>
   )

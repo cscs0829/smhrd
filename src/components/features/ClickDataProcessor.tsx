@@ -490,10 +490,30 @@ export default function ClickDataProcessor({}: ClickDataProcessorProps) {
                 {processedData?.zeroClickItems && processedData.zeroClickItems.length > 0 && (
                   <div className="bg-card text-card-foreground flex flex-col gap-6 rounded-xl border py-6 shadow-sm">
                     <div className="px-6">
-                      <h3 className="text-lg font-semibold mb-3 text-red-700 flex items-center gap-2">
-                        <AlertCircle className="h-5 w-5" />
-                        Delect 테이블에 추가할 데이터 ({processedData.zeroClickItems.length}개)
-                      </h3>
+                      <div className="flex items-center justify-between mb-3">
+                        <h3 className="text-lg font-semibold text-red-700 flex items-center gap-2">
+                          <AlertCircle className="h-5 w-5" />
+                          Delect 테이블에 추가할 데이터 ({processedData.zeroClickItems.length}개)
+                        </h3>
+                        <Button 
+                          onClick={handleAddToDelect} 
+                          disabled={isAddingToDelect}
+                          size="sm"
+                          className="bg-red-600 hover:bg-red-700"
+                        >
+                          {isAddingToDelect ? (
+                            <>
+                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                              추가 중...
+                            </>
+                          ) : (
+                            <>
+                              <Database className="mr-2 h-4 w-4" />
+                              Delect 테이블에 추가
+                            </>
+                          )}
+                        </Button>
+                      </div>
                       <div className="border rounded-lg overflow-hidden">
                         <Table>
                           <TableHeader>
@@ -520,25 +540,6 @@ export default function ClickDataProcessor({}: ClickDataProcessorProps) {
                         )}
                       </div>
                     </div>
-                    <div className="px-6">
-                      <Button 
-                        onClick={handleAddToDelect} 
-                        disabled={isAddingToDelect}
-                        className="w-full bg-red-600 hover:bg-red-700"
-                      >
-                        {isAddingToDelect ? (
-                          <>
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            Delect 테이블에 추가 중...
-                          </>
-                        ) : (
-                          <>
-                            <Database className="mr-2 h-4 w-4" />
-                            Delect 테이블에 추가
-                          </>
-                        )}
-                      </Button>
-                    </div>
                   </div>
                 )}
 
@@ -546,10 +547,30 @@ export default function ClickDataProcessor({}: ClickDataProcessorProps) {
                 {processedData?.newItems && processedData.newItems.length > 0 && (
                   <div className="bg-card text-card-foreground flex flex-col gap-6 rounded-xl border py-6 shadow-sm">
                     <div className="px-6">
-                      <h3 className="text-lg font-semibold mb-3 text-green-700 flex items-center gap-2">
-                        <CheckCircle className="h-5 w-5" />
-                        EP 데이터에 추가할 데이터 ({processedData.newItems.length}개)
-                      </h3>
+                      <div className="flex items-center justify-between mb-3">
+                        <h3 className="text-lg font-semibold text-green-700 flex items-center gap-2">
+                          <CheckCircle className="h-5 w-5" />
+                          EP 데이터에 추가할 데이터 ({processedData.newItems.length}개)
+                        </h3>
+                        <Button 
+                          onClick={handleAddToEpData} 
+                          disabled={isAddingToEpData}
+                          size="sm"
+                          className="bg-green-600 hover:bg-green-700"
+                        >
+                          {isAddingToEpData ? (
+                            <>
+                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                              추가 중...
+                            </>
+                          ) : (
+                            <>
+                              <Database className="mr-2 h-4 w-4" />
+                              EP 데이터에 추가
+                            </>
+                          )}
+                        </Button>
+                      </div>
                       <div className="border rounded-lg overflow-hidden">
                         <Table>
                           <TableHeader>
@@ -575,25 +596,6 @@ export default function ClickDataProcessor({}: ClickDataProcessorProps) {
                           </div>
                         )}
                       </div>
-                    </div>
-                    <div className="px-6">
-                      <Button 
-                        onClick={handleAddToEpData} 
-                        disabled={isAddingToEpData}
-                        className="w-full bg-green-600 hover:bg-green-700"
-                      >
-                        {isAddingToEpData ? (
-                          <>
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            EP 데이터에 추가 중...
-                          </>
-                        ) : (
-                          <>
-                            <Database className="mr-2 h-4 w-4" />
-                            EP 데이터에 추가
-                          </>
-                        )}
-                      </Button>
                     </div>
                   </div>
                 )}
