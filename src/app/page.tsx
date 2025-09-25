@@ -13,7 +13,7 @@ import ClickDataProcessor from '@/components/features/ClickDataProcessor'
 import { EPDataProcessor } from '@/components/features/EPDataProcessor'
 import { ImageLinkGenerator } from '@/components/features/ImageLinkGenerator'
 import { ThemeToggle } from '@/components/features/ThemeToggle'
-import { Database, HelpCircle, Github } from 'lucide-react'
+import { Database } from 'lucide-react'
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState<string>('process')
@@ -51,24 +51,6 @@ export default function Home() {
             </div>
           </div>
 
-          {/* 오른쪽 액션 버튼들 */}
-          <div className="flex items-center space-x-2 ml-auto">
-            <Badge variant="secondary" className="hidden sm:inline-flex">
-              v2.0
-            </Badge>
-            
-            <ThemeToggle />
-            
-            <Button variant="ghost" size="icon" className="hidden sm:inline-flex">
-              <HelpCircle className="h-4 w-4" />
-              <span className="sr-only">도움말</span>
-            </Button>
-            
-            <Button variant="ghost" size="icon" className="hidden sm:inline-flex">
-              <Github className="h-4 w-4" />
-              <span className="sr-only">GitHub</span>
-            </Button>
-          </div>
         </div>
       </div>
 
