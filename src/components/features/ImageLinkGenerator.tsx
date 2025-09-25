@@ -540,11 +540,6 @@ export function ImageLinkGenerator() {
               <span>·</span>
               <span>고유 링크: {uniqueEntries.length}/11</span>
             </div>
-            <div className="flex items-center gap-2">
-              <Button onClick={handleGenerateXlsx} className="px-4" variant="secondary" disabled={uniqueEntries.length === 0}>
-                <Download className="h-4 w-4" /> 엑셀(xlsx)
-              </Button>
-            </div>
           </div>
         </CardFooter>
       </Card>
