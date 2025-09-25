@@ -805,10 +805,10 @@ export function ImageLinkGenerator() {
                   </h4>
                   <div className="border rounded-lg overflow-hidden max-h-64 overflow-y-auto">
                     <Table>
-                      <TableHeader className="sticky top-0 bg-background">
+                      <TableHeader className="sticky top-0 bg-background z-10">
                         <TableRow>
                           <TableHead className="w-16">순번</TableHead>
-                          <TableHead>링크</TableHead>
+                          <TableHead className="min-w-[300px]">링크</TableHead>
                           <TableHead className="w-20">상태</TableHead>
                           <TableHead className="w-20">작업</TableHead>
                         </TableRow>
@@ -818,13 +818,59 @@ export function ImageLinkGenerator() {
                           const isDuplicate = duplicateCheckResult.duplicateLinks.includes(link)
                           return (
                             <TableRow key={index}>
-                              <TableCell>{index + 1}</TableCell>
-                              <TableCell>
-                                <div className="break-all text-sm font-mono bg-gray-50 p-2 rounded">
-                                  {link}
+                              <TableCell className="w-16">{index + 1}</TableCell>
+                              <TableCell className="min-w-[300px]">
+                                <div className="flex items-center gap-2">
+                                  <div 
+                                    id={`duplicate-link-container-${index}`}
+                                    className="flex-1 overflow-x-auto scrollbar-hide"
+                                    style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+                                  >
+                                    <div className="break-all text-sm font-mono bg-gray-50 p-2 rounded whitespace-nowrap min-w-max">
+                                      {link}
+                                    </div>
+                                  </div>
+                                  <div className="flex flex-col gap-1">
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      onClick={() => {
+                                        const container = document.getElementById(`duplicate-link-container-${index}`)
+                                        if (container) {
+                                          const scrollAmount = 200
+                                          container.scrollLeft = Math.max(0, container.scrollLeft - scrollAmount)
+                                        }
+                                      }}
+                                      className="h-6 w-6 p-0"
+                                    >
+                                      <ChevronLeft className="h-3 w-3" />
+                                    </Button>
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      onClick={() => {
+                                        const container = document.getElementById(`duplicate-link-container-${index}`)
+                                        if (container) {
+                                          const scrollAmount = 200
+                                          container.scrollLeft = container.scrollLeft + scrollAmount
+                                        }
+                                      }}
+                                      className="h-6 w-6 p-0"
+                                    >
+                                      <ChevronRight className="h-3 w-3" />
+                                    </Button>
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      onClick={() => handleCopyLink(link, '링크')}
+                                      className="h-6 w-6 p-0"
+                                    >
+                                      <Copy className="h-3 w-3" />
+                                    </Button>
+                                  </div>
                                 </div>
                               </TableCell>
-                              <TableCell>
+                              <TableCell className="w-20">
                                 {isDuplicate ? (
                                   <Badge variant="destructive" className="text-xs">
                                     중복
@@ -835,7 +881,7 @@ export function ImageLinkGenerator() {
                                   </Badge>
                                 )}
                               </TableCell>
-                              <TableCell>
+                              <TableCell className="w-20">
                                 <Button
                                   size="sm"
                                   variant="outline"
