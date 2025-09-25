@@ -48,10 +48,6 @@ export function ImageLinkGenerator() {
   const [duplicateCheckInput, setDuplicateCheckInput] = useState<string>('')
   const [duplicateCheckResult, setDuplicateCheckResult] = useState<DuplicateCheckResult | null>(null)
   const [isCheckingDuplicates, setIsCheckingDuplicates] = useState<boolean>(false)
-  
-  // 결과 테이블 스크롤 상태
-  const [imageLinkScrollPosition, setImageLinkScrollPosition] = useState<number>(0)
-  const [addImageLinkScrollPosition, setAddImageLinkScrollPosition] = useState<number>(0)
 
   const uniqueEntries = useMemo(() => {
     const seen = new Set<string>()
@@ -292,31 +288,6 @@ export function ImageLinkGenerator() {
     }
   }
 
-  const handleScrollImageLink = (direction: 'left' | 'right') => {
-    const container = document.getElementById('image-link-container')
-    if (container) {
-      const scrollAmount = 200
-      const newPosition = direction === 'left' 
-        ? Math.max(0, imageLinkScrollPosition - scrollAmount)
-        : imageLinkScrollPosition + scrollAmount
-      
-      container.scrollLeft = newPosition
-      setImageLinkScrollPosition(newPosition)
-    }
-  }
-
-  const handleScrollAddImageLink = (direction: 'left' | 'right') => {
-    const container = document.getElementById('add-image-link-container')
-    if (container) {
-      const scrollAmount = 200
-      const newPosition = direction === 'left' 
-        ? Math.max(0, addImageLinkScrollPosition - scrollAmount)
-        : addImageLinkScrollPosition + scrollAmount
-      
-      container.scrollLeft = newPosition
-      setAddImageLinkScrollPosition(newPosition)
-    }
-  }
 
   return (
     <div className="space-y-6">
@@ -501,89 +472,96 @@ export function ImageLinkGenerator() {
                       {results.length > 0 ? (
                         <Table>
                           <TableHeader className="sticky top-0 bg-background z-10">
-                            <TableRow>
-                              <TableHead className="w-1/2 min-w-[300px]">image_link</TableHead>
-                              <TableHead className="w-1/2 min-w-[300px]">add_image_link</TableHead>
-                            </TableRow>
+                        <TableRow>
+                          <TableHead className="w-1/2 max-w-[300px]">image_link</TableHead>
+                          <TableHead className="w-1/2 max-w-[300px]">add_image_link</TableHead>
+                        </TableRow>
                           </TableHeader>
                           <TableBody>
                             {results.map((row, idx) => (
                               <TableRow key={idx}>
-                                <TableCell className="align-top p-2">
-                                  <div className="flex items-center gap-2">
+                                <TableCell className="align-top p-2 max-w-[300px]">
+                                  <div className="flex items-center gap-1">
                                     <div 
-                                      id={`image-link-container-${idx}`}
-                                      className="flex-1 overflow-x-auto scrollbar-hide"
+                                      className="flex-1 overflow-x-auto scrollbar-hide max-w-[200px]"
                                       style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
                                     >
-                                      <div className="break-all text-xs p-2 bg-gray-50 rounded min-h-[40px] flex items-center whitespace-nowrap min-w-max">
+                                      <div className="text-xs p-1 bg-gray-50 rounded whitespace-nowrap">
                                         {row.image_link}
                                       </div>
                                     </div>
-                                    <div className="flex flex-col gap-1">
-                                      <Button
-                                        size="sm"
-                                        variant="outline"
-                                        onClick={() => handleScrollImageLink('left')}
-                                        className="h-6 w-6 p-0"
+                                    <div className="flex gap-1">
+                                      <button
+                                        onClick={() => {
+                                          const container = document.querySelector(`#image-link-${idx}`)
+                                          if (container) {
+                                            container.scrollLeft -= 100
+                                          }
+                                        }}
+                                        className="p-1 text-gray-500 hover:text-gray-700"
                                       >
                                         <ChevronLeft className="h-3 w-3" />
-                                      </Button>
-                                      <Button
-                                        size="sm"
-                                        variant="outline"
-                                        onClick={() => handleScrollImageLink('right')}
-                                        className="h-6 w-6 p-0"
+                                      </button>
+                                      <button
+                                        onClick={() => {
+                                          const container = document.querySelector(`#image-link-${idx}`)
+                                          if (container) {
+                                            container.scrollLeft += 100
+                                          }
+                                        }}
+                                        className="p-1 text-gray-500 hover:text-gray-700"
                                       >
                                         <ChevronRight className="h-3 w-3" />
-                                      </Button>
-                                      <Button
-                                        size="sm"
-                                        variant="outline"
+                                      </button>
+                                      <button
                                         onClick={() => handleCopyLink(row.image_link, 'image_link')}
-                                        className="h-6 w-6 p-0"
+                                        className="p-1 text-gray-500 hover:text-gray-700"
                                       >
                                         <Copy className="h-3 w-3" />
-                                      </Button>
+                                      </button>
                                     </div>
                                   </div>
                                 </TableCell>
-                                <TableCell className="align-top p-2">
-                                  <div className="flex items-center gap-2">
+                                <TableCell className="align-top p-2 max-w-[300px]">
+                                  <div className="flex items-center gap-1">
                                     <div 
-                                      id={`add-image-link-container-${idx}`}
-                                      className="flex-1 overflow-x-auto scrollbar-hide"
+                                      id={`add-image-link-${idx}`}
+                                      className="flex-1 overflow-x-auto scrollbar-hide max-w-[200px]"
                                       style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
                                     >
-                                      <div className="break-all text-xs p-2 bg-gray-50 rounded min-h-[40px] whitespace-nowrap min-w-max">
+                                      <div className="text-xs p-1 bg-gray-50 rounded whitespace-nowrap">
                                         {row.add_image_link}
                                       </div>
                                     </div>
-                                    <div className="flex flex-col gap-1">
-                                      <Button
-                                        size="sm"
-                                        variant="outline"
-                                        onClick={() => handleScrollAddImageLink('left')}
-                                        className="h-6 w-6 p-0"
+                                    <div className="flex gap-1">
+                                      <button
+                                        onClick={() => {
+                                          const container = document.querySelector(`#add-image-link-${idx}`)
+                                          if (container) {
+                                            container.scrollLeft -= 100
+                                          }
+                                        }}
+                                        className="p-1 text-gray-500 hover:text-gray-700"
                                       >
                                         <ChevronLeft className="h-3 w-3" />
-                                      </Button>
-                                      <Button
-                                        size="sm"
-                                        variant="outline"
-                                        onClick={() => handleScrollAddImageLink('right')}
-                                        className="h-6 w-6 p-0"
+                                      </button>
+                                      <button
+                                        onClick={() => {
+                                          const container = document.querySelector(`#add-image-link-${idx}`)
+                                          if (container) {
+                                            container.scrollLeft += 100
+                                          }
+                                        }}
+                                        className="p-1 text-gray-500 hover:text-gray-700"
                                       >
                                         <ChevronRight className="h-3 w-3" />
-                                      </Button>
-                                      <Button
-                                        size="sm"
-                                        variant="outline"
+                                      </button>
+                                      <button
                                         onClick={() => handleCopyLink(row.add_image_link, 'add_image_link')}
-                                        className="h-6 w-6 p-0"
+                                        className="p-1 text-gray-500 hover:text-gray-700"
                                       >
                                         <Copy className="h-3 w-3" />
-                                      </Button>
+                                      </button>
                                     </div>
                                   </div>
                                 </TableCell>
@@ -808,7 +786,7 @@ export function ImageLinkGenerator() {
                       <TableHeader className="sticky top-0 bg-background z-10">
                         <TableRow>
                           <TableHead className="w-16">순번</TableHead>
-                          <TableHead className="min-w-[300px]">링크</TableHead>
+                          <TableHead className="max-w-[200px]">링크</TableHead>
                           <TableHead className="w-20">상태</TableHead>
                           <TableHead className="w-20">작업</TableHead>
                         </TableRow>
@@ -819,54 +797,46 @@ export function ImageLinkGenerator() {
                           return (
                             <TableRow key={index}>
                               <TableCell className="w-16">{index + 1}</TableCell>
-                              <TableCell className="min-w-[300px]">
-                                <div className="flex items-center gap-2">
+                              <TableCell className="max-w-[200px]">
+                                <div className="flex items-center gap-1">
                                   <div 
-                                    id={`duplicate-link-container-${index}`}
-                                    className="flex-1 overflow-x-auto scrollbar-hide"
+                                    id={`duplicate-link-${index}`}
+                                    className="flex-1 overflow-x-auto scrollbar-hide max-w-[120px]"
                                     style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
                                   >
-                                    <div className="break-all text-sm font-mono bg-gray-50 p-2 rounded whitespace-nowrap min-w-max">
+                                    <div className="text-xs font-mono bg-gray-50 p-1 rounded whitespace-nowrap">
                                       {link}
                                     </div>
                                   </div>
-                                  <div className="flex flex-col gap-1">
-                                    <Button
-                                      size="sm"
-                                      variant="outline"
+                                  <div className="flex gap-1">
+                                    <button
                                       onClick={() => {
-                                        const container = document.getElementById(`duplicate-link-container-${index}`)
+                                        const container = document.querySelector(`#duplicate-link-${index}`)
                                         if (container) {
-                                          const scrollAmount = 200
-                                          container.scrollLeft = Math.max(0, container.scrollLeft - scrollAmount)
+                                          container.scrollLeft -= 100
                                         }
                                       }}
-                                      className="h-6 w-6 p-0"
+                                      className="p-1 text-gray-500 hover:text-gray-700"
                                     >
                                       <ChevronLeft className="h-3 w-3" />
-                                    </Button>
-                                    <Button
-                                      size="sm"
-                                      variant="outline"
+                                    </button>
+                                    <button
                                       onClick={() => {
-                                        const container = document.getElementById(`duplicate-link-container-${index}`)
+                                        const container = document.querySelector(`#duplicate-link-${index}`)
                                         if (container) {
-                                          const scrollAmount = 200
-                                          container.scrollLeft = container.scrollLeft + scrollAmount
+                                          container.scrollLeft += 100
                                         }
                                       }}
-                                      className="h-6 w-6 p-0"
+                                      className="p-1 text-gray-500 hover:text-gray-700"
                                     >
                                       <ChevronRight className="h-3 w-3" />
-                                    </Button>
-                                    <Button
-                                      size="sm"
-                                      variant="outline"
+                                    </button>
+                                    <button
                                       onClick={() => handleCopyLink(link, '링크')}
-                                      className="h-6 w-6 p-0"
+                                      className="p-1 text-gray-500 hover:text-gray-700"
                                     >
                                       <Copy className="h-3 w-3" />
-                                    </Button>
+                                    </button>
                                   </div>
                                 </div>
                               </TableCell>
