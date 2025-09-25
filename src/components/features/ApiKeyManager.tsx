@@ -134,6 +134,7 @@ export function ApiKeyManager() {
         if (!response.ok) {
           const errorData = await response.json()
           console.error('API 키 추가 오류:', errorData)
+          console.error('오류 상세 정보:', errorData.details)
           throw new Error(errorData.error || 'API 키 추가에 실패했습니다')
         }
         

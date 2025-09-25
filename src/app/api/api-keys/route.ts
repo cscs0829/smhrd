@@ -74,25 +74,39 @@ export async function POST(req: NextRequest) {
     //   }, { status: 400 })
     // }
 
-    const supabase = getSupabase()
+    console.log('Supabase 연결 시도')
+    let supabase
+    try {
+      supabase = getSupabase()
+      console.log('Supabase 연결 성공')
+    } catch (connectionError) {
+      console.error('Supabase 연결 실패:', connectionError)
+      throw new Error(`Supabase 연결 실패: ${connectionError instanceof Error ? connectionError.message : 'Unknown error'}`)
+    }
+
+    const insertData = {
+      id: `api-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      provider,
+      name,
+      description: description || null,
+      api_key: apiKey,
+      is_active: true,
+      is_default: false
+    }
+    console.log('삽입할 데이터:', { ...insertData, api_key: '***' })
 
     const { data, error } = await supabase
       .from('api')
-      .insert({
-        provider,
-        name,
-        description: description || null,
-        api_key: apiKey,
-        is_active: true,
-        is_default: false
-      })
+      .insert(insertData)
       .select()
       .single()
 
     if (error) {
-      console.error('API 키 생성 오류:', error)
+      console.error('Supabase 삽입 오류:', error)
       throw error
     }
+
+    console.log('Supabase 삽입 성공:', data)
 
     // 기존 api_keys 테이블 형식으로 변환
     const transformedData = {
@@ -110,8 +124,23 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ data: transformedData })
   } catch (error: unknown) {
     console.error('API 키 생성 오류:', error)
-    const message = error instanceof Error ? error.message : '알 수 없는 오류가 발생했습니다.'
-    return NextResponse.json({ error: message }, { status: 500 })
+    console.error('오류 스택:', error instanceof Error ? error.stack : 'No stack trace')
+    
+    let message = '알 수 없는 오류가 발생했습니다.'
+    let details = null
+    
+    if (error instanceof Error) {
+      message = error.message
+      details = {
+        name: error.name,
+        stack: error.stack
+      }
+    }
+    
+    return NextResponse.json({ 
+      error: message,
+      details: details
+    }, { status: 500 })
   }
 }
 
