@@ -739,7 +739,7 @@ export function ImageLinkGenerator() {
                       <TableHeader className="sticky top-0 bg-background z-10">
                         <TableRow>
                           <TableHead className="w-12">순번</TableHead>
-                          <TableHead className="w-[200px]">링크</TableHead>
+                          <TableHead className="w-[550px]">링크</TableHead
                           <TableHead className="w-16">상태</TableHead>
                           <TableHead className="w-16">작업</TableHead>
                         </TableRow>
@@ -750,10 +750,10 @@ export function ImageLinkGenerator() {
                           return (
                             <TableRow key={index}>
                               <TableCell className="w-12">{index + 1}</TableCell>
-                              <TableCell className="w-[200px]">
+                              <TableCell className="w-[350px]">
                                 <div className="flex items-center gap-1">
                                   <div 
-                                    className="flex-1 overflow-x-auto scrollbar-hide max-w-[160px]"
+                                    className="flex-1 overflow-x-auto scrollbar-hide max-w-[310px]"
                                     style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
                                   >
                                     <div className="text-xs font-mono bg-gray-50 p-1 rounded whitespace-nowrap">
