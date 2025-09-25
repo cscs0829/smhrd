@@ -1,5 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
+import { createClient, SupabaseClient } from '@supabase/supabase-js'
+
+interface EpDataItem {
+  id: string
+  title: string
+}
+
+interface DeleteDataItem {
+  product_id: string
+  title: string
+}
 
 function getSupabase() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://cbetujraqbeegqtjghpl.supabase.co'
@@ -9,8 +19,8 @@ function getSupabase() {
 }
 
 // 페이지네이션으로 모든 데이터를 가져오는 함수
-async function fetchAllData(supabase: any, tableName: string, selectColumns: string, searchTitle: string) {
-  const allData: any[] = []
+async function fetchAllData(supabase: SupabaseClient, tableName: string, selectColumns: string, searchTitle: string) {
+  const allData: unknown[] = []
   const pageSize = 1000 // Supabase 기본 제한
   let from = 0
   let hasMore = true
@@ -69,10 +79,10 @@ export async function POST(request: NextRequest) {
       }
 
       // 페이지네이션으로 모든 EP 데이터 검색
-      const epData = await fetchAllData(supabase, 'ep_data', 'id, title', title)
+      const epData = await fetchAllData(supabase, 'ep_data', 'id, title', title) as EpDataItem[]
 
       // 페이지네이션으로 모든 삭제 테이블 데이터 검색
-      const deleteData = await fetchAllData(supabase, 'delete', 'product_id, title', title)
+      const deleteData = await fetchAllData(supabase, 'delete', 'product_id, title', title) as DeleteDataItem[]
 
       // 중복이 발견된 경우
       if (epData.length > 0 || deleteData.length > 0) {
@@ -84,10 +94,11 @@ export async function POST(request: NextRequest) {
         
         // EP 데이터에서 발견된 중복들
         if (epData.length > 0) {
-          epData.forEach((item: any) => {
+          epData.forEach((item) => {
+            const epItem = item as EpDataItem
             duplicateItems.push({
-              id: item.id,
-              title: item.title,
+              id: epItem.id,
+              title: epItem.title,
               source: 'ep_data'
             })
           })
@@ -95,10 +106,11 @@ export async function POST(request: NextRequest) {
 
         // 삭제 테이블에서 발견된 중복들
         if (deleteData.length > 0) {
-          deleteData.forEach((item: any) => {
+          deleteData.forEach((item) => {
+            const deleteItem = item as DeleteDataItem
             duplicateItems.push({
-              id: item.product_id,
-              title: item.title,
+              id: deleteItem.product_id,
+              title: deleteItem.title,
               source: 'delete'
             })
           })
