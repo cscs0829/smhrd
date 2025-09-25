@@ -84,7 +84,7 @@ export async function POST(request: NextRequest) {
         
         // EP 데이터에서 발견된 중복들
         if (epData.length > 0) {
-          epData.forEach(item => {
+          epData.forEach((item: any) => {
             duplicateItems.push({
               id: item.id,
               title: item.title,
@@ -95,7 +95,7 @@ export async function POST(request: NextRequest) {
 
         // 삭제 테이블에서 발견된 중복들
         if (deleteData.length > 0) {
-          deleteData.forEach(item => {
+          deleteData.forEach((item: any) => {
             duplicateItems.push({
               id: item.product_id,
               title: item.title,

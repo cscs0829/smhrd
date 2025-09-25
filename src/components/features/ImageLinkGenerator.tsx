@@ -177,7 +177,7 @@ export function ImageLinkGenerator() {
     try {
       await navigator.clipboard.writeText(lines.join('\n'))
       toast.success('결과를 클립보드에 복사했어요 (엑셀에 바로 붙여넣기)')
-    } catch (e) {
+    } catch {
       toast.error('클립보드 복사에 실패했습니다')
     }
   }
@@ -259,7 +259,7 @@ export function ImageLinkGenerator() {
       } else {
         toast.success('중복 링크가 없습니다')
       }
-    } catch (error) {
+    } catch {
       toast.error('중복 검사 중 오류가 발생했습니다')
     } finally {
       setIsCheckingDuplicates(false)
@@ -274,7 +274,7 @@ export function ImageLinkGenerator() {
   const handleOpenLink = (url: string) => {
     try {
       window.open(url, '_blank', 'noopener,noreferrer')
-    } catch (error) {
+    } catch {
       toast.error('링크를 열 수 없습니다')
     }
   }
@@ -283,7 +283,7 @@ export function ImageLinkGenerator() {
     try {
       await navigator.clipboard.writeText(text)
       toast.success(`${type}이 클립보드에 복사되었습니다`)
-    } catch (error) {
+    } catch {
       toast.error('복사에 실패했습니다')
     }
   }

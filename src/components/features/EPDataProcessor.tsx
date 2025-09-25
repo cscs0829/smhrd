@@ -158,7 +158,7 @@ export function EPDataProcessor({}: EPDataProcessorProps) {
         throw new Error('Delect 테이블 추가 중 오류가 발생했습니다.')
       }
 
-      const result = await response.json()
+      await response.json()
       toast.success(`${processedData.delectItems.length}개 항목이 Delect 테이블에 추가되었습니다.`)
     } catch (error) {
       setError(error instanceof Error ? error.message : 'Delect 테이블 추가 중 오류가 발생했습니다.')
