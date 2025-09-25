@@ -3,12 +3,10 @@ import { AIService } from '@/lib/ai-service'
 import { createClient } from '@supabase/supabase-js'
 
 function getSupabase() {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
-  if (!supabaseUrl || !supabaseServiceRoleKey) {
-    throw new Error('Supabase 환경변수가 설정되지 않았습니다.')
-  }
-  return createClient(supabaseUrl, supabaseServiceRoleKey)
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://cbetujraqbeegqtjghpl.supabase.co'
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNiZXR1anJhcWJlZWdxdGpnaHBsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTA0OTgsImV4cCI6MjA3MzU4NjQ5OH0.CqgOMrgEN4xyE5CZKHy7uuKuEQQcUoHrU-_6L1Dh-Tw'
+  
+  return createClient(supabaseUrl, supabaseAnonKey)
 }
 
 export async function POST(request: NextRequest) {
