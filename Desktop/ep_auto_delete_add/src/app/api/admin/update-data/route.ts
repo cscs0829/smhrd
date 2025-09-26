@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getSupabaseClient } from '@/lib/supabase'
+import { createServerSupabaseClient } from '@/lib/supabase'
 
 type AllowedTable = 'ep_data' | 'delect' | 'api'
 
@@ -43,7 +43,7 @@ export async function PATCH(req: NextRequest) {
       )
     }
 
-    const supabase = getSupabaseClient()
+    const supabase = createServerSupabaseClient()
 
     // values에서 허용된 컬럼만 필터링
     const whitelist = ALLOWED_UPDATE_COLUMNS[table as AllowedTable]

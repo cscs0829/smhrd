@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getSupabaseClient } from '@/lib/supabase'
+import { createServerSupabaseClient } from '@/lib/supabase'
 import Fuse from 'fuse.js'
 
 export async function POST(request: NextRequest) {
@@ -10,7 +10,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: '제목을 입력해주세요.' }, { status: 400 })
     }
 
-    const supabase = getSupabaseClient()
+    const supabase = createServerSupabaseClient()
 
     // ep_data와 delect 테이블에서 모든 제목 조회
     const [epDataResult, delectResult] = await Promise.all([

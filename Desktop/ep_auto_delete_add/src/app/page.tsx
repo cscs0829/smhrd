@@ -1,5 +1,6 @@
 import KeywordTitleGenerator from '@/components/features/KeywordTitleGenerator';
 import ClickDataProcessor from '@/components/features/ClickDataProcessor';
+import ImageConverter from '@/components/features/ImageConverter';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 export default function Home() {
@@ -17,9 +18,10 @@ export default function Home() {
           </div>
           
           <Tabs defaultValue="title-generator" className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
+            <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="title-generator">AI 제목 생성기</TabsTrigger>
               <TabsTrigger value="data-processor">데이터 처리</TabsTrigger>
+              <TabsTrigger value="image-converter">이미지 변환</TabsTrigger>
             </TabsList>
             
             <TabsContent value="title-generator" className="mt-6">
@@ -28,6 +30,10 @@ export default function Home() {
             
             <TabsContent value="data-processor" className="mt-6">
               <ClickDataProcessor />
+            </TabsContent>
+            
+            <TabsContent value="image-converter" className="mt-6">
+              <ImageConverter />
             </TabsContent>
           </Tabs>
         </div>

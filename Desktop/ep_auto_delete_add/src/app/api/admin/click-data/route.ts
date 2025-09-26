@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getSupabaseClient } from '@/lib/supabase'
+import { createServerSupabaseClient } from '@/lib/supabase'
 
 export async function POST(request: NextRequest) {
   try {
@@ -56,7 +56,7 @@ export async function POST(request: NextRequest) {
       })
     }
 
-    const supabase = getSupabaseClient()
+    const supabase = createServerSupabaseClient()
 
     // 1. ep_data 테이블의 모든 데이터 조회
     const { data: epData, error: fetchError } = await supabase
