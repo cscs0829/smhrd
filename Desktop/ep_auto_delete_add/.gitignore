@@ -1,9 +1,0 @@
-# Editor & System Files
-.vscode/
-.cursor/
-.kiro/
-.DS_Store
-
-# Dependencies
-.npm/
-node_modules/
