@@ -1,0 +1,22 @@
+import java.util.Scanner;
+
+public class Ex17 {
+
+	public static void main(String[] args) {
+		
+		Scanner sc = new Scanner(System.in);
+		int sum = 0;
+		for(int i = 1; i <= 10; i++) {
+			System.out.println(i + "번 째 정수 입력 >>");
+			int num = sc.nextInt();
+			if(num%3==0) {
+				sum += num;
+			}
+			
+		System.out.println("3의 배수 : "+sum );
+	
+		}
+
+	}
+
+}

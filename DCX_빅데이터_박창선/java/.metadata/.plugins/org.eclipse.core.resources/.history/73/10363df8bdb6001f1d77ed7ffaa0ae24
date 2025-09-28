@@ -1,0 +1,120 @@
+package model;
+
+import java.awt.Image;
+import java.net.URL;
+import java.util.Random;
+import java.util.Scanner;
+import javax.swing.ImageIcon;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+
+public class computer {
+
+    Random rd = new Random();
+    Scanner sc = new Scanner(System.in);
+
+    // 이미지를 표시하는 메소드
+    public void showImage(String imagePath) {
+        try {
+            URL imageUrl = getClass().getResource(imagePath);
+            if (imageUrl == null) {
+                throw new Exception("이미지 파일 경로를 찾을 수 없습니다.");
+            }
+
+            ImageIcon imageIcon = new ImageIcon(imageUrl);
+            Image scaledImage = imageIcon.getImage().getScaledInstance(300, 300, Image.SCALE_SMOOTH);
+            imageIcon = new ImageIcon(scaledImage);
+
+            JFrame frame = new JFrame("귀신 등장!");
+            JLabel label = new JLabel(imageIcon);
+            frame.add(label);
+            frame.setSize(400, 400);
+            frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+            frame.setVisible(true);
+
+            Thread.sleep(3000); // 3초간 표시
+            frame.dispose();
+
+        } catch (Exception e) {
+            System.out.println("이미지를 로드할 수 없습니다: " + e.getMessage());
+        }
+    }
+
+    // Hard 모드
+    public void computerHard(String[] arraycomputerHard) {
+        try {
+            arraycomputerHard = new String[3];
+            arraycomputerHard[0] = "컴퓨터 네트워크의 'IP'는 무엇의 약어인가요?\n" + 
+                                   "[1] Internet Process\n" + 
+                                   "[2] Internal Protocol\n" + 
+                                   "[3] Internet Protocol\n" + 
+                                   "[4] Internet Processor\n 답 : ";
+            arraycomputerHard[1] = "JDBC를 이용하여 데이터베이스에 연결할 때 필요한 클래스는?\n" + 
+                                   "[1] DriverManager\n" + 
+                                   "[2] Connection\n" + 
+                                   "[3] ResultSet\n" + 
+                                   "[4] Statement\n 답 : ";
+            arraycomputerHard[2] = "객체지향 프로그래밍의 3대 요소가 아닌 것은?\n" + 
+                                   "[1] 캡슐화\n" + 
+                                   "[2] 상속\n" + 
+                                   "[3] 다형성\n" + 
+                                   "[4] 일관성\n 답 : ";
+
+            System.out.println("컴퓨터실에 들어왔습니다. 문제를 풀어 상자를 열어보세요.");
+            Thread.sleep(2000);
+
+            int num = rd.nextInt(3);
+            System.out.print(arraycomputerHard[num]);
+            int answer = sc.nextInt();
+
+            if (num == 0 && answer == 3 || num == 1 && answer == 1 || num == 2 && answer == 4) {
+                System.out.println("상자가 열렸습니다! 열쇠를 얻었습니다.");
+            } else {
+                System.out.println("틀렸습니다. 귀신이 등장합니다!");
+                showImage("/images/사람3.png");
+            }
+
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
+    // Easy 모드
+    public void scienceEasy(String[] arraycomputerEasy) {
+        try {
+            arraycomputerEasy = new String[3];
+            arraycomputerEasy[0] = "자바의 기본 데이터 타입 중에서 4바이트를 차지하는 타입은 무엇인가요?\n" + 
+                                   "[1] byte\n" + 
+                                   "[2] short\n" + 
+                                   "[3] int\n" + 
+                                   "[4] double\n 답 : ";
+            arraycomputerEasy[1] = "자바에서 객체 지향 프로그래밍의 4대 원칙이 아닌 것은 무엇인가요?\n" + 
+                                   "[1] 캡슐화\n" + 
+                                   "[2] 상속\n" + 
+                                   "[3] 다형성\n" + 
+                                   "[4] 인터페이스\n 답 : ";
+            arraycomputerEasy[2] = "자바에서 String 클래스의 equals() 메소드의 사용 목적은 무엇인가요?\n" + 
+                                   "[1] 두 객체의 메모리 주소를 비교한다.\n" + 
+                                   "[2] 두 문자열 객체의 내용을 비교한다.\n" + 
+                                   "[3] 두 문자열 객체의 크기를 비교한다.\n" + 
+                                   "[4] 두 문자열 메모리 내용을 비교한다.\n 답 : ";
+
+            System.out.println("과학실에 들어왔습니다. 문제를 풀어 상자를 열어보세요.");
+            Thread.sleep(2000);
+
+            int num = rd.nextInt(3);
+            System.out.print(arraycomputerEasy[num]);
+            int answer = sc.nextInt();
+
+            if (num == 0 && answer == 3 || num == 1 && answer == 4 || num == 2 && answer == 2) {
+                System.out.println("상자가 열렸습니다! 열쇠를 얻었습니다.");
+            } else {
+                System.out.println("틀렸습니다. 귀신이 등장합니다!");
+                showImage("/images/사람3.png");
+            }
+
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+}

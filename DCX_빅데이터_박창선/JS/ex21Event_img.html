@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <img 
+    id="bird" 
+    src="https://pds.joongang.co.kr/news/component/htmlphoto_mmdata/201612/13/htm_2016121317575698565.jpg" 
+    width="300px"
+    class="imgClass"
+    height="250px"
+    >
+    <!--
+    {
+    tagName: 'IMG',
+    id : 'bird',
+    class : 'imgClass',
+    src : 'https://pds.joongang.co.kr/news/component/htmlphoto_mmdata/201612/13/htm_2016121317575698565.jpg',
+    width : '300px',
+    attribute : {
+    0:{name : 'id'},...
+    }
+    }
+    -->
+    <br>
+    <button>이미지 변경</button>
+
+    <script>
+        // 첫 번째 외부 주소 값을 src1이라는 변수 안에 담기, 두번쨰 외부 주소 값을 src2라는 변수 안에 담기
+        const src1 = "https://pds.joongang.co.kr/news/component/htmlphoto_mmdata/201612/13/htm_2016121317575698565.jpg"
+        const src2="https://i3.ruliweb.com/cmt/22/08/29/182e7c4999b17e38.jpg"
+        // 선택자를 통해서 접근하는 메소드 사용하기 -> 버튼요소의 정보 가지고 오기 -> btn이라는 변수안에 담기
+        let btn = document.querySelector('button'); //버튼에 id나 class 정보가 없기에 selector를 사용하여 태그 이름을 통해 가져옴
+        // 버튼에 이벤트 연결 -> 클릭했을 때, 이미지가 변경 되도록 (addEventListener)
+        btn.addEventListener('click', () => {
+            // 이미지 요소 가져오기
+            let bird = document.getElementById('bird')
+            bird = document.getElementsByClassName('imgClass')[0]
+            bird = document.querySelector('img')
+            bird = document.querySelector('#bird')
+            bird = document.querySelector('.imgClass')
+            // src속성을 비교해서 사진을 비교 -> 조건문을 활용
+            if (bird.src == src1) {
+                // bird.src = src2
+                //setAttribute('속성','변경할 값')
+                bird.setAttribute('src',src2)
+            }
+            else{
+                // bird.src = src1;
+                bird.setAttribute('src',"https://pds.joongang.co.kr/news/component/htmlphoto_mmdata/201612/13/htm_2016121317575698565.jpg")
+            }
+            
+        })
+    </script>
+</body>
+</html>

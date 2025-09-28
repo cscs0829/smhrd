@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <h1 id="h1Tag">DOM 사용하기</h1>
+
+    <ul>
+        <li>목요일</li>
+        <li>금요일</li>
+        <li>토요일</li>
+    </ul>
+
+    <script>
+        // document -> 현재 요소가 있는 문서
+        // . -> 접근을 한다
+        // getElementById -> 아이디 값(속성)을 통해서 가지고 오겠다 => 요소
+
+
+        let h1Element = document.getElementById('h1Tag')
+        console.log(h1Element);
+        
+        // 리스트 요소에 접근
+        let liElemnet = document.querySelectorAll('li')
+        console.log(liElemnet);
+        
+        // 배열데이터를 한번에 출력 => 반복문
+        for(let i=0; i<liElemnet.length; i++){
+            console.log(liElemnet[i].textContent)
+        }
+
+        let li_Tag = document.getElementsByTagName('li');
+        console.log(`${li_Tag[0].textContent} 안의 내용입니다.`);
+        
+    </script>
+</body>
+</html>

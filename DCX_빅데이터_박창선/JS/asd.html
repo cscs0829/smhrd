@@ -1,0 +1,26 @@
+<body>
+    <h1 id="h1title">WEB MASTER!! </h1>
+    <p class="pTitle">web에 대해 이해하기</p>
+    <p class="pTitle">나만의 홈페이지 만들기</p>
+    <ul>
+        <li class="webSub">HTML</li>
+        <li class="webSub">CSS</li>
+        <li class="webSub">JS</li>
+    </ul>
+    
+    <script>
+        // 1.
+        let Q1 = document.getElementById('h1title').innerText;
+        console.log(Q1);
+    
+        // 2.
+        let Q2 = document.getElementsByClassName('pTitle')[1].innerText;
+        console.log(Q2);
+    
+        // 3.
+    
+        for (let i = 0; i < document.getElementsByClassName('webSub').length; i++) {
+            let Q3 = document.getElementsByTagName('li')[i].innerText
+            console.log(Q3);
+        }
+    </script>

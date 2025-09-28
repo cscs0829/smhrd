@@ -1,0 +1,63 @@
+package view;
+
+import java.util.Scanner;
+
+import controller.GameCon;
+import model.SCIENCE;
+import model.GameDAO;
+import model.GameDTO;
+
+
+public class GameMain {
+
+	public static void main(String[] args) {
+
+		Scanner sc = new Scanner(System.in);
+		GameCon gc = new GameCon();	
+		
+		String[] arrayScience = null;
+		
+		System.out.println(arrayScience);
+		
+		while(true) {
+			
+		
+		System.out.println("그림");
+		
+		System.out.print("[1] 회원가입 [2] 로그인 [3] 종료 >> ");
+		int menu = sc.nextInt();
+		
+		if(menu == 1) {
+			// 회원가입
+			System.out.print("ID : ");
+			String id = sc.next();
+			System.out.print("PW : ");
+			String pw = sc.next();
+			System.out.print("NAME : ");
+			String name = sc.next();
+			
+			gc.joinCon(id, pw, name);
+			
+			
+		} else if(menu == 2) {
+			// 로그인
+			System.out.print("ID : ");
+			String id = sc.next();
+			System.out.print("PW : ");
+			String pw = sc.next();
+			
+			gc.loginCon(id, pw, arrayScience);
+			
+			
+		} else if (menu == 3) {
+			// 종료
+			
+		} else {
+			System.out.println("잘못입력하셨습니다. 다시 입력해주세요");
+		}
+			
+		
+		}	
+	}
+
+}

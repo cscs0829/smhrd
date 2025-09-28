@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <input type="text" id="inputTxt">
+    <p id="container"></p>
+
+    <script>
+        // 1. input요소의 정보를 가져오기 => 변수에 저장
+        const inputTxt = document.getElementById('inputTxt');
+        const container = document.getElementById('container')
+        // 2. 가지고온 input 요소에 addEventinstner방식으로 이벤트를 연결한다
+        inputTxt.addEventListener('keyup', ()=>{
+            // const inputval = inputTxt.value;
+            // container.textContent = inputval;
+
+            console.log(inputTxt.value);
+
+            let container = document.getElementById('container');
+            container.textContent = inputTxt.value;
+            
+        })
+        // 3. 여러분들이 이벤트를 종류 : keyup
+        
+        // 4. input요소의 값을 가지고 오는 속성 : value
+
+        // 5. p태그안에 컨텐츠를 input값으로 변경하기
+    
+        
+
+
+        
+    </script>
+</body>
+</html>

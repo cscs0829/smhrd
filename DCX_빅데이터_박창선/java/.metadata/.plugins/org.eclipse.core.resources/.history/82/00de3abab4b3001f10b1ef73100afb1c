@@ -1,0 +1,40 @@
+package 닌텐도게임;
+
+import java.security.PublicKey;
+
+public class GameMain {
+
+	public static void main(String[] args) {
+		
+		// 게임을 실행할 수 있는 게임기 안!
+		// 게임을 실행하기 위해서 게임칩!
+		
+		// 추상 클래스도 객체를 생성 할 수 있을까?
+		// GameChip chip = new GameChip();
+		
+		Mario m1 = new Mario();
+		insert(m1);
+		
+		Dongmul d1 = new Dongmul();
+		insert(d1);
+		
+		Zelda z1 = new Zelda();
+		insert(z1);
+		
+		kirby k1 = new Kirby();
+		insert(k1);
+	}
+	// 게임칩을 가지고 와서 게임을 실행하는 메소드
+	public static void insert(GameChip chip) {
+		m1.start();
+	}
+	//메소드 오버로딩 (중복 정의)
+//	public static void insert(Dongmul d1) {
+//		d1.start();
+//	}
+//	private static void insert(Zelda z1) {
+//		z1.start();
+//	}
+	
+
+}

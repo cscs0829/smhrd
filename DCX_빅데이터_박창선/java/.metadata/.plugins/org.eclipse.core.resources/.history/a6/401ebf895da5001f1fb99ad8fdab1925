@@ -1,0 +1,23 @@
+package srhrd;
+
+public class Ex07_배열 {
+
+	public static void main(String[] args) {
+		
+		
+		// 배열 선언 및 생성
+		// 자료형[] 배열이름 = new 자료형[배열의 크기];
+		
+		int num = 10; //초기화
+		
+		// 1. 배열 선언
+		int[] intArray;
+				
+		// 2. 배열 생성
+		intArray = new int[10];
+		
+		// 배열의 주소값만 저장
+		System.out.println(intArray);
+	}
+
+}

@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <script>
+        // 조건문 예제
+        // money 변수의 값이 만원 이상이면 '돈을 출금한다'를 출력하고 
+        // 만원 미만이면 '돈을 저금한다.'를 출력하시오 
+        //let money = parseInt(prompt('돈을 입금하세요'));
+        //if(10000<=money){
+            //console.log('돈을 출금한다');
+        //}else{
+            //console.log('돈을 저금한다');
+        //}
+
+        // 조건문 실습
+        // 공배수 구하기
+        //let num = parseInt(prompt('숫자를 입력하세요'));
+        //if(num%2===0 && num%6===0){
+            //console.log(`${num}은 2와 6의 배수입니다.`);
+        //}else{
+            //console.log(`${num}은 2와 6의 배수가 아닙니다.`);
+        //}
+
+        // 조건문 실습(다중if) 예제
+        // 두 숫자를 입력받은 후, 크기 비교 결과에 따른 메세지를 출력하시오
+        // 첫 번째 입력한 값이 더 큰 수 입니다.
+        // 두 번째 입력한 값이 더 큰 수 입니다.
+        // 두 수는 같습니다
+        //let num1 = parseInt(prompt('첫 번째 숫자를 입력하세요'));
+        //let num2 = parseInt(prompt('두 번째 숫자를 입력하세요'));
+        
+        //if(num1>num2){
+            //console.log('첫 번째 입력한 값이 더 큰 수 입니다');
+        //}else if(num1<num2){
+            //console.log('두 번째 입력한 값이 더 큰 수 입니다');
+        //}else if(num1 === num2){
+            //console.log('두 수는 같습니다');
+        //}
+
+        // SWITCH문
+        // 내가 입력한 숫자를 비교 -> switch(X) X랑 비교
+        // X는 결과 값 or 산술식
+        // 짝, 홀수 구하기
+        // 입력한 숫자를 짝, 홀수 판별
+        // 짝수일 떄, 홀수일 때 case 안에 어떤 값을 넣어야 하는지
+        // 짝, 홀수가 아닐때 default문으로 처리
+        let num = parseInt(prompt('숫자를 입력하세요'));
+        switch(num%2){
+            case 0:
+                console.log('짝수입니다');
+                break
+            case 1:
+                console.log('홀수입니다');
+                break
+            default:
+                console.log('짝수도 홀수도 아닙니다');
+                break
+        }
+
+        
+    </script>
+</body>
+</html>

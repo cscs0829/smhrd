@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=<device-width>, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    
+    <script>
+        // 입,출력문
+        
+        // 입력 - prompt('출력할 내용')
+        // 사용자가 키보드로 입력한 값을 문자열로 반환해주는 기능(함수)
+
+        // 출력 - console.log("출력할 내용")
+        // F12(개발자 도구창)->console탭 클릭 -> 출력내용 확인
+        // console.log(prompt('여러분의 이름을 작성하세요'));
+
+        // 입력 confirm('출력할 내용')
+        // 사용자가 확인 또는 취소 버튼을 눌렀을 때, 참/거짓에 대한 결확 반환
+        // console.log(confirm('비밀번호를 변경하시겟습니까'));
+
+        // 출력 - alert('출력할 내용')
+        // alert('js는 처음입니다!');
+        
+        // 출력 - document.write('출력할 내용')
+        // 현재 문서(브라우저의 바디) 에 출력할 수 있다.
+        // HTML태그 + 문자열 같이 사용 가능!
+        // document.write('<h1>안녕하세요!</h1>');
+
+        // 변수 선언 & 초기화
+        //var num = 3;
+        //console.log(num);  
+        
+        // let, const 변수 선언 키워드
+        // let - 변수명을 중복으로 정의할 수 없다.
+        //     - 변수 재할당 가능
+        let num1 = 10;
+        num1 = 20;
+        console.log(num1);
+        
+        // const - 상수를 정의할 때 사용 | 한번 초기화한 값을 다른 값으로 
+        // 변경할 수 없다
+        const num2 = 30;
+        console.log(num2);
+        
+        // underfined값 출력 -> 변수 선언만 했을 때 
+        let num3;
+        // num3 = 50;
+        console.log(num3);
+        
+        var name = prompt('이름을 입력해주세요~!');
+        console.log('반갑습니다~'+ name +'님! 즐거운 하루 되세요');
+        
+</script>
+</body>
+</html>

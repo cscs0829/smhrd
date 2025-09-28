@@ -1,0 +1,22 @@
+package controller;
+
+import java.util.Scanner;
+
+
+import model.GameDAO;
+import model.SCIENCE;
+import model.Computer;
+import model.GameDTO;
+
+public class GameCon {
+    public void startConsoleGame() {
+        System.out.println("게임 콘솔을 시작합니다.");
+        System.out.println("게임이 진행 중...");
+        try {
+            Thread.sleep(2000); // 게임 진행 중을 표현하기 위한 딜레이
+            System.out.println("게임 종료. 다음 단계로 넘어갑니다.");
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+}

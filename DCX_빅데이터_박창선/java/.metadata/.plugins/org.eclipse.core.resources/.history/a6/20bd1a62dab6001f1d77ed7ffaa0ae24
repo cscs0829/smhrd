@@ -1,0 +1,63 @@
+package view;
+
+import model.*;
+
+import java.util.Scanner;
+
+import controller.GameCon;
+
+public class GameMain {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        GameDAO dao = new GameDAO();
+        Computer computer = new Computer();
+        SCIENCE science = new SCIENCE();
+        GameCon gameCon = new GameCon();
+        ART art = new ART();
+        MusicRoom musicRoom = new MusicRoom();
+
+        while (true) {
+            System.out.println("\n1. 회원가입\n2. 로그인\n3. 게임 시작\n4. 예술 갤러리 탐험\n5. 음악 감상실 탐방\n6. 종료");
+            int choice = sc.nextInt();
+
+            switch (choice) {
+                case 1 -> {
+                    System.out.println("회원가입");
+                    System.out.print("ID: ");
+                    String id = sc.next();
+                    System.out.print("PW: ");
+                    String pw = sc.next();
+                    System.out.print("Name: ");
+                    String name = sc.next();
+                    GameDTO dto = new GameDTO(id, pw, name);
+                    if (dao.join(dto) > 0) System.out.println("회원가입 성공");
+                    else System.out.println("회원가입 실패");
+                }
+                case 2 -> {
+                    System.out.println("로그인");
+                    System.out.print("ID: ");
+                    String id = sc.next();
+                    System.out.print("PW: ");
+                    String pw = sc.next();
+                    GameDTO dto = new GameDTO(id, pw);
+                    if (dao.login(dto)) System.out.println("로그인 성공");
+                    else System.out.println("로그인 실패");
+                }
+                case 3 -> {
+                    System.out.println("게임 시작");
+                    gameCon.startConsoleGame();
+                    computer.computerEasy();
+                    science.scienceHard();
+                }
+                case 4 -> art.artGallery();
+                case 5 -> musicRoom.playMusic();
+                case 6 -> {
+                    System.out.println("프로그램 종료");
+                    sc.close();
+                    System.exit(0);
+                }
+                default -> System.out.println("잘못된 입력입니다. 다시 선택하세요.");
+            }
+        }
+    }
+}

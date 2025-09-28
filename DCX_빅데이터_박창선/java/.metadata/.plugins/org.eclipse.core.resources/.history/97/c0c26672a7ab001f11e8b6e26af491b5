@@ -1,0 +1,24 @@
+
+public class Ex28 {
+
+	public static void main(String[] args) {
+		String str = "00101000";
+		String[] arr = str.split("");
+
+		int sum = 0;
+		int square = 1;
+
+		for (int i = arr.length - 1; i >= 0; i--) {
+			if (arr[i].equals("1")) {
+				sum = sum + square * 1;
+				square = square*2;
+			}else {
+				square *=2;
+			}
+		}
+
+		System.out.println(str + "(2) = " + sum + "(10)");
+
+	}
+
+}

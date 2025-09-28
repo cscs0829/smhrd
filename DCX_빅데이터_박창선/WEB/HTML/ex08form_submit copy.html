@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <form method="get" action="#">
+        <table border="1px" width="400px">
+            <!-- aling="center" -->
+            <!-- step1 아이디 비번 입력 -->
+             <tr >
+                <th colspan="2">Step1 : 아이디 비번 입력</th>
+             </tr>
+             <tr >
+                <td>아이디</td>
+                <td>
+                    <input>
+                </td>
+             </tr>
+             <tr >
+                <td>비밀번호</td>
+                <td>
+                    <input type="password">
+                </td>
+             </tr>
+             <tr>
+                <td>비밀번호 확인</td>
+                <td>
+                    <input type="password">
+                </td>
+             </tr>
+
+             <!-- step2 개인정보 -->
+             <tr >
+                <th colspan="2">Step2 : 개인정보</th>
+             </tr>
+             <tr>
+                <td>성별</td>
+                <td>
+                    <!-- 
+                    input태그의 radio type을 이용한다면 
+                    동일한 name 을 부여해서 단일 선택으로 만들기!
+                    -->
+                    남 <input type="radio" name="gender">
+                    여 <input type="radio" name="gender">
+                </td>
+             </tr>
+             <tr  >
+                <td>혈액형</td>
+                <td>
+                    <select>
+                        <option>A형</option>
+                        <option>B형</option>
+                        <option>O형</option>
+                        <option>AB형</option>
+                    </select>
+                </td>
+             </tr>
+             <tr>
+                <td>생일</td>
+                <td>
+                    <input type="date">
+                </td>
+             </tr>
+             
+             <!-- step3 선호도 -->
+             <tr>
+                <th colspan="2">Step3 : 선호도</th>
+             </tr>
+             <tr>
+                <td>취미</td>
+                <td>
+                    축구<input type="checkbox">
+                    야구<input type="checkbox">
+                    농구<input type="checkbox">
+                </td>
+             </tr>
+             <tr>
+                <td>좋아하는 색깔</td>
+                <td>
+                    <input type="color">
+                </td>
+             </tr>
+
+             <!-- step4 하고싶은말-->
+             <tr>
+                <th colspan="2">Step4 : 하고싶은말 </th>
+             </tr>
+             <tr>
+                <td colspan="2">
+                    <textarea cols="54" rows="5"></textarea>
+                </td>
+             </tr>
+
+             <!-- 제출 , 초기화 -->
+             <tr>
+                <td colspan="2">
+                    <input type="submit">
+                    <input type="reset">
+                </td>
+             </tr>
+        </table>
+    </form>
+</body>
+</html>

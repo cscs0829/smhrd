@@ -1,0 +1,159 @@
+package model;
+
+import java.util.Random;
+
+
+import java.util.Scanner;
+
+public class SCIENCE {
+
+		Random rd = new Random();
+		Scanner sc = new Scanner(System.in);
+		
+		
+		// Hard모드 과학실
+		public void scienceHard(String[] arrayScienceHard) {
+			try {
+				arrayScienceHard = new String[3];
+				arrayScienceHard[0] = "왜 하늘은 파랗게 보일까요? \n"
+									+ "[1] 대기 중의 산소가 파란색을 흡수하기 때문이다.\n"
+									+ "[2] 햇빛이 대기를 통과하면서 파란색이 산란되기 때문이다.\n"
+									+ "[3] 지구의 자기장이 파란색 빛을 반사하기 때문이다.\n"
+									+ "[4] 대기 중의 먼지가 파란색 빛을 산란시키기 때문이다.\n 답 : ";
+				
+				arrayScienceHard[1] = "스마트폰의 배터리 충전이 느려지는 주된 이유는 무엇일까요? "
+									+ "[1] 배터리의 온도가 너무 낮다.\n"
+									+ "[2] 배터리가 오래되어 전압이 낮아졌다.\n"
+									+ "[3] 충전 케이블의 저항이 커졌다.\n"
+									+ "[4] 스마트폰의 프로세서가 너무 바쁘다.\n 답 : ";
+				
+				arrayScienceHard[2] = "다크 초콜릿이 건강에 좋은 이유는 무엇인가요? >> "
+									+ "[1] 항산화 성분이 풍부하기 때문이다.\n"
+									+ "[2] 칼로리가 낮아서 다이어트에 좋다.\n"
+									+ "[3] 카페인이 포함되어 있어 집중력에 좋다.\n"
+									+ "[4] 비타민 C가 풍부한다.\n 답 : ";
+				
+				System.out.println("학교에 들어간다......");
+				Thread.sleep(2000);
+				System.out.println("교실문에 자물쇠가 4개나 달려있다. 열려있는 곳은 과학실뿐이다.");
+				Thread.sleep(2000);
+				System.out.println("과학실에 들어가니 교탁위에 상자가 열려있고 자물쇠로 잠겨있다. 앞에는 종이 한 장에 문제가 적혀있다."
+						+ "아무래도 문제를 풀면 상자가 열리는 것 같다\n문제를 풀어보자");
+				Thread.sleep(2000);
+				int num = rd.nextInt(3);
+				System.out.print(arrayScienceHard[num]);
+				int answer = sc.nextInt();
+				if(num == 0) {
+					if(answer == 2) {
+						System.out.println("상자 열리는 소리");
+						System.out.println("상자 안에는 열쇠가 1개 들어있다. 열쇠를 모아서 교실문을 열면 될 것 같다.");
+						
+					
+					} else {
+						System.out.println("실패문구 + 귀신나오기");
+						
+					}
+				} else if (num == 1) {
+					if(answer == 2) {
+						System.out.println("상자 열리는 소리");
+						System.out.println("상자 안에는 열쇠가 1개 들어있다. 열쇠를 모아서 교실문을 열면 될 것 같다.");
+					
+					
+					} else {
+						System.out.println("실패문구 + 귀신나오기");
+						
+					}
+				} else if (num == 2) {
+					if(answer == 1) {
+						System.out.println("상자 열리는 소리");
+						System.out.println("상자 안에는 열쇠가 1개 들어있다. 열쇠를 모아서 교시문을 열면 될 것 같다.");
+					
+					
+					} else {
+						System.out.println("실패문구 + 귀신나오기");
+					}
+				}
+				
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+			
+		}
+		
+		// Easy 모드 과학실
+		public void scienceEasy(String[] arrayScienceEasy) { // 주소값만 가지고 있는 레퍼런스 변수
+			try {
+				arrayScienceEasy = new String[3];
+				arrayScienceEasy[0] = "지구의 대기에서 가장 많은 비율을 차지하는 기체는 무엇일까요?\n"
+						+ "[1] 산소\n"
+						+ "[2] 이산화탄소\n"
+						+ "[3] 질소\n"
+						+ "[4] 아르곤\n 답 : ";
+				arrayScienceEasy[1] = "지구에서 가장 깊은 바다는 어디일까요?\n"
+						+ "[1] 태평양\n"
+						+ "[2] 대서양\n"
+						+ "[3] 인도양\n"
+						+ "[4] 남극해\n 답 : ";
+				arrayScienceEasy[2] = "사람의 평균 체온은 약 몇 도일까요?\n"
+						+ "[1] 35.5°c\n"
+						+ "[2] 36.5°c\n"
+						+ "[3] 37.5°c\n"
+						+ "[4] 38.5°c\n 답 : ";
+				
+				System.out.println("학교에 들어간다......");
+				Thread.sleep(2000);
+				System.out.println("교실문에 자물쇠가 4개나 달려있다. 열려있는 곳은 과학실뿐이다.");
+				Thread.sleep(2000);
+				System.out.println("과학실에 들어가니 교탁위에 상자가 열려있고 자물쇠로 잠겨있다. 앞에는 종이 한 장에 문제가 적혀있다."
+									+ "아무래도 문제를 풀면 상자가 열리는 것 같다\n문제를 풀어보자");
+				Thread.sleep(2000);
+				int num = rd.nextInt(3);
+				System.out.print(arrayScienceEasy[num]);
+				int answer = sc.nextInt();
+				if(num == 0) {
+					if(answer == 3) {
+						System.out.println("상자 열리는 소리");
+						System.out.println("상자 안에는 열쇠가 1개 들어있다. 열쇠를 모아서 교실문을 열면 될 것 같다.");
+						
+					
+					} else {
+						System.out.println("실패문구 + 귀신나오기");
+						
+					}
+				} else if (num == 1) {
+					if(answer == 1) {
+						System.out.println("상자 열리는 소리");
+						System.out.println("상자 안에는 열쇠가 1개 들어있다. 열쇠를 모아서 교시문을 열면 될 것 같다.");
+					
+					
+					} else {
+						System.out.println("실패문구 + 귀신나오기");
+						
+					}
+				} else if (num == 2) {
+					if(answer == 2) {
+						System.out.println("상자 열리는 소리");
+						System.out.println("상자 안에는 열쇠가 1개 들어있다. 열쇠를 모아서 교시문을 열면 될 것 같다.");
+					
+					
+					} else {
+						System.out.println("실패문구 + 귀신나오기");
+					}
+				}
+				
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+			
+		}
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+}

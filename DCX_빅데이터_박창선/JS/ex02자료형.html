@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <script>
+        // 자료형 - 숫자형(Number)
+        // 정수 - 0,1,2,-1,-2
+        // 실수 -3.14, 2.556
+
+        let num1 = 1;
+        let num2 = 10;
+        let num3 = 3.14;
+
+        console.log(num1,num2,num3);
+        
+        // 자료형 - 문자열(String)
+        // 작은 따음표('') 또는 큰 따음표("")로 표현
+        let str1 = 'Hello JS';
+        let str2 = 'Front';
+        console.log(str1, str2);
+        
+        // 자료형 - 논리형(Boolean)
+        // 참 또는 거짓으로 표현
+        let isLogin = true;
+        let isState = false;
+        console.log(isLogin, isState);
+
+        // 자료형 - undefined, null
+        // 데일리 적기 중요!
+        // undefined - 데이터의 자료형, 값 모두 비어 있는 경우에 표현
+        // null - 의도적으로 사용자가 값을 비울 때 사용 
+        let isNull = null;
+        let empty;
+        console.log(isNull, empty); 
+        
+        // 자료형 - 배열(Array)
+        // 여러개의 데이터를 하나의 공간에 저장하는 형태 -> []
+        let array = [];
+        let array2 = [1,2,3];
+        console.log(array, array2);
+        
+        // 자료형 - 객체(object)
+        // 여러 자료형 데이터를 하나로 묶어 표현
+        let obj = {
+            name : 'park',
+            age : 20
+        }
+        console.log(obj);
+
+        // 형 변환 - 자동 형 변환
+        console.log(10 + '10');
+            
+        // 형 변환 - 강제 형 변환
+        // 자료형 -> 숫자형 : Number()-숫자로 변환, parsseInt()-정수로 변환
+        // parseFloat() - 실수로 변환
+        console.log(10+ Number('20'));
+        console.log(10+ parseInt('10.5'));
+        console.log(10+ parseFloat('10.5'));
+
+        // 자료형 -> 문자열
+        // String()
+        // 숫자형데이터(변수).toString() : 숫자형 데이터가 담긴 변수를 문자열로 변환
+        // 숫자형데이터(변수).toFixed(2) : 2번째 자리의 소수점 까지 표현
+
+        let strnum = 10;
+        // typeof('대상') -> 대상의 자료형을 알 수 있다
+        console.log(typeof(String(strnum)));
+        
+        let num10  = 15;
+        console.log(num10.toString());
+        let num20 = 3.144522;
+        console.log(num20.toFixed(2));
+        
+        //실습 두 숫자 5, 10을 입력하여 510 과 15만들기
+        //var n1 = prompt('첫 번째 숫자를 입력하세요');
+        //var n2 = prompt('두 번째 숫자를 입력하세요');
+
+        //console.log('두 숫자를 더한 결과 : '+ n1 + n2);
+        //console.log('두 숫자를 더한 결과 : '+ (Number(n1) + Number(n2)));
+
+        let num100 = prompt('첫 번째 숫자 입력');
+        let num200 = prompt('두 번째 숫자 입력');
+
+        // 문자열 + 문자열 = 문자열
+        console.log('두 숫자를 더한 결과 :' + (num100+num200));
+        console.log('두 숫자를 더한 결과 :', Number(num100)+Number(num200));
+        
+        
+    </script>
+</body>
+</html>

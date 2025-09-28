@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <script>
+        //while문
+        //while문 안에 조건을 넣어 반복문 출력하기
+        // let num = 1;
+        // while(num<11){
+        //     console.log('JavaScript 재미있다!');
+        //     num ++;
+        //     //num += 1;
+        // }
+
+        // let num1 =1;
+        // while(true){
+        //     console.log(num1);
+        //     num1++;
+
+        // if(num1 === 11){
+        //     console.log('출력 종료');
+        //     break;
+            
+        // }
+            
+        // }
+
+        // while문 실습 
+        //내가 작성한 코드 
+        // num1 = 0;
+        // while(true){
+        //     let num = parseInt(prompt('숫자를 입력하세요'));
+            
+        //     if(num ===0){
+        //         console.log(`최종 결과 : ${num1+=num}`);
+        //         console.log('프로그램을 종료합니다'); 
+        //         break      
+        //     }
+        //     console.log(`더한 결과 : ${num1+=num}`); 
+        // }
+        // // 선생님 작성코드
+        // let sum = 0;
+        // while(true){
+        //     let num = parseInt(prompt('숫자를 입력하세요'));
+            
+        //     if(num !== 0){
+        //         sum+=num;
+        //         console.log(`더한 결과 : ${sum}`);    
+        //     }else{
+        //         console.log(`최종 결과 : ${sum}`);
+        //         console.log(`프로그램을 종료하겠습니다.`);  
+        //         break; 
+        //     }
+        
+        // do-while문
+        // let num = 1;
+        // do {
+        //     console.log(num);
+        //     num += 1;
+        // }while(num <= 10);
+
+        // do-while문을 활용해서 1~100까지의 숫자중 
+        // 5의 배수를 찾아보기
+        // do예약어 안에 조건문을 통해서 작성
+        let num1 = parseInt(prompt('숫자 입력'));
+        let i = 1;
+        do {
+            if(i % num1 ===0){
+                console.log(i);
+            }
+            i++;
+        }while(i <= 100);
+        // for(초기화; 조건식; 작업 후 처리){
+        // 실행문장    
+        //  }
+    </script>
+</body>
+</html>

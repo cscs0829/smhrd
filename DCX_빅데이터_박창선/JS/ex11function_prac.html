@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <script>
+        // 함수 표현식
+        // 익명함수를 사용해 변수에 할당하여 사용하는 함수
+        const func =  function() {
+            console.log('함수표현식 실행!');
+            
+        }
+
+        //함수 호출부 
+        func();
+
+        // 함수 표현식 예제
+
+        const addNumber = function(num1 ,num2){
+            console.log(`${num1}과 ${num2}의 더한 결과: ${num1+num2}`);
+   
+            
+        }
+        addNumber(5,7)
+        addNumber(3,4)
+        //======================================================
+        const hi = () =>{
+            return 3*9;
+        }
+
+        const pine = (name) => {
+            console.log(name);
+            
+        }
+
+        pine(hi());
+
+        // 화살표 함수
+        // ECMA6에 도입된 함수로 함수 표현식을 간소화한 함수
+        const greet = () => {
+            console.log('오늘은 목요일~');
+        };
+
+        greet();
+
+        const greet2 = (name) => {
+            console.log(`안녕하세요 저는 ${name}입니다.`);
+        }
+        
+        greet2('박창선');
+        
+        //====================================================
+        
+        const greet3 = js => {
+            console.log(`저는 ${js} 중 입니다.`);
+                
+        }
+        
+        greet3('수업');
+        
+        //====================================================
+
+        const greet4 = (name) => {
+            return `안녕하세요 저는 ${name}입니다.`
+        }
+        
+        console.log(greet4('박창선'));
+        
+        //======================================================
+
+        const greet5 = name => `안녕하세요 저는 ${name}입니다.`
+        
+        console.log(greet5('박창선'));
+
+        
+    </script>
+</body>
+</html>

@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <script>
+        // 간단한 for문 예제
+        // 100~1까지 출력하는 for문을 작성하기
+        // for(let i =100; i>=1; i--){
+        //     console.log(i);
+        // }
+
+    let evenSum = 0;
+    let oddSum = 0;
+    let even = '';
+    let odd = '';
+
+    for(let i=1; i<=20; i++){
+        
+        if(i%2===1){
+            odd += i + " ";
+            oddSum += i;
+        }else if(i%2===0){
+            even += i + " ";
+            evenSum += i;
+        }
+        
+    }
+
+    console.log(`${even}의 합 : ${evenSum}`);
+    console.log(`${odd}의 합 : ${oddSum}`);
+    
+    </script>
+</body>
+</html>

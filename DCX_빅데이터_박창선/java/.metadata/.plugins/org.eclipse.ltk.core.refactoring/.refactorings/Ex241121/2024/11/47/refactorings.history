@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<session version="1.0">
+<refactoring comment="Rename type &apos;serch.Ex01_sequentialSerch&apos; to &apos;Ex01_sequentialSearch&apos;&#x0D;&#x0A;- Original project: &apos;Ex241121&apos;&#x0D;&#x0A;- Original element: &apos;serch.Ex01_sequentialSerch&apos;&#x0D;&#x0A;- Renamed element: &apos;serch.Ex01_sequentialSearch&apos;&#x0D;&#x0A;- Update references to refactored element&#x0D;&#x0A;- Update textual occurrences in comments and strings" description="Rename type &apos;Ex01_sequentialSerch&apos;" flags="589830" id="org.eclipse.jdt.ui.rename.type" input="/src&lt;serch{Ex01_sequentialSerch.java[Ex01_sequentialSerch" matchStrategy="1" name="Ex01_sequentialSearch" qualified="false" references="true" similarDeclarations="false" stamp="1732154991142" textual="false" version="1.0"/>
+</session>

@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <script>
+        //객체 : 여러 데이터(값)을 하나의 변수에 저장할 수 있는 자료형
+        // 구조
+        /*
+        let 객체 변수명 = {
+            key1 : value1,
+            key2 : value2 
+        }
+            key : 객체의 속성(property)
+            value : 속성의 값 => 기본자료형, 참조자료행  
+         */
+
+         // 사용자 정의 객체 생성
+         let person ={
+            name : '박창선',
+            age : 20,
+            male : true,
+            favorite : {
+                food : 'pizza',
+                drink : 'coffee'
+            },
+            epl : ['박지성', '손흥민', '황희찬'],
+            intre : () => {
+                console.log("객체안에 함수");    
+            }
+         }
+
+         // 객체 접근
+         console.log(person);
+         console.log(`제 이름은 ${person.name} 입니다.`);
+         // 나이, 성별, 음식, 축구선수 중에 2번째 있는 선수의 이름 출력
+         console.log(`제 나이는 ${person.age} 입니다`);
+         console.log(person.male);
+         console.log(person.favorite.food);
+         console.log(person.epl[1]);
+         
+         // 객체의 속성 값 변경
+         person.name = '강규남';
+         console.log(`이름변경 : ${person.name}`);
+         console.log(person);
+
+         person.age = '60';
+         console.log(`나이변경 : ${person.age}`);
+         console.log(person);
+         
+         // 여러분들의 나이를 60세로 변경 => 출력 => 업로드 
+         // 객체 안의 함수(값)을 가져오는 방법
+         person.intre()
+         
+         
+    </script>
+</body>
+</html>

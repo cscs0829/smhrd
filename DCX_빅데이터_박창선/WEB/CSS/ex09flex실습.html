@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        .container{
+            background-color: whitesmoke;
+            height: 100px;
+            display: flex;
+        }
+
+        .box1{
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-basis: 15%;
+        }
+
+        .box2{
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-basis: 70%;
+        }
+
+        .box3{
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-basis: 15%;
+        }
+
+        .box2>a {
+            font-size: 25px;
+            color: black;
+            font-weight: 600;
+            margin: 10px;
+            padding: 15px;
+        }
+
+        .box3>a {
+            font-size: 25px;
+            color: black;
+            font-weight: 400;
+            margin: 10px;
+            padding: 15px;
+        }
+
+        a {
+            text-decoration: none;
+        }
+
+        /* 반응형 선택자 적용하기 
+        그룹선택자 : ,
+        */
+        .box2>a:hover,
+        .box3>a:hover{
+            background-color: black;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="box1">
+            <h1>SMHRD</h1>
+        </div>
+        <div class="box2">
+            <a href="#">메뉴</a>
+            <a href="#">베스트</a>
+            <a href="#">뉴스</a>
+        </div>
+        <div class="box3">
+            <a href="#">로그인</a>
+            <a href="#">회원가입</a>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <!-- Event 연결하는 방법1 : 인라인 방식
+        HTML요소의 이벤트 속성으로 적용하는 방식 
+    -->
+
+    <button onclick="show()">클릭</button>
+    <br>
+    <p id = "p_event1">마우스를 올려주세요</p>
+    <p id = "p_event2">마우스를 올려주세요</p>
+
+    <script>
+        // show함수 선언부 생성
+        const show = () => {
+            console.log('인라인 방식');
+        }
+
+        // Event연결하는 방법2 : 프로퍼티 방식 
+        // 이벤트를 연결할 HTML요소가 필요
+        const p_event1 = document.getElementById('p_event1');
+        const p_event2 = document.getElementById('p_event2');
+        // console.log('p요소', p_event.innerText);
+        
+        // 별도의 함수를 정의한 후, 이벤트 속성 값으로 초기화
+        // 프로퍼티 방식으로 이벤트를 연결할 때는 소괄호 생략
+        const show2 = () => {
+            alert('프로퍼티 방식');
+        }
+
+        p_event1.onmouseover = show2;
+        p_event1.onmouseover = () =>{console.log('123')};
+        
+        // Event 연결하는 방법3 : addEventListener()
+        // 이벤트를 연결할 HTML요소가 필요
+        p_event2.addEventListener('click', ()=>{
+            alert('add 이벤트 발생!')
+        })
+
+        p_event2.addEventListener('click', ()=>{
+            console.log('add 이벤트 발생@')
+        })
+
+        p_event2.addEventListener('mouseout', ()=>{
+            console.log('add이벤트 발생2');
+            
+        })
+    </script>
+</body>
+</html>

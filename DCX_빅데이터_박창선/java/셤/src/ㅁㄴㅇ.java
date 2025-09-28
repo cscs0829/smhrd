@@ -1,0 +1,157 @@
+package model;
+
+import java.util.Random;
+
+
+import java.util.Scanner;
+
+public class computer {
+
+		Random rd = new Random();
+		Scanner sc = new Scanner(System.in);
+		
+		
+		// Hard모드 과학실
+		public void computerHard(String[] arrayScienceHard) {
+			try {
+				arrayComputerHard = new String[3];
+	            arrayComputerHard[0] = "컴퓨터 네트워크의 'IP'는 무엇의 약어인가요?\n"	            
+	                    + "[1] Internet Process\n"
+	                    + "[2] Internal Protocol\n"
+	                    + "[3] Internet Protocol\n"
+	                    + "[4] Internet Processor";
+	            arrayComputerHard[1] = "JDBC를 이용하여 데이터베이스에 연결할 때 필요한 클래스는?\n"
+	                    + "[1] DriverManager\n"
+	                    + "[2] Connection\n"
+	                    + "[3] ResultSet\n"
+	                    + "[4] Statement";
+	            arrayComputerHard[2] = "객체지향 프로그래밍의 3대 요소가 아닌 것은?\n"	                   
+	                    + "[1] 캡슐화\n"
+	                    + "[2] 상속\n"
+	                    + "[3] 다형성\n"
+	                    + "[4] 일관성";
+				
+				System.out.println("학교에 들어간다......");
+				Thread.sleep(2000);
+				System.out.println("교실문에 자물쇠가 4개나 달려있다. 열려있는 곳은 과학실뿐이다.");
+				Thread.sleep(2000);
+				System.out.println("과학실에 들어가니 교탁위에 상자가 열려있고 자물쇠로 잠겨있다. 앞에는 종이 한 장에 문제가 적혀있다."
+						+ "아무래도 문제를 풀면 상자가 열리는 것 같다\n문제를 풀어보자");
+				Thread.sleep(2000);
+				int num = rd.nextInt(3);
+				System.out.print(arrayScienceHard[num]);
+				int answer = sc.nextInt();
+				if(num == 0) {
+					if(answer == 1) {
+						System.out.println("상자 열리는 소리");
+						System.out.println("상자 안에는 열쇠가 1개 들어있다. 열쇠를 모아서 교시문을 열면 될 것 같다.");
+						
+					
+					} else {
+						System.out.println("실패문구 + 귀신나오기");
+						
+					}
+				} else if (num == 1) {
+					if(answer == 2) {
+						System.out.println("상자 열리는 소리");
+						System.out.println("상자 안에는 열쇠가 1개 들어있다. 열쇠를 모아서 교시문을 열면 될 것 같다.");
+					
+					
+					} else {
+						System.out.println("실패문구 + 귀신나오기");
+						
+					}
+				} else if (num == 2) {
+					if(answer == 4) {
+						System.out.println("상자 열리는 소리");
+						System.out.println("상자 안에는 열쇠가 1개 들어있다. 열쇠를 모아서 교시문을 열면 될 것 같다.");
+					
+					
+					} else {
+						System.out.println("실패문구 + 귀신나오기");
+					}
+				}
+				
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+			
+		}
+		
+		// Easy 모드 과학실
+		public void scienceEasy(String[] arrayScienceEasy) { // 주소값만 가지고 있는 레퍼런스 변수
+			try {
+				arrayScienceEasy = new String[3];
+				arrayComputerEasy[0] = "자바의 기본 데이터 타입 중에서 4바이트를 차지하는 타입은 무엇인가요?\n"
+	                    + "[1] byte\n"
+	                    + "[2] short\n"
+	                    + "[3] int\n"
+	                    + "[4] double";
+	            arrayComputerEasy[1] = "자바에서 객체 지향 프로그래밍의 4대 원칙이 아닌 것은 무엇인가요?\n"
+	                    + "[1] 캡슐화 (Encapsulation)\n"
+	                    + "[2] 상속 (Inheritance)\n"
+	                    + "[3] 다형성 (Polymorphism)\n"
+	                    + "[4] 인터페이스 (Interface)";
+	            arrayComputerEasy[2] = "자바에서 String 클래스의 equals() 메소드의 사용 목적은 무엇인가요?\n"
+	                    + "[1] 두 객체의 메모리 주소를 비교한다.\n"
+	                    + "[2] 두 문자열 객체의 내용을 비교한다.\n"
+	                    + "[3] 두 문자열 객체의 크기를 비교한다.\n"
+	                    + "[4] 두 문자열 객체의 내용을 비교한다.";
+				
+				System.out.println("학교에 들어간다......");
+				Thread.sleep(2000);
+				System.out.println("교실문에 자물쇠가 4개나 달려있다. 열려있는 곳은 과학실뿐이다.");
+				Thread.sleep(2000);
+				System.out.println("과학실에 들어가니 교탁위에 상자가 열려있고 자물쇠로 잠겨있다. 앞에는 종이 한 장에 문제가 적혀있다."
+									+ "아무래도 문제를 풀면 상자가 열리는 것 같다\n문제를 풀어보자");
+				Thread.sleep(2000);
+				int num = rd.nextInt(3);
+				System.out.print(arrayScienceEasy[num]);
+				int answer = sc.nextInt();
+				if(num == 0) {
+					if(answer == 3) {
+						System.out.println("상자 열리는 소리");
+						System.out.println("상자 안에는 열쇠가 1개 들어있다. 열쇠를 모아서 교시문을 열면 될 것 같다.");
+						
+					
+					} else {
+						System.out.println("실패문구 + 귀신나오기");
+						
+					}
+				} else if (num == 1) {
+					if(answer == 4) {
+						System.out.println("상자 열리는 소리");
+						System.out.println("상자 안에는 열쇠가 1개 들어있다. 열쇠를 모아서 교시문을 열면 될 것 같다.");
+					
+					
+					} else {
+						System.out.println("실패문구 + 귀신나오기");
+						
+					}
+				} else if (num == 2) {
+					if(answer == 2) {
+						System.out.println("상자 열리는 소리");
+						System.out.println("상자 안에는 열쇠가 1개 들어있다. 열쇠를 모아서 교시문을 열면 될 것 같다.");
+					
+					
+					} else {
+						System.out.println("실패문구 + 귀신나오기");
+					}
+				}
+				
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+			
+		}
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+}

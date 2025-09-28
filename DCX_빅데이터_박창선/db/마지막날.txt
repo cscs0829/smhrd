@@ -1,0 +1,32 @@
+데이터베이스란? 
+
+여러사용자가 공유하여 사용할 수 있도록 만들어진 데이터의 집합이다.
+--> 운영데이터의 집합(모음집)
+
+DBMS(DataBase Managerment System)
+--> 데이터베이스 안에 있는 데이터를 효율적으로 관리하기 위해 만들어진
+소프트웨어 시스템이다.
+종류로는 오라클, MySQL, 마리아DB 등이 있다.
+
+SQL(Structure Query Language)
+--> 데이터베이스에게 유일하게 명령을 내릴 수 있는 언어이다.
+
+-- SQL의 문법 
+-- QUEREY -SELECT 문 > SELECT > FROM > WHERE > GROUP BY> 
+    HAVING> ORDER BY
+
+-- DDL (DATA DEFINITION LANGUAGE) : 데이터 정의어 
+--> CREATE, ALTER, RENAME, TRUNCATE, DROP
+-- DML (DATA MANIPULATION LANGUAGE) : 데이터 조작어
+--> SELECT / INSERT / UPDATE / DELETE 세인업데
+-- TCL (TRANSACTION CONTROL LANGUAGE) : 트랜잭션 제어어
+--> COMMIT, ROLLBACK, SAVEPOINT
+-- DCL (DATA CONTROL LANGUAGE) : 데이터 제어어
+--> GRANT, REVOKE, ROLE
+
+-- SQL 작성순서
+
+
+--****SQL 실행 순서****
+
+커리문 구룹바이 조인 복잡한 조건 하나 앤드 우선순위 생각

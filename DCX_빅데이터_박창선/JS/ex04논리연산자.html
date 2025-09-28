@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <script>
+        // 논리연산자
+        // 1. Not 연산자 : 논리값 또는 노리식 앞에 '!'를 표기
+        // 기존값을 반대로 뒤집는 연산자
+
+        // 2. AND 연산자 : 두 논리값 또는 식이 모두 true인 경우에
+        // 최종값을 true로 반환하는 연산자 
+
+        // 3. OR 연산자 : 두 논리값 또는 식이 하나만 true여도 
+        // 최종값을 true로 반환하는 연산자
+
+        // 4. 조건(삼항) 연산자 :
+        // 조건식? 실행문장1 : 실행문장2
+        // 조건식이 true인 경우 => 실행문장1 실행
+        // 조건식이 false인 경우 => 실행문장2 실행
+
+        // 삼항연산자 예제 => 홀, 짝수 구하기
+        let num = parseInt(prompt('숫자를 입력해주세요'));
+
+        console.log(num % 2===0 ? (num+'은(는) 짝수입니다.') :(num+'은(는) 홀수입니다.'));
+        console.log(typeof(num));
+        
+        // 템플릿 문자열
+        // 문자열 안에 변수를 사용할 수 있는 문법
+        // 백틱 `` 1번 옆에
+        // 백틱 안에 변수를 사용해야 할 경우 => `${변수}`로 표기
+        console.log(num % 2 === 1 ? `${num}은(는) 홀수입니다` : `${num}은(는) 짝수입니다`);
+        
+
+    </script>
+</body>
+</html>

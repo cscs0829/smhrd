@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <script>
+        // 함수 기본구조 만들기
+        
+        // 함수 선언부
+        function greet() {
+            console.log('함수를 사용하겠습니다!');
+        }
+        // 함수 호출부
+        greet();
+
+        // 매개변수의 이름은 원하는 이름을 사용할 수 있다.
+        function greet2(name){
+            console.log(`안녕하세요. ${name}입니다.`); 
+        }
+        greet2('양상권');
+
+        // 두 숫자를 연산하여 결과값을 출력하는 sum()함수 구현 => 12
+        // 출력문 내용은 매개변수명 + 매개변수명의 더한결과는 : 12입니다.
+        function sum(a,b){
+            console.log(`${a} 와 ${b}의 더한 값은 ${a+b} 입니다.`);
+        }
+
+        sum(6,4)
+        // 계산식을 구해주는 함수 만들기 
+        // 함수명은 calculator
+        // 함수 실행 로직안에서 => 조건문을 통해서 생성
+        let num1 = parseInt(prompt('첫번째 숫자를 입력하세요'));
+        let num2 = parseInt(prompt('두번째 숫자를 입력하세요'));
+        let giho = prompt('기호를 입력하세요');
+
+        function calculator(num1,num2,giho){
+            if(giho === '+'){
+                console.log(`${num1} 과 ${num2}의 더한 결과는 ${num1+num2} 입니다.`);
+            }else if(giho === '-'){
+                console.log(`${num1} 과 ${num2}의 뺀 결과는 ${num1-num2} 입니다.`);
+            }else if(giho === '*'){
+                console.log(`${num1} 과 ${num2}의 곱한 결과는 : ${num1*num2} 입니다.`);
+            }else if(giho === '/'){
+                console.log(`${num1} 과 ${num2}의 나눈 결과는 : ${num1/num2} 입니다.`);
+            }
+        }
+        calculator(num1,num2,giho)
+
+        // return문 활용해서 함수 만들기
+        function sum2(num10, num20) {
+            return num10+num20;
+        }
+
+        console.log(sum2(5,5));
+        
+        
+    </script>
+</body>
+</html>

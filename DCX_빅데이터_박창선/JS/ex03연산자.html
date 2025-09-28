@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <script>
+        // 산술 연산자 : +, -, *, /, %
+        // JS에서는 /(나누기) 기호를 사용하게 되면
+        // 결과값이 도출된다
+        let num1 = 11;
+        let num2 = 5;
+
+        //문자열 연결
+        let str1 = 'Hello';
+        let str2 = 'world';
+
+        console.log(parseInt(num1/num2));
+        console.log(num1+num2);
+        console.log(str1+' '+str2);
+        
+        // 산술연산자 실습
+        // 숫자형 데이터를 저장하는 num 변수에는 315가 저장되어 있다.
+        // 백의 자리 이하를 버린 결과가 출력되도록 구현하시오 
+        // parsseInt()-정수로 변환
+        let num300 = 315;
+
+        console.log('백의 자리 이하 버린 결과 >>' , parseInt(num300/100)*100);
+        console.log('백의 자리 이하 버린 결과 >>' , num300 - num300%100);
+        
+        // 증감연산자 
+        // 숫자형 데이터를 가진 변수 앞, 뒤에 증감 연산자를 붙여 1을 증가
+        // 또는 1을 감소하는 연산
+        let num3 = 10;
+        let result = num3-- + 5 + --num3;
+        console.log(num3, result);
+        
+        // 복합대입 연산자 
+        //num10 += 5;
+        //num10 = num10+5;
+
+        //num20 -= 10;
+        //mum = num20-10;
+
+        // 비교 연산자
+        let num50 = 3;
+        let num60 = 5;
+        let num70 = 7;
+        let num80 = '3'
+
+        console.log(num50 > num60);
+        console.log(num50 < num60);
+        console.log(num50 == num80);
+        console.log(num50 === num80);
+
+        // '==' vs '==='
+        // 동등연산자 : 두개의 피연산자 값이 같은지 비교
+        //             둘중 하나의 값이 다른 자료형이면 자료 형 변환
+        // 일치연산자 : 두개의 피연산자 값이 같은지 비교
+        //             데이터와 자료형을 모두 비교
+    </script>
+</body>
+</html>

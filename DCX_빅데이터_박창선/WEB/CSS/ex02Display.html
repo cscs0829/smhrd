@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=<device-width>, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        /* display : 화면에 보이는 방식을 (공간)지정 */
+        /* display : inline --> 태그가 출력하는 크기만큼의 공간을 차지 */
+        /* display : block --> 태그가 한줄 전체를 차지 */
+        /* display : inline-block 
+            --> 기본적으로는 inline을 따라감
+            --> 추가로 높이와 가로길이를 지정 할 수 있다
+        */
+        /* display : none --> 공간을 차지안하겠다(사용자에게 보여주지 않는다) */
+
+        div{
+            display: none;
+            width: 200px;
+            height: 200px;
+        }
+        #one{
+            background-color: red;
+        }
+        #two{
+            background-color: green;
+        }
+        
+        h1{
+            display: inline-block;
+            width: 200px;
+            height: 200px;
+        }
+    </style>
+</head>
+<body>
+    <h1>H1 공간</h1>
+    <h1>h1 공간2</h1>
+    <ul>
+        <li>리스트1</li>
+        <li>리스트2</li>
+    </ul>
+    <p>p 공간</p>
+
+    <hr>
+
+    <a>a공간</a>
+    <span>span 공간</span>
+    <input>
+
+    <hr>
+    <!-- div : 공간을 나눌때 사용이 되어지는 태그 -->
+    <div id="one">DISPLAY BLOCK</div>
+    <div id="two">DISPLAY BLOCK2</div>
+</body>
+</html>

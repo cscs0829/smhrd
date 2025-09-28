@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <script>
+        //==================================
+        // * 여러분들이 좋아하는 세 종류의 포켓몬으로 객체를 생성하고 정보를 출력하기
+
+
+        // (1) pokemon1
+        // - 이름(문자), 도감번호(숫자), 타입(문자), 색상(문자), 포획률(숫자), 기술(함수)
+        // (2) pokemon2
+        // - 이름, 도감번호, 타입, 색상, 포획률, 기술(함수)
+        // (3) pokemon3
+        // - 이름, 도감번호, 타입, 색상, 포획률, 기술(함수)
+        /*
+        console 결과창
+        1. 포켓몬의 데이터를 출력 => 객체
+        2. 포켓몬의 기술을 출력 => 함수안에 있는 출력문을 가지고 와서 출력 실행
+
+        */
+        let poketmon1 ={
+            name : '버터플',
+            rate : 12,
+            type : '벌레',
+            color : '보라',
+            pohack : '45%',
+            gisol :['독가루', '저림가루', '수면가루']
+            }
+            let poketmon2 ={
+                name : '야도란',
+                num : 80,
+                type : '에스퍼',
+                color : '핑크',
+                pohack : '75%',
+                gisol :['몸통박치기', '울음소리', '염동력']
+            }
+            let poketmon3 ={
+                name : '피죤투',
+                rate : 18,
+                type : '비행',
+                color : '황색',
+                pohack : '45%',
+                gisol :['날개치기', '에어슬래시', '칼바람']
+            }
+            console.log(poketmon1);
+            console.log(poketmon1.gisol[1]);
+            console.log(poketmon2);
+            console.log(poketmon2.gisol[1]);
+            console.log(poketmon3);
+            console.log(poketmon3.gisol[1]);
+        
+    </script>
+</body>
+</html>

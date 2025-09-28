@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script src="./jquery-3.7.1.min.js"></script>
+    <style>
+        h1{
+            background-color: aqua;
+            /* style 태그 안에서 속성을 작성할때 : background-color(케밥케이스)
+               script 태그 안에서 속성을 작성할때 : backgroundColor(카멜케이스)
+            */
+        }
+    </style>
+</head>
+<body>
+    <h1>jQuery 활용</h1>
+    <h2>JQuery style</h2>
+    <h3>jQuery on</h3>
+    <h4>jQuery Event</h4>
+    <button id="h1">h1change</button>
+    <button id="h2">h2change</button>
+    <button id="h3">h3change</button>
+    <button id="h4">h4change</button>
+    
+    <script>
+        // 첫 번째 버튼 요소 접근
+        // 요소(버튼) 접근 후, 클릭시 h1태그 안의 글자색상을 빨간색으로 변경
+        // $('요소명|선택자').css('속성', '값')
+        $('#h1').click(()=>{
+            $('h1').css('color','red');
+        })
+
+        // 두번째 버튼 클릭 시, 글자색상과 배경색상을 변경(객체 형태로 작성)
+        // .click() 동작 메소드는 JS의 프로퍼티 방식과 동일
+        // .on() JS의 addEventListener() 방식과 동일
+        $('#h2').click(()=>{
+            $('h2').css({
+                'color':'dimgray',
+                'backgroundColor':'tomato'
+            });
+        })
+
+
+        $('#h2').click(()=>{
+            $('h2').css({
+                'color':'blue',
+                'backgroundColor':'tomato'
+            });
+        })
+
+        // on() 활용하기
+        $('#h3').on('click', ()=>{
+            $('h3').css(
+                'color', 'green'
+            );
+        })
+
+        $('#h3').on('click', ()=>{
+            $('h3').css(
+                'background-color', 'hotpink'
+            );
+        })
+
+        $('h4').on({
+            'mouseover':()=>{
+                $('h4').css({
+                    'color': 'yellow',
+                    'background-color': 'lightblue'
+                });
+            },
+            'mouseout':()=>{
+                $('h4').css({
+                    'color': 'black',
+                    'background-color': 'white'
+                });
+            }
+        })
+    </script>
+</body>
+</html>

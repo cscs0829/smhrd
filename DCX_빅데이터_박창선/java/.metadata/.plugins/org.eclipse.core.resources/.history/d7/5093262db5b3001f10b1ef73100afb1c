@@ -1,0 +1,19 @@
+package 닌텐도게임;
+
+public class Krby extends GameChip{
+
+	
+	
+	@Override // annotation -> 하나의 주석 
+	public void start() {
+		System.out.println("커비를 시작한다~ ");
+	}
+	
+	
+	
+	
+	
+	
+	
+	
+}

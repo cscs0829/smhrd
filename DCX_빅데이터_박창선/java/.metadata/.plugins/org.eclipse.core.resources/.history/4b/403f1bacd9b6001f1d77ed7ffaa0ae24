@@ -1,0 +1,68 @@
+package view;
+
+import model.GameDAO;
+import model.GameDTO;
+import model.Computer;
+import model.SCIENCE;
+
+import java.util.Scanner;
+
+public class GameMain {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        GameDAO gameDAO = new GameDAO();
+        Computer computer = new Computer();
+        SCIENCE science = new SCIENCE();
+
+        System.out.println("Welcome to the Escape Game!");
+        System.out.println("1. Sign Up");
+        System.out.println("2. Login");
+        System.out.print("Select an option: ");
+        int choice = sc.nextInt();
+
+        if (choice == 1) {
+            System.out.print("Enter ID: ");
+            String id = sc.next();
+            System.out.print("Enter Password: ");
+            String pw = sc.next();
+            System.out.print("Enter Name: ");
+            String name = sc.next();
+            
+            GameDTO newPlayer = new GameDTO(id, pw, name);
+            int result = gameDAO.join(newPlayer);
+            if (result > 0) {
+                System.out.println("Sign Up Successful!");
+            } else {
+                System.out.println("Sign Up Failed. Try Again.");
+            }
+        } else if (choice == 2) {
+            System.out.print("Enter ID: ");
+            String id = sc.next();
+            System.out.print("Enter Password: ");
+            String pw = sc.next();
+
+            GameDTO player = new GameDTO(id, pw);
+            boolean isLoggedIn = gameDAO.login(player);
+            if (isLoggedIn) {
+                System.out.println("Login Successful!");
+                // Start game
+                System.out.println("Select Difficulty: 1. Easy  2. Hard");
+                int difficulty = sc.nextInt();
+
+                if (difficulty == 1) {
+                    System.out.println("Starting Easy Mode...");
+                    science.scienceEasy(null);
+                } else if (difficulty == 2) {
+                    System.out.println("Starting Hard Mode...");
+                    science.scienceHard(null);
+                }
+            } else {
+                System.out.println("Login Failed. Please check your credentials.");
+            }
+        } else {
+            System.out.println("Invalid Option.");
+        }
+
+        sc.close();
+    }
+}

@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <style>
+        div {
+            width: 100px;
+            height: 100px;
+            border: solid 1px black;
+        }
+
+        #box1 {
+            background-color: red;
+            border: solid 1px black;
+           
+        }
+        /* box2~4의 배경색 지정
+        blue, green, gray
+        */
+
+        /* 우측화면과 같이 margin 속성 넣어보기! 
+        어느방향에 여백이 생겼는지 확인하고 각각의 요소 확인
+        */
+        #box2 {
+            background-color: blue;
+            border: solid 1px black;
+            margin-left: 100px;
+        }
+
+        #box3 {
+            background-color: green;
+            border: solid 1px black;
+            margin-left: 200px;
+        }
+
+        #box4 {
+            background-color: gray;
+            border: solid 1px black;
+            margin-left: 300px; 
+        }
+
+        body{
+            margin: 0px;
+            /* body태그의 기본 margin 값은 8px
+             => default 값
+            */
+        }
+    </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stepped Margin Example</title>
+</head>
+<body>
+    <div id="box1"></div>
+    <div id="box2"></div>
+    <div id="box3"></div>
+    <div id="box4"></div>
+</body>
+</html>

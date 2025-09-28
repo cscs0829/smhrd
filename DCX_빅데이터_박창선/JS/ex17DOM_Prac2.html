@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <h1>클릭 한번 해볼까요?</h1>
+    <button onclick="mkH1()">h1태그 생성</button>
+    <button onclick="mkA()")>a태그 생성</button>
+    <button onclick="mkU1()">ul태그 생성</button>
+    <!-- div공간은 버튼을 클릭할 때 누적할 공간 -->
+    <div id="divTag"></div>
+    
+    <script>
+        // 1. 콘텐츠(글자)를 누적해줄 공간을 가져오기
+        let divVal = document.getElementById('divTag');
+        
+        // 2. 3개의 함수를 만들기 => 인라인 방식으로 각각의 버튼에 함수 연결하기
+
+        const mkH1 = () => {
+            
+            divVal.innerHTML += '<h1>DOM 활용하기</h1>';
+          
+        }
+
+        const mkA = () => {
+           
+            divVal.innerHTML +='<a href="https://www.google.com">구글로 이동</a>';
+          
+        }
+
+        const mkU1 = () => {
+          
+            divVal.innerHTML +='<ul><li>html</li></ul>'+'<ul><li>CSS</li></ul>'+'<ul><li>JS</li></ul>';
+          
+        }
+        // 3. 각각의 함수 로직은 화면을 참고 => 텍스트+태그를 반영 메소드 사용하기(innerHTML)
+
+        // 4. 화면에 내용을 작성하는 출력문
+    </script>
+</body>
+</html>

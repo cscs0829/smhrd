@@ -1,0 +1,26 @@
+package 닌텐도게임;
+
+public abstract class GameChip {
+
+	// 내가 만들려고하는 모든 게임칩의 공통의 조상 클래스
+	// 게임칩에 있어야하는 공통적인 속성,기능만 뽑아서 작성
+	
+	// 1. 추상클래스 
+	// - 추상 메소드를 하나라도 가지고 있다면 반드시 추상 클래스가 되어야한다.
+	// - 추상 클래스도 일반 메소드를 가질 수 있다!
+	// - abstract 키워드를 사용해서 선언한다!
+	
+	    protected void temp() {
+	        System.out.println("임시 메소드");
+	    }
+
+	    public abstract void start();
+	}
+
+	public abstract void start();
+	// 2. 추상 메소드 
+	// - {}(body)가 없는 메소드 
+	// - 선언(틀 :메소드명, 리턴타입, 매개변수)은 되어있으나 
+	// - 로직은 구현되지 않는 메소드
+	// - abstract 키워드를 사용해서 선언한다!
+}

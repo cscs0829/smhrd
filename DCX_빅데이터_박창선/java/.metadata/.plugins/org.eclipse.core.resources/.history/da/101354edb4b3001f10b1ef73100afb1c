@@ -1,0 +1,38 @@
+package 닌텐도게임;
+
+import java.security.PublicKey;
+
+public class GameMain {
+
+	abstract class GameChip {
+	    abstract void start(); // 게임 실행 메소드
+	}
+
+	class Mario extends GameChip {
+	    @Override
+	    void start() {
+	        System.out.println("Mario 게임 시작!");
+	    }
+	}
+
+	class Dongmul extends GameChip {
+	    @Override
+	    void start() {
+	        System.out.println("Dongmul 게임 시작!");
+	    }
+	}
+
+	class Zelda extends GameChip {
+	    @Override
+	    void start() {
+	        System.out.println("Zelda 게임 시작!");
+	    }
+	}
+
+	class Kirby extends GameChip {
+	    @Override
+	    void start() {
+	        System.out.println("Kirby 게임 시작!");
+	    }
+	}
+}

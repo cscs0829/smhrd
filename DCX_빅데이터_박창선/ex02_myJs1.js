@@ -1,0 +1,60 @@
+// 이동하기 버튼을 클릭했을 때
+        // 각각의 div 요소의 정보를 가지고 오기 => 4개의 변수안에 담아주기
+        // 변수의 이름은 red, blue, green, gray 로 설정
+        let red = document.getElementById('redBox');
+        let blue = document.getElementById('blueBox');
+        let green = document.getElementById('greenBox');
+        let gray = document.getElementById('grayBox');
+
+        // 이동하기 버튼 요소의 정보 가지고 오기 => move라는 변수에 담아주기
+        let move = document.querySelector('.move');
+        let radius = document.querySelector('.radius');
+        // 이동하기 버튼을 클릭했을 때 => 이벤트를 연결(addEventListener)
+        move.addEventListener('click', ()=>{
+            // 각각의 div에 마진값을 주기
+            red.style.marginleft = '5px';
+            red.style.margintop = '5px';
+            blue.style.marginLeft ='100px';
+            green.style.marginLeft = '200px';
+            gray.style.marginLeft = '300px';
+        })
+        // 클릭했을 때, 블루, 그린, 그레이 색상의 div가 마진값을 갖도록 실행로직 작성
+        // 메소드 사용 => *style.속성 = 값;
+        // 이동하기 버튼을 더블클릭(dblclick)했을 때 원상태로 복구하기
+        move.addEventListener('dblclick', ()=>{
+            red.style.marginleft = '0px';
+            red.style.margintop = '0px';
+            blue.style.marginLeft ='0px';
+            green.style.marginLeft = '0px';
+            gray.style.marginLeft = '0px';
+        })
+
+        // 반복문을 사용해서 둥글게 만들기
+        let divlist = document.querySelectorAll('div');
+        // 반복문을 활용해서 divlist안에 있는 요소들을 console창에 출력해보기
+        // 둥글게 버튼을 클릭했을 때, 상단의 우측/하단의 좌축 둥글게 만들기
+        // style.borderxxxxx = '50%'
+        
+        radius.addEventListener('click', ()=>{
+            for(let i = 0; i < divlist.length; i++){
+                divlist[i].style.borderTopRightRadius = '50%';
+                divlist[i].style.borderBottomLeftRadius = '50%';
+                red.style.marginleft = '5px';
+                red.style.margintop = '5px';
+                blue.style.marginLeft ='100px';
+                green.style.marginLeft = '200px';
+                gray.style.marginLeft = '300px';
+            }
+        })
+        
+        radius.addEventListener('dblclick', ()=>{
+            for(let i = 0; i < divlist.length; i++){
+                divlist[i].style.borderTopRightRadius = '0%';
+                divlist[i].style.borderBottomLeftRadius = '0%';
+                red.style.marginleft = '5px';
+                red.style.margintop = '5px';
+                blue.style.marginLeft ='0px';
+                green.style.marginLeft = '0px';
+                gray.style.marginLeft = '0px';
+            }
+        })

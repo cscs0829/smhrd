@@ -1,0 +1,56 @@
+div>div{
+    width: 200px;
+    height: 200px;
+}
+
+#static{
+    /* (1) static : 정적인
+    postion속성의 기본 값
+    위치속성이 비활성화
+    */
+    background-color: salmon;
+    position: static;
+    top: 50px;
+    left: 50px;
+}
+
+#relative {
+    /* (2) relative : 상대적인
+    위치속성 활성화
+    기준 : 원래 있던 위치 
+    */
+    background-color: aquamarine;
+    position: relative;
+    top: 20px;
+    left: 20px;
+}
+
+#parents {
+    background-color: darkgray;
+    position: static;
+}
+
+#absolute{
+    /* (3) absolute : 절대적인
+    위치속성 활성화
+    기준 : position속성이 static이 아닌 부모
+    만약에 부모요소가 없거나, 혹은 부모요소의 position
+    속성 값이 static이라면 문서 최상단의 위치를 
+    기준으로 삼는다
+    */
+    background-color: chartreuse;
+    position: absolute;
+    top: 0px;
+    left: 0px;
+}
+
+#fixed{
+    /* (4) fixed : 고정적인
+    위치속성 활성화, 부모요소 무시! 스크롤 무시!
+    기준 : body태그 
+    */
+    background-color: cyan;
+    position: fixed;
+    bottom: 0px;
+    right: 0px;
+}

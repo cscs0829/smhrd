@@ -1,0 +1,27 @@
+package model;
+
+import java.util.Random;
+
+public class ART {
+    Random rd = new Random();
+
+    public void artGallery() {
+        String[] artworks = {
+            "1. '별이 빛나는 밤' - 빈센트 반 고흐",
+            "2. '모나리자' - 레오나르도 다 빈치",
+            "3. '절규' - 에드바르 뭉크",
+            "4. '해바라기' - 빈센트 반 고흐",
+            "5. '물랭 드 라 갈레트의 무도회' - 르누아르"
+        };
+
+        int selectedArt = rd.nextInt(artworks.length);
+        System.out.println("예술 갤러리 탐험 중...");
+        try {
+            Thread.sleep(1500); // 탐험을 표현하기 위한 딜레이
+            System.out.println("감상할 작품은 다음과 같습니다: ");
+            System.out.println(artworks[selectedArt]);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+}

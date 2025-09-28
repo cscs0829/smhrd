@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <input type ="text" id = "inputTag">
+    <button onclick="getInput()"">클릭</button>
+    <input type ="text" id = "inputTag2">
+    <button onclick="getInput2()">h1태그 출력</button>
+    
+    <span id="spanTag">아래 버튼을 클릭하면 텍스트의 스타일이 변경됩니다.</span>
+    <br>
+    <button onclick="clickFunc()">스타일 변경</button>
+
+    <script>
+        // 함수 선언부 2개 생성하고 실행 로직을 작성
+        // input요소 접근하기
+        // input태그 안에 입력한 값을 접근하는 속성 => value 속성
+        const getInput = () => {
+            let inputVal = document.getElementById('inputTag');
+            alert(inputTag.value);  
+        }
+        
+        const getInput2 = () => {
+            let inputVal2 = document.getElementById('inputTag2');
+            document.write(`<h1>${inputVal2.value}</h1>`);
+        }
+
+        const clickFunc = () => {
+            // 요소명.style.property : 요소의 스타일 속성을 접근하거나 새로운 값 설정
+            let spanTag = document.getElementById(`spanTag`);
+            spanTag.style.color = 'red';
+            spanTag.style.fontSize = '35px';
+            spanTag.style.fontWeight = '900';
+            spanTag.style.backgroundColor = 'green';
+
+        }
+    </script>
+</body>
+</html>

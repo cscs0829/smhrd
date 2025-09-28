@@ -1,0 +1,20 @@
+import java.util.Scanner;
+
+public class Ex04 {
+
+	public static void main(String[] args) {
+		Scanner sc = new Scanner(System.in);
+		
+		System.out.println("총 금액 입력 : ");
+		int mon = sc.nextInt();
+		
+		if(mon/10000!=0) {
+			System.out.println(mon/10000);
+		}
+		
+		
+		
+		
+	}
+
+}

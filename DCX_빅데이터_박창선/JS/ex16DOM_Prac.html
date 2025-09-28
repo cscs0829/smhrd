@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <h1 id ="tit">
+    오늘 <span><strong>날씨</strong></span>가 춥습니다.
+    </h1>
+
+    <p id="num">0</p>
+    <button onclick="increase()">증가</button>
+    <button onclick="decrease()">감소</button>
+
+    <script>
+        //HTML요소객체 접근
+        let tit = document.getElementById('tit');
+        console.log(`h1요소의 정보${tit}`);
+
+        console.log(tit.innerText);
+        console.log(tit.innerHTML);
+        
+        // HTML 요소객체 값 변경
+        // innerText : 요소의 컨텐츠를 접근/변경 할때 문자열로 반영
+        // innerHTML : 요소의 컨텐츠를 접근/변경 할때 문자열+태그를 반영
+        // tit.innerText = '내일은 수요일'
+        tit.innerHTML = `<a href = "https://www.naver.com">DOM 학습</a>`;
+
+        let num = document.getElementById('num');
+
+        const increase = () => {
+            console.log('증가함수 실행');
+            console.log(num);
+            num.innerText = parseInt(num.innerText)+1;
+            // p태그 안에 있는 컨텐츠를 가지고 왔고, 그 안에 있는 컨텐츠를 접근해서 변경
+            // 가지고온 컨텐츠를 -> 형 변환(정수)
+            // 변경된 내용을 다시 대입
+        }
+
+        const decrease = () => {
+            console.log('감소함수 실행');
+            
+            if(num.innerText >0){
+                num.innerText = parseInt(num.innerText)-1;
+            }
+            // 감소조건! : 0밑으로 떨어지면 x 
+            
+        }
+
+    </script>
+</body>
+</html>

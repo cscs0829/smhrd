@@ -1,0 +1,53 @@
+package 닌텐도게임;
+
+abstract class GameChip {
+    abstract void start();
+}
+
+class Mario extends GameChip {
+    @Override
+    void start() {
+        System.out.println("Mario 게임 시작!");
+    }
+}
+
+class Dongmul extends GameChip {
+    @Override
+    void start() {
+        System.out.println("Dongmul 게임 시작!");
+    }
+}
+
+class Zelda extends GameChip {
+    @Override
+    void start() {
+        System.out.println("Zelda 게임 시작!");
+    }
+}
+
+class Kirby extends GameChip {
+    @Override
+    void start() {
+        System.out.println("Kirby 게임 시작!");
+    }
+}
+
+public class GameMain {
+    public static void main(String[] args) {
+        Mario m1 = new Mario();
+        insert(m1);
+
+        Dongmul d1 = new Dongmul();
+        insert(d1);
+
+        Zelda z1 = new Zelda();
+        insert(z1);
+
+        Kirby k1 = new Kirby();
+        insert(k1);
+    }
+
+    public static void insert(GameChip chip) {
+        chip.start();
+    }
+}

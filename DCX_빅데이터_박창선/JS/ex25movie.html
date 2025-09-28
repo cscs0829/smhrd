@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script src="./jquery-3.7.1.min.js"></script>
+</head>
+<body>
+    <div id="result-area">
+        <table border="1">
+            <tr>
+                <th>순위</th>
+                <th>영화명</th>
+                <th>개봉일</th>
+            </tr>
+        </table>
+    </div>
+    <button id="req-button">데이터 요청</button>
+    </div> 
+
+    <script src="./ex25movie.js"></script>
+    <!-- <script>
+        // 버튼을 클릭 시, 동착하는 이벤트를 제작
+        $('#req-button').on('click', ()=>{
+            let date = prompt('개봉일자를 입력하세요', 'YYYYMMDD');
+            let movieURL = `https://kobis.or.kr/kobisopenapi/webservice/rest/boxoffice/searchDailyBoxOfficeList.json?key=2e253996065f37a83ebafe7a1fb0cfc2&targetDt=${date}`;    
+        
+            // ajax() : 비동기통신 지원 함수
+            $.ajax({
+                url : movieURL,
+                type : 'get',
+                // 응답받는 데이터를 매개변수안에 넣어서 사용 -> response,res,result
+                success : (res) => {
+                    console.log(res.boxOfficeResult.dailyBoxOfficeList); 
+                    let movieList = res.boxOfficeResult.dailyBoxOfficeList;
+                    
+                    // 박스오피스순위, 영화이름, 개봉일을 콘솔창에 출력해보기! -> 반복문
+                    // 배열안의 객체 데이터를 접근할지! 
+                    for(let i = 0; i < movieList.length; i++){
+                        console.log(`${movieList[i].rank}, ${movieList[i].movieNm}, ${movieList[i].openDt}`);
+                    }
+                    // 콘솔창에 결과가 출력됐다면, 화면에 출력해보기
+                    // 테이블 안에 데이터를 넣기 위해서 tr td태그를 사용하고 그안에 콘솔창에 넣은 값들을 위치 시키기
+                    // $(A).append(B) : A가장 뒤에 B의 데이터를 위치시킴
+
+                    for(let i = 0; i < movieList.length; i++){
+                        $('#result-area table').append(
+                            `<tr>
+                                <td>${movieList[i].rank}</td>
+                                <td>${movieList[i].movieNm}</td>
+                                <td>${movieList[i].openDt}</td>
+                            </tr>`
+                        );
+                    }
+                error : () => {
+                    alert('요청실패');
+                }
+                }
+                // 시험 태그 css 적용 자바스크립트 실습문제 명시도 순위문제 나옴
+                /* 선택자의 가중치(우선순위) */
+        /* 
+            전체(*) : 0
+            태그선택자 : 1
+            클래스선택자 : 10
+            아이디선택자 : 100
+            important : 100000000
+            
+            div div {
+            color : red !important;
+            } *명시도 2*
+
+
+        
+        */
+            })
+        })
+    </script> -->
+</body>
+</html>
